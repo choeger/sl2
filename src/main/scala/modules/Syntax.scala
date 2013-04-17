@@ -59,7 +59,7 @@ trait Syntax {
      * attributes into account. If attributes matter, we have to access them
      * explicitely
      */
-    override def hashCode(): Int = { EmptyAttribute.hashCode() }
+    override def hashCode(): Int = { classOf[Attribute].hashCode() }
     override def equals(other: Any) = other match {
       case a: Attribute => true
       case _ => false
@@ -255,7 +255,7 @@ trait Syntax {
       var doc = line
 
       for (d <- m.dataDefs)
-        doc = doc <@> dataLex <+> d.ide <+> cat(d.tvars.map(value)) <+> funEqLex <+> catList(d.constructors map showConstructor, dataSepLex) <> line
+        doc = doc <@> showDataDef(d)
 
       for ((name, s) <- m.signatures)
         doc = doc <@> funLex <+> name <+> typeLex <+> showType(s.typ) <> line
@@ -267,11 +267,21 @@ trait Syntax {
       doc
     }
 
-    def showConstructor(c: ConstructorDef) = c.constructor <+> cat(c.types.map(showType))
+    def showDataDef(d : DataDef) : Doc = d match {
+      case DataDef(name, Nil, cons, _) => {
+        dataLex <+> d.ide <+> funEqLex <+> catList(d.constructors map showConstructor, space <> dataSepLex) <> line
+      }
+      case DataDef(name, vars, cons, _) => {
+        dataLex <+> d.ide <+> hsep(d.tvars.map(value)) <+> funEqLex <+> catList(d.constructors map showConstructor, space <> dataSepLex) <> line
+      }
+    }
+
+    def showConstructor(c: ConstructorDef) = c.constructor <+> hsep(c.types.map(showType))
 
     def showType(t: ASTType): Doc = t match {
-      case TyVar(i, a) => i <> space
-      case TyExpr(c, ts, a) => c <+> cat(ts.map(showType))
+      case TyVar(i, a) => i
+      case TyExpr(c, Nil, _) => c
+      case TyExpr(c, ts, a) => parens(c <+> hsep(ts.map(showType)))
       case FunTy(ps, a) => catList(ps map showType, arrowLex)
     }
 
