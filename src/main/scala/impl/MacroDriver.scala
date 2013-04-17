@@ -48,8 +48,8 @@ object MacroDriver extends CombinatorParser with CodeGenerator with Syntax
   with FDCheckerImpl with TypeCheckerImpl 
   with ProgramCheckerImpl with Driver {
 
-  val prelude = Source.fromURL(getClass.getResource("/prelude.sl")).getLines.mkString("\n")
-  val preludeJs = Source.fromURL(getClass.getResource("/prelude.js")).getLines.mkString("\n")
+  val prelude = Source.fromURL(getClass.getResource("/prelude.sl")).mkString
+  val preludeJs = Source.fromURL(getClass.getResource("/prelude.js")).mkString
 
   def macroImpl(c : MacroCtxt)(s : c.Expr[String]) : c.Expr[String] = {
     import c.universe._
@@ -68,6 +68,28 @@ object MacroDriver extends CombinatorParser with CodeGenerator with Syntax
   }
 
   def compileSl(s : String) = macro macroImpl
+
+  def slcImpl(c : MacroCtxt)(s : c.Expr[String]) : c.Expr[String] = {
+    import c.universe._
+    s match {
+      case Expr(Literal(Constant(sl))) => {
+        val res = MacroDriver.getClass.getResource(sl.toString)
+        (for (url <- Option(res)) yield {
+          val file = Source.fromURL(url).mkString
+          val result = run(prelude::file::Nil)
+          result match {
+            case Left(e) => c.abort(c.enclosingPosition, e.toString)
+            case Right(js) => c.Expr(Literal(Constant(preludeJs + "\n" + js)))
+          }
+        }).getOrElse(c.abort(c.enclosingPosition, "Could not load source file : " + sl + " from classpath."))
+      }
+      case _ => {
+        c.abort(c.enclosingPosition, "Expected a string literal, got: " + showRaw(s))
+      }      
+    }
+  }
+
+  def slc(s : String) = macro slcImpl
 
   override def run(input: List[String]): Either[Error, String] =
     {
