@@ -1,0 +1,194 @@
+%%
+%% This is file `uebbgrammar.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% uebbgrammar.dtx  (with options: `package')
+%% 
+%% This is a generated file.
+%% 
+%% Copyright (c) 2009, Florian Lorenzen
+%% 
+%% This file may be distributed and/or modified under the
+%% conditions of the LaTeX Project Public License, either
+%% version 1.3 of this license or (at your option) any later
+%% version. The latest version of this license is in:
+%% 
+%%   http://www.latex-project.org/lppl.txt
+%% 
+%% and version 1.3 or later is part of all distributions of
+%% LaTeX version 2003/12/01 or later.
+%% 
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{uebbgrammar}
+  [2009/12/14 v0.2 LaTeX macros for context-free grammars]
+\RequirePackage{ifthen}[2001/05/26]
+\RequirePackage{amsmath}[2000/07/18]
+\RequirePackage{float}[2000/11/08]
+\RequirePackage{keyval}[1999/03/16]
+\def\@grammarsep{::=}
+\def\@grammarrep{\otimes}
+\def\@grammarrepi{\oplus}
+\def\@terminalstyledecl{\tt}
+\def\@terminalstylebox{}
+\def\@nonterminalstyledecl{\it}
+\def\@commentsign{---}
+\def\@commentstyle{\normalfont}
+\def\@grammarcaptionprefix{Grammar}
+\define@key{@gramkeyval}{sep}
+{\renewcommand{\@grammarsep}{#1}}
+
+\define@key{@gramkeyval}{terminalstyledecl}
+{\renewcommand{\@terminalstyledecl}{#1}}
+
+\define@key{@gramkeyval}{terminalstylebox}
+{\renewcommand{\@terminalstylebox}{#1}}
+
+\define@key{@gramkeyval}{nonterminalstyledecl}
+{\renewcommand{\@nonterminalstyledecl}{#1}}
+
+\define@key{@gramkeyval}{commentsign}
+{\renewcommand{\@commentsign}{#1}}
+
+\define@key{@gramkeyval}{commentstyle}
+{\renewcommand{\@commentstyle}{#1}}
+
+\define@key{@gramkeyval}{rep}
+{\renewcommand{\@grammarrep}{#1}}
+
+\define@key{@gramkeyval}{repi}
+{\renewcommand{\@grammarrepi}{#1}}
+
+\define@key{@gramkeyval}{grammarcaptionprefix}
+{\renewcommand{\@grammarcaptionprefix}{#1}}
+\newcommand{\setgrammarstyle}[1]{%
+  \setkeys{@gramkeyval}{#1}%
+}
+\newfloat{@grammarfigure}{tbph}{grm}
+\floatname{@grammarfigure}{\@grammarcaptionprefix}
+\newcommand{\listofgrammars}{%
+  \listof{@grammarfigure}{List of Grammars}%
+}
+\newcommand{\grammarref}[1]{Grammar~\ref{#1}}
+\newboolean{@terminal}
+\setboolean{@terminal}{false}
+\def\@sqopen{\left[}
+\def\@sqclose{\right]}
+\def\@kleenestar{*}
+\def\@kleeneplus{+}
+\def\@parenopen{\left(}
+\def\@parenclose{\right)}
+\newsavebox{\@terminalbox}
+\def\@startterminal{\begin{lrbox}{\@terminalbox}}
+\def\@stopterminal#1{\end{lrbox}#1{\usebox{\@terminalbox}}}
+{%
+  \catcode`\:\active%
+  \catcode`<=\active%
+  \catcode`>=\active%
+  \catcode`|=\active%
+  \catcode`\'=\active%
+  \catcode`\^^M=\active%
+  \catcode`[=\active%
+  \catcode`]=\active%
+  \catcode`(=\active%
+  \catcode`)=\active%
+  \catcode`*=\active%
+  \catcode`+=\active%
+  \catcode`~=\active%
+  \catcode`!=\active%
+  \gdef\@grammarsymbols{%
+    \catcode`:=\active
+    \catcode`<=\active%
+    \catcode`>=\active%
+    \catcode`|=\active%
+    \catcode`\'=\active%
+    \catcode`\^^M=\active%
+    \catcode`[=\active%
+    \catcode`]=\active%
+    \catcode`(=\active%
+    \catcode`)=\active%
+    \catcode`*=\active%
+    \catcode`+=\active%
+    \catcode`~=\active%
+    \catcode`!=\active%
+
+    \def<{\@nonterminalstyledecl\bgroup}%
+    \def>{\egroup\ }%
+    \def'{\ifthenelse{\boolean{@terminal}}%
+      {\egroup\end{math}\@stopterminal{\@terminalstylebox}\ \setboolean{@terminal}{false}}%
+      {\setboolean{@terminal}{true}\@startterminal\begin{math}\@terminalstyledecl\bgroup}}%
+    \def::={&\@grammarsep&}%
+    \def\alt{&\mid&}%
+    \def|{\mid\ }%
+    \def[{\@sqopen}%
+    \def]{\!\!\@sqclose\ }%
+    \def({\@parenopen}%
+    \def){\!\!\@parenclose\ }%
+    \def*{\!\!\raisebox{0.75pt}{\@kleenestar}\;}%
+    \def+{\!\!\raisebox{2pt}{\@kleeneplus}\;}%
+    \def^^M{\\}%
+    \def~{\!\!\!\@grammarrep\!}%
+    \def!{\!\!\!\@grammarrepi\!}%
+    \def\comment##1{& \text{\@commentsign\; \@commentstyle##1}}%
+  }
+}
+\newsavebox{\@grammarbox}
+\newcommand{\@grammarstart}{%
+  \begin{lrbox}{\@grammarbox}
+    \@grammarsymbols
+    \begin{math}
+      \begin{array}{lcll}
+}
+\newcommand{\@grammarend}{%
+      \end{array}
+    \end{math}
+  \end{lrbox}
+}
+\newcommand{\@grammaroutput}{%
+  \usebox{\@grammarbox}%
+}
+\newcommand{\@begingrammararray}{%
+  \begin{array}{lcll}%
+}
+\newcommand{\@endgrammararray}{%
+  \end{array}%
+}
+\newenvironment{grammar}{%
+  \@grammarstart%
+}{%
+  \@grammarend%
+  \@grammaroutput%
+}
+\newenvironment{displaygrammar}{%
+  \@grammarstart%
+}{%
+  \@grammarend%
+  \begin{center}%
+    \@grammaroutput%
+  \end{center}%
+}
+\newcommand{\@grammarcaption}{}
+\newcommand{\@grammarlabel}{}
+
+\newenvironment{grammarfigure}[2][NOLABEL]{%
+  \renewcommand{\@grammarcaption}{#2}%
+  \ifthenelse{\equal{#1}{NOLABEL}}{%
+    \renewcommand{\@grammarlabel}{}%
+  }{%
+    \renewcommand{\@grammarlabel}{\label{#1}}%
+  }%
+  \@grammarstart%
+}{%
+  \@grammarend%
+  \begin{@grammarfigure}%
+    \caption{\@grammarcaption \@grammarlabel}%
+    \begin{center}%
+      \@grammaroutput%
+    \end{center}%
+    \vspace{-0.5\baselineskip}%
+  \end{@grammarfigure}%
+}
+\endinput
+%%
+%% End of file `uebbgrammar.sty'.

@@ -1,0 +1,567 @@
+% Copyright (c) 2013, Andreas Buechele, Florian Lorenzen, Judith Rohloff
+%                     Christoph Hoeger, Fabian Linges, Martin Zuber
+% All rights reserved.
+
+% Redistribution and use in source and binary forms, with or without
+% modification, are permitted provided that the following conditions are
+% met:
+
+%   * Redistributions of source code must retain the above copyright
+%     notice, this list of conditions and the following disclaimer.
+%   * Redistributions in binary form must reproduce the above
+%     copyright notice, this list of conditions and the following
+%     disclaimer in the documentation and/or other materials provided
+%     with the distribution.
+%   * Neither the name of the TU Berlin nor the names of its
+%     contributors may be used to endorse or promote products derived
+%     from this software without specific prior written permission.
+
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+% "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+% LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+% A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+% HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+% SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+% LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+% DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+% THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+% (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+% OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+\documentclass{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{tipa}
+\usepackage{uebbgrammar}
+\usepackage{listings}
+\usepackage{url}
+
+% Declare the backslash from cmtt to use as terminal symbol in
+% grammar.
+\DeclareTextSymbol{\BackslashTT}{T1}{"5C}
+
+
+\author{Andreas~B\"uchele \and Christoph H\"oger \and Fabian Linges \and Florian~Lorenzen \and Judith~Rohloff \and Martin Zuber}
+\title{The SL language and compiler}
+
+\newcommand{\verbatiminput}[2][]{%
+  \lstinputlisting[basewidth=0.5em,
+  columns=fixed,
+  basicstyle=\small\ttfamily,#1]{#2}}
+\newcommand{\TODO}{\begin{center}\LARGE\textbf{TODO}\end{center}}
+
+\begin{document}
+
+\def\open{\texttt{(}}
+\def\close{\texttt{)}}
+\def\bropen{\texttt{\{}}
+\def\brclose{\texttt{\}}}
+\def\sqopen{\texttt{[}}
+\def\sqclose{\texttt{]}}
+\def\squote{\texttt{'}}
+\def\dquote{\texttt{"}}
+\def\eq{\texttt{=}}
+\def\colon{\texttt{:}}
+\def\lam{\mbox{\texttt{\BackslashTT}}}
+\def\bar{\texttt{|}}
+\def\comma{\texttt{,}}
+\def\arrow{\texttt{->}}
+
+\def\addint{\texttt{+}}
+\def\subint{\texttt{-}}
+\def\mulint{\texttt{*}}
+\def\divint{\texttt{/}}
+
+\def\ltint{\texttt{<}}
+\def\leint{\texttt{<=}}
+\def\eqint{\texttt{==}}
+\def\neint{\texttt{/=}}
+\def\geint{\texttt{>=}}
+\def\gtint{\texttt{>}}
+
+\maketitle
+
+
+\section{Introduction}
+
+SL (Simple Language) is very simple, purely functional programming
+language, mainly developed for teaching purposes at TU Berlin. The
+current implementation of the compiler translates SL programs to
+JavaScript.
+
+This document briefly describes the language, its standard prelude,
+and the compiler. We assume familiarity with the basic concepts of
+functional programming languages.
+
+
+\subsection{Symbols used in syntactic descriptions}
+
+We use standard EBNF descriptions for the languages' syntax. Symbols
+in \texttt{monospaced} font represent terminals, symbols in
+$\mathit{italics}$ represent nonterminals. We furthermore use the
+following operators:
+\begin{center}
+  \begin{tabular}{ll}
+    \begin{grammar}<\alpha>*\end{grammar} &
+    zero ore more repetitions of $\alpha$ \\
+    \begin{grammar}<\alpha>+\end{grammar} &
+    one ore more repetitions of $\alpha$ \\
+    \begin{grammar}<\alpha>~'T'\end{grammar} &
+    zero ore more repetitions of $\alpha$ separated by \texttt{T} \\
+    \begin{grammar}<\alpha>!'T'\end{grammar} &
+    one ore more repetitions of $\alpha$ separated by \texttt{T}
+  \end{tabular}
+\end{center}
+
+
+\section{The language SL}
+
+\renewcommand{\arraystretch}{1.2}
+
+\begin{grammarfigure}[grm:sl]{The grammar of SL.}
+  <Program> ::= <Def>+
+  <Def> ::= 'FUN' 'var' '\colon' <Type>
+  \alt 'DEF' 'var' <PPat>* '\eq' <Expr>
+  \alt 'DATA' 'type' 'var'* '\eq' ('cons' <Type>*)!'\bar'
+  <PPat> ::= 'var' | 'cons' | '\open' 'cons' <PPat>* '\close'
+  <Type> ::= 'var' | 'type' | '\open' 'type' <Type>* '\close'
+  \alt <Type> '\arrow' <Type>!'\arrow' | (<Type> '\arrow' <Type>)
+  <Expr> ::= 'IF' <Expr> 'THEN' <Expr> 'ELSE' <Expr>
+  \alt '\lam' <PPat>+ '.' <Expr>
+  \alt 'CASE' <Expr> <Alt>+
+  \alt 'LET' <LocalDef>+ 'IN' <Expr>
+  \alt <Expr> <Expr>
+  \alt '\open' <Expr> '\close'
+  \alt <Expr> 'binop' <Expr>
+  \alt <JSQuote>
+  \alt 'var' | 'cons' | ['\subint']'num' | 'char' | 'string'
+  <JSQuote> ::= '\bropen\bar' 'string' '\bar\brclose' ['\colon' <Type>]
+  <LocalDef> ::= 'var' '\eq' <Expr>
+  <Alt> ::= 'OF' <Pat> 'THEN' <Expr>
+  <Pat> ::= 'var' | 'cons' | 'cons' <PPat>+
+\end{grammarfigure}
+
+
+\begin{grammarfigure}[grm:lexical]{Lexical structure of SL.}
+  'binop' ::= '\addint' | '\subint' | '\mulint' | '\divint'
+  \alt '\ltint' | '\leint' | '\eqint' | '\neint' | '\geint' | '\gtint'
+  'var' ::= 'lowercase' 'alphanum'*
+  'cons' ::= 'uppercase' 'alphanum'*
+  'type' ::= 'uppercase' 'alphanum'*
+  'lowercase' ::= 'a' | \cdots | 'z'
+  'uppercase' ::= 'A' | \cdots | 'Z'
+  'digit' ::= '0' | \cdots | '9'
+  'alphanum' ::= 'lowercase' | 'uppercase' | 'digit'
+  'num' ::= 'digit'+
+  'char' ::= '\squote' 'character' '\squote'
+  'string' ::= '\dquote' 'character'* '\dquote'
+\end{grammarfigure}
+
+
+The grammatical structure of SL is shown in Fig.~\ref{grm:sl} with the
+lexical definitions in Fig.~\ref{grm:lexical}. We illustrate the
+different phrases by example.
+
+\TODO{Lexic anpassen (Operatoren)}
+
+
+\subsection{Predefined functions and types}
+\label{sec:pred-funct-types}
+
+SL has five predefined types: \verb|Int|, \verb|Char|, and
+\verb|String|, integers, characters, and strings respectively, as well
+as the type of the built-in JavaScript-quoting monad \verb|DOM| and
+the unit type \verb|Void|.
+
+To manipulate predefined types SL has the following predefined
+functions:
+\begin{verbatim}
++   : Int -> Int -> Int
+-   : Int -> Int -> Int
+*   : Int -> Int -> Int
+/   : Int -> Int -> Int
+<   : Int -> Int -> Bool
+<=  : Int -> Int -> Bool
+==  : Int -> Int -> Bool
+/=  : Int -> Int -> Bool
+>=  : Int -> Int -> Bool
+ord : Char -> Int
+chr : Int -> Char
+\end{verbatim}
+JavaScript quotes run inside the \verb|DOM| monad and can be combined
+using the standard bind operators. \verb|yield| lifts SL values into
+the \verb|DOM| monad.
+\begin{verbatim}
+yield : a -> DOM a
+&=    : DOM a -> (a -> DOM b) -> DOM b
+&     : DOM a -> DOM b -> DOM b
+\end{verbatim}
+In contrast to built-in types, \verb|Bool| is not predefined but
+belongs to the standard prelude.
+
+For the two function \verb|ord| and \verb|chr| that convert among
+integer and characters the following identities holds:
+\begin{verbatim}
+ord (chr n) = n
+chr (ord c) = c
+\end{verbatim}
+
+
+\subsection{Top-level definitions}
+\label{sec:definitions}
+
+An SL program consists of a sequence of data type definitions,
+function signatures, and function definitions that may appear in any
+order.
+
+\subsubsection{Data type definitions.}
+\label{sec:data-type-defin}
+
+A data type definition introduces a type name and one or more data
+constructors. Data types may be parametric, the type parameters have
+to be listed after the type name. We can define the type of
+polymorphic lists with the following piece of code:
+\begin{verbatim}
+DATA List a = Cons a (List a) | Nil
+\end{verbatim}
+Note that data constructors and type names always start with a capital
+letter whereas type parameters start with small letters.
+
+To demonstrate the use of more than one type parameter, we define
+pairs and triples:
+\begin{verbatim}
+DATA P2 a b = P2 a b
+
+DATA P3 a b c = P3 a b c
+\end{verbatim}
+
+There are the following context restrictions on data type definitions:
+\begin{itemize}
+\item All names of types in a program must be disjoint.
+\item All type parameters in a data type definition must be disjoint.
+nn\item All data constructors in a program must be disjoint (not just
+  all data constructors of a particular type).
+\item No undeclared type parameters may be used on the righ-hand side
+  of a definition.
+\item All uses of type names on the right-hand side of a definition
+  must be applied to the correct number of type arguments. For
+  example, given the previous definition of lists, the following
+  $n$-ary tree is invalid:
+\begin{verbatim}
+DATA Tree a = Tree a List
+\end{verbatim}
+  Instead, \verb|List| must be applied to a type argument:
+\begin{verbatim}
+DATA Tree a = Tree a (List (Tree a))
+\end{verbatim}
+\end{itemize}
+
+
+\subsubsection{Function definitions}
+\label{sec:function-definitions}
+
+Top-level function definitions are pattern based and consist of one or
+more consequent clauses. The clauses of a function $f$ must not be
+interrupted by clauses of a different function $g$ nor may any
+function have the name of a predefined function of
+Sec.~\ref{sec:pred-funct-types}.
+
+The clauses of a function are tried in top-down order until the first
+matching pattern is found (first-fit pattern matching).
+
+In patterns only variables or constructors introduced in data type
+definition are allowed. Furthermore, variables and function names have
+to start with a small letter to easily distinguish them from data
+constructors.
+
+As an example, we define the well-known map- and foldr1-function on
+lists (using the list data type from the previous section):
+\begin{verbatim}
+DEF map f Nil         = Nil
+DEF map f (Cons x xs) = Cons (f x) (map f xs)
+
+DEF foldr1 op (Cons x Nil) = x
+DEF foldr1 op (Cons x xs)  = op x (foldr1 op xs)
+\end{verbatim}
+
+
+\subsubsection{User-defined operators}
+\label{sec:user-defined-ops}
+
+In addition to regular function definitions the programmer can define
+custom, binary operators. An operator definition is a regular function
+definition where the operator name is stated infix. Thus a custom
+operator \verb|%| for a modulo function might be defined the following
+way:
+\begin{verbatim}
+DEF a % n = a - (n * (a / n))
+\end{verbatim}
+
+
+\subsubsection{Function signatures}
+\label{sec:function-signatures}
+
+Note that we do not have to write down types for functions, the SL
+front-end is able to infer the most general type for each function ---
+if it is type correct at all. The type of the \verb|map| definitions
+defined previously is
+\begin{verbatim}
+map : (a -> b) -> List a -> List b
+\end{verbatim}
+
+Nevertheless, the programmer can still provide a type signature for
+each top-level function definition, i.\,e., to specialize a function
+according to her own choice. Given the \verb|foldr1| function defined
+earlier, the programer can explicitly give a typing for this function
+by providing a corresponding signature for the function definitions:
+\begin{verbatim}
+FUN foldr1 : (a -> a -> a) -> List a -> a
+\end{verbatim}
+
+
+\subsection{Expressions}
+\label{sec:expressions}
+
+A function body, i.\,e., the right hand side of a function definition,
+consists of an expression, which may use the variables introduced on
+the left-hand side of the definition and all names of top-level
+function definitions.
+
+
+\paragraph{Function application}
+\label{sec:function-application}
+
+Function application of a function $f$ to an argument $a$ is written
+as juxtaposition of $f$ and $a$ without parentheses: $f\ a$. This
+makes the partial application of functions particularly comfortable.
+
+For example, we can write the increment function like this:
+\begin{verbatim}
+DEF add x y = x + y
+DEF inc = add 1
+\end{verbatim}
+Note that the grammar of SL does not allow partial application of
+predefined infix functions, hence the definition of \verb|add|.
+
+
+\paragraph{Conditionals}
+\label{sec:conditionals}
+
+SL has to kinds of conditionals: if- and case-expressions. 
+
+The condition in an if-expression must be of type \verb|Bool| (defined
+in the prelude). The mutually recursive pair of \verb|even| and
+\verb|odd| uses an if-expression:
+\begin{verbatim}
+-- n must be non-negative.
+DEF even n = IF n == 0 THEN True ELSE odd (n-1)
+DEF odd n  = IF n == 1 THEN True ELSE even (n-1)
+\end{verbatim}
+
+Case-expressions perform pattern-matching for a single expression,
+i.\,e., we can rewrite the \verb|map| function into a single clause
+using a case-expression:
+\begin{verbatim}
+DEF map f l = CASE l
+                OF Nil       THEN Nil
+                OF Cons x xs THEN Cons (f x) (map f xs)
+\end{verbatim}
+Similar to pattern-based top-level definitions, pattern matching uses
+a top-down first-fit strategy.
+
+Using the prelude definition of \verb|Bool|
+\begin{verbatim}
+DATA Bool = True | False
+\end{verbatim}
+an expression \verb|IF c THEN t ELSE e| is equivalent to
+\begin{verbatim}
+CASE c
+  OF True  THEN t 
+  OF False THEN e
+\end{verbatim}
+
+
+\paragraph{$\lambda$-abstractions}
+\label{sec:lambda-abstractions}
+
+A $\lambda$-abstraction introduces an anonymous function. Like in
+top-level definitions, pattern matching is used for the
+arguments. Note, however, that program evaluation will fail if a
+pattern in a $\lambda$-abstraction does not match, since there are no
+alternatives to try.
+
+An anonymous function taking a two element list of integers returning
+the maximum of the two can be written as:
+\begin{verbatim}
+\ (Cons x (Cons y Nil)) . IF x >= y THEN x ELSE y
+\end{verbatim}
+The application of the above $\lambda$-abstraction to a one or three
+element list will fail of course.
+
+
+\paragraph{Local definitions}
+\label{sec:local-definitions}
+
+An expression may contain local definitions using a let-expression,
+e.\,g.:
+\begin{verbatim}
+LET gt5 = \ x . x > 5
+IN map gt5 list
+\end{verbatim}
+It is allowed to introduce more than one local definition, provided
+the names introduced in the left-hand sides are disjoint, e.\,g.
+\begin{verbatim}
+LET even = \ n . IF n == 0 THEN True ELSE odd (n-1)
+    odd  = \ n . IF n == 1 THEN True ELSE even (n-1)
+IN even m
+\end{verbatim}
+As we can see in the last example, the names introduced in a
+let-expression may be used in the right-hand sides, even mutually
+recursive.
+
+There is, however, an important restriction for SL:
+\begin{quote}
+  \label{restriction}
+  \textbf{Restriction}
+
+\emph{In a set of mutually recursive definitions, all right-hand sides
+  must be $\lambda$-expressions.}
+\end{quote}
+
+This restriction includes the special case of a single recursive
+definition, i.\,e., the following definition is allowed
+\begin{verbatim}
+LET sum = \ n . IF n == 0 THEN 0 ELSE n + sum (n-1)
+IN sum 10
+\end{verbatim}
+whereas
+\begin{verbatim}
+LET ones = Cons 1 ones
+    head = \ (Cons x xs) . x
+IN head ones
+\end{verbatim}
+or
+\begin{verbatim}
+LET f = g 1 + 1
+    g = \ n . IF x == 1 THEN 1 ELSE f + x
+IN f
+\end{verbatim}
+are not. The reason is that the above expressions will never terminate
+using SL's eager evaluation strategy.
+
+
+\paragraph{JavaScript quotes}
+\label{sec:javascript-quotes}
+
+SL allows the programmer to define JavaScript quotes, i.\,e.,
+``embedded'' JavaScript snippets. JavaScript quotes are SL expressions
+and run inside the \verb|DOM| monad. Additionally, SL provides a
+mechanism to reference to SL expressions in the quoted JavaScript
+code. As an example, let us consider the definition
+\begin{verbatim}
+DEF f x y = yield (x + y) &= (\ n. {| alert("Result" + $n) |})
+\end{verbatim}
+A JavaScript quote is defined using the \verb+{|+ and \verb+|}+
+braces. The JavaScript code given in a quote can refer to any SL value
+visible in the current scope by prefixing its name with a \verb|$|
+character. In our example, we refer to the pattern variable \verb|n|
+bound by the $\lambda$-abstraction encapsulating the JavaScript quote
+to show the result of adding \verb|x| and \verb|y| to the user with
+the help of a dialog window.
+
+Since JavaScript quotes run inside the built-in \verb|DOM| monad, a
+plain JavaScript quote always has the type \verb|DOM Void|. To be able
+to observe a value encapsulated by the \verb|DOM| monad the programmer
+has to ascribe the JavaScript quote with a corresponding type, e.g.,
+\begin{verbatim}
+DEF ratio = LET getWindowHeight = {| window.outerHeight |} : DOM Int
+                getWindowWidth  = {| window.outerWidth |} : DOM Int
+            IN getWindowWidth  &= (\ width.
+               getWindowHeight &= (\ height.
+               yield (width / height)))
+\end{verbatim}
+In this example, we use JavaScript quotes to access the DOM to
+determine the current height and width of the browser window. The
+function \verb|ratio| uses these information to calculate the current
+ratio of the browser window, the type of this function is
+\verb|DOM Int|.
+
+
+\paragraph{Further syntactic rules}
+\label{sec:furth-synt-rules}
+
+There are a few additional syntactic rules left out for brevity in the
+grammar of Fig.~\ref{grm:sl}. We name them here in prose:
+
+\begin{itemize}
+\item Application associates to the left.
+\item $\lambda$-bodies reach as far to the right as possible, i.\,e.
+\begin{verbatim}
+\ x . map (inc x) (Cons 1 Nil) = \ x . (map (inc x) (Cons 1 Nil))
+\end{verbatim}
+and not
+\begin{verbatim}
+\ x . map (inc x) (Cons 1 Nil) = (\ x . map (inc x)) (Cons 1 Nil)
+\end{verbatim}
+\item The arithmetic operators associate to the left; \mulint, \divint,
+  bind tighter than \addint, \subint{} resp.
+\item The boolean operators associate to the left.
+\item The comparison operators are not associative.
+\item The arithmetic operators have highest precedence, followed by
+  comparison operators, and boolean operators with lowest precedence.
+\item Function application by juxtaposition has highest priority.
+\end{itemize}
+
+
+\section{Programs in SL}
+\label{sec:programs-sl}
+
+A program in SL consists of a series of data definitions, function
+definitions, and function signatures and exactly one nullary main
+function. The main function contains the expression to be evaluated,
+i.\,e., the starting point of the program. The type of the
+main-function must be \verb|DOM Void|.
+
+The standard prelude (cf. next section) is implicitly part of every SL
+program since types like \verb|List| and \verb|Bool| are required to
+assign types to certain SL expressions.
+
+
+\section{SL standard prelude}
+\label{sec:slil-stand-prel}
+
+The standard prelude of SL is included in every program
+(cf. Sec.~\ref{sec:programs-sl}). It is very small and consists only
+of two data type definitions for lists and booleans (file
+\texttt{Prelude.sl}):
+\verbatiminput[linerange={30-34}]{../src/main/resources/prelude.sl}
+
+
+\section{SL compiler}
+\label{sec:sl-compiler}
+
+
+\subsection{Building and using the compiler}
+\label{sec:build-inst-comp}
+
+The SL compiler uses the \textit{Simple Build Tool}
+(sbt)\footnote{\url{http://www.scala-sbt.org/}} as its build system.
+
+
+\bigskip\noindent
+Running the command \verb|assembly| inside the sbt shell
+\begin{verbatim}
+sbt> assembly 
+\end{verbatim}
+yields a Java archive containing the bundled SL compiler.
+
+\TODO describe usage of compiler
+
+\end{document}
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% TeX-PDF-mode: t
+%%% End: 
