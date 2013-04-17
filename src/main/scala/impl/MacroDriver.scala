@@ -33,6 +33,8 @@ import de.tuberlin.uebb.sl2.modules._
 import de.tuberlin.uebb.sl2.modules.Syntax.{Var}
 
 import language.experimental.macros
+
+import scala.io.Source
  
 import reflect.macros.{Context => MacroCtxt}
 
@@ -46,14 +48,17 @@ object MacroDriver extends CombinatorParser with CodeGenerator with Syntax
   with FDCheckerImpl with TypeCheckerImpl 
   with ProgramCheckerImpl with Driver {
 
+  val prelude = Source.fromURL(getClass.getResource("/prelude.sl")).getLines.mkString("\n")
+  val preludeJs = Source.fromURL(getClass.getResource("/prelude.js")).getLines.mkString("\n")
+
   def macroImpl(c : MacroCtxt)(s : c.Expr[String]) : c.Expr[String] = {
     import c.universe._
     s match {
       case Expr(Literal(Constant(sl))) => {
-        val result = run(sl.toString::Nil)
+        val result = run(prelude::sl.toString::Nil)
         result match {
           case Left(e) => c.abort(c.enclosingPosition, e.toString)
-          case Right(js) => c.Expr(Literal(Constant(js)))
+          case Right(js) => c.Expr(Literal(Constant(preludeJs + "\n" + js)))
         }
       }
       case _ => {
