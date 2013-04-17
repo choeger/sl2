@@ -40,6 +40,8 @@ function _add(arg1) {
     };
 };
 
+var _adds = _add;
+
 function _sub(arg1) {
     return function(arg2) {
 	return arg1 - arg2;

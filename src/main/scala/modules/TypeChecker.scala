@@ -46,6 +46,7 @@ trait TypeChecker {
     */
   def predefsContext: Context = {
     val int  = BaseType(Integer)
+    val str  = BaseType(String)
     val char = BaseType(Character)
     val bool = TypeConstructor("Bool", Nil)
     val α    = TypeVariable("a")
@@ -62,6 +63,7 @@ trait TypeChecker {
 	 neLex     -> (int --> (int --> bool)),
 	 geLex     -> (int --> (int --> bool)),
 	 gtLex     -> (int --> (int --> bool)),
+         strAdd    -> (str --> (str --> str)),
 	 yieldLex  -> forall(α)(α --> dom(α)),
 	 bindLex   -> forall(α, β)(dom(α) --> ((α --> dom(β)) --> dom(β))),
 	 bindNRLex -> forall(α, β)(dom(α) --> (dom(β) --> dom(β))),

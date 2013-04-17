@@ -147,6 +147,10 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers {
       ("40 + 2".compiled.evaluated) should equal("42".evaluated)
     }
 
+    it("Should compile string concatenation correctly") {
+      (""""a" +s "b"""".compiled.evaluated) should equal(""" "ab" """.evaluated)
+    }
+
     it("Should compile multiplication correctly") {
       ("40 * 2".compiled.evaluated) should equal("80".evaluated)
     }

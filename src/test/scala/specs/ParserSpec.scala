@@ -177,17 +177,23 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
       "g x y + z".as.expr should parse(App(App(ExVar(addLex), App(App(ExVar("g"), ExVar("x")), ExVar("y"))), ExVar("z")))
     }
 
-    it("Should parse a minus before arthimc expression") {
+    it("Should parse a minus before arithmetic expression") {
       "-(x + y)".as.expr should parse(App(App(ExVar(mulLex), ConstInt(-1)), App(App(ExVar(addLex), ExVar("x")), ExVar("y"))))
     }
     
-    it("Should parse binary minus in arthimc expression") {
+    it("Should parse binary minus in arithmetic expression") {
       "x - 1".as.expr should parse(App(App(ExVar(subLex), ExVar("x")), ConstInt(1)))
+    }
+    
+    
+    it("Should parse string concatenation") {
+      "x +s y".as.expr should parse(App(App(ExVar(strAdd), ExVar("x")), ExVar("y")))
     }
     
   }
 
   describe(testedImplementationName() + " Test case 3: operator precedence") {
+
     it("Should bind rhs multiplication over lhs comparison") {
       "x == y * z".as.expr should parse(App(App(ExVar(eqLex), ExVar("x")), App(App(ExVar(mulLex), ExVar("y")), ExVar("z"))))
     }

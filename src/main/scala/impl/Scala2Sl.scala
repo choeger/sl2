@@ -40,7 +40,7 @@ class Scala2Sl(val universe : Universe, rename : Map[String, String], val syntax
   import syntax._
 
   case class SerializationException(msg : String) extends Exception(msg)
-  
+
   var datadefs : List[DataDef] = Nil
   var scala2Sl : Map[String, ConVar] = Map("List" -> "List")
 

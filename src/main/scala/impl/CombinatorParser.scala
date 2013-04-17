@@ -198,9 +198,9 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   private def consRegex: Parser[String] = not(keyword) ~> """[A-Z][a-zA-Z0-9]*""".r ^^ { case s: String => s }
   private def typeRegex: Parser[String] = not(keyword) ~> """[A-Z][a-zA-Z0-9]*""".r ^^ { case s: String => s }
   private def varRegex: Parser[String] = """[a-z][a-zA-Z0-9]*""".r ^^ { case s: String => s }
-  private def reservedOpsRegex: Parser[String] = """[\+\-\*><]|/|<=|==|/=|>=""".r ^^ { case s: String => s }
+  private def reservedOpsRegex: Parser[String] = """(\+s)|[\+\-\*><]|/|<=|==|/=|>=""".r ^^ { case s: String => s }
   private def binopRegex: Parser[ExVar] = (opRegex | reservedOpsRegex) ^^@ { (a, s) => ExVar(s, a) }
-  private def opRegex: Parser[String] = """[!§%&/=\?\+\*#\-\<\>|]+""".r ^^ { case s: String => s }
+  private def opRegex: Parser[String] = """[!§%&/=\?\+\*#\-\<\>|][s!§%&/=\?\+\*#\-\<\>|]*""".r ^^ { case s: String => s }
   private def customOp: Parser[String] = Parser { in =>
     opRegex(in) match {
       case Success(t, in1) =>
@@ -261,6 +261,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
     case ExVar(`bindLex`, a) => 1
     case ExVar(`bindNRLex`, a) => 1
     case ExVar(`addLex`, a) => 2
+    case ExVar(`strAdd`, a) => 2
     case ExVar(`subLex`, a) => 2
     case ExVar(`mulLex`, a) => 3
     case ExVar(`divLex`, a) => 3

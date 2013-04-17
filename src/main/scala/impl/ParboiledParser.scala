@@ -308,7 +308,10 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
     term
   }
 
-  def add : Rule1[Expr] = rule { "+ " ~ push(ExVar(addLex)) }
+  def add : Rule1[Expr] = rule { 
+    "+s " ~ push(ExVar(strAdd)) |    
+    "+ " ~ push(ExVar(addLex))
+  }
   def sub : Rule1[Expr] = rule { "- " ~ push(ExVar(subLex)) }
 
   def arith_rhs : ReductionRule1[Expr, Expr] = rule {

@@ -52,6 +52,8 @@ trait Lexic {
   val stolLex = "stol"
   val ltosLex = "ltos"
 
+  val strAdd = "+s"
+
   val arithOps = List(addLex, subLex, mulLex, divLex)
   val cmpOps = List(ltLex, leLex, eqLex, neLex, geLex, gtLex)
   val monadicOps = List(yieldLex, bindLex, bindNRLex)
