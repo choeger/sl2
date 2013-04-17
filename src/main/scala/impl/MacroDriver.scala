@@ -89,7 +89,33 @@ object MacroDriver extends CombinatorParser with CodeGenerator with Syntax
     }
   }
 
+  def slc1Impl[T : c.WeakTypeTag](c : MacroCtxt)(s : c.Expr[String]) : c.Expr[String] = {
+    import c.universe._
+    s match {
+      case Expr(Literal(Constant(sl))) => {
+        val res = MacroDriver.getClass.getResource(sl.toString)
+        (for (url <- Option(res)) yield {
+          val conv = new Scala2Sl(c.universe, Map(), this)
+          conv.scala2SlType(Map())(weakTypeOf[T].asInstanceOf[conv.universe.Type])
+          val model = conv.currentProgram.toString
+
+          val file = Source.fromURL(url).mkString
+          val result = run(prelude::model::file::Nil)
+          result match {
+            case Left(e) => c.abort(c.enclosingPosition, e.toString)
+            case Right(js) => c.Expr[String](Literal(Constant(preludeJs + "\n" + js)))
+          }
+        }).getOrElse(c.abort(c.enclosingPosition, "Could not load source file : " + sl + " from classpath."))
+      }
+      case _ => {
+        c.abort(c.enclosingPosition, "Expected a string literal, got: " + showRaw(s))
+      }      
+    }
+  }
+
   def slc(s : String) = macro slcImpl
+
+  def slc1[T](s : String) = macro slc1Impl[T]
 
   override def run(input: List[String]): Either[Error, String] =
     {
