@@ -143,7 +143,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   private def dataDef: Parser[DataDef] = dataLex ~> typeRegex ~ rep(varRegex) ~ funEqLex ~ rep1sep(conDef, dataSepLex) ^^@
     { case (a, t ~ tvs ~ _ ~ cs) => DataDef(t, tvs, cs, a) }
 
-  private def functionSig: Parser[Tuple2[Var, FunctionSig]] = funLex ~> varRegex ~ typeLex ~ funSigType ^^@ { case (a, v ~ _ ~ t) => (v, FunctionSig(t, a)) }
+  private def functionSig: Parser[Tuple2[Var, FunctionSig]] = funLex ~> varRegex ~ typeLex ~ parseType ^^@ { case (a, v ~ _ ~ t) => (v, FunctionSig(t, a)) }
 
   private def expr: Parser[Expr] = binop
   private def simpleexpr: Parser[Expr] = neg | app
@@ -161,7 +161,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   private def lambda: Parser[Lambda] = lambdaLex ~> rep(ppat) ~ dotLex ~ expr ^^@ { case (a, p ~ _ ~ e) => Lambda(p, e, a) }
   private def caseParser: Parser[Case] = caseLex ~> expr ~ rep1(alt) ^^@ { case (a, e ~ as) => Case(e, as, a) }
   private def let: Parser[Let] = letLex ~> rep1(localDef) ~ inLex ~ expr ^^@ { case (a, lds ~ _ ~ e) => Let(lds, e, a) }
-  private def javaScript: Parser[Expr] = ((jsOpenLex ~> """(?:(?!\|\}).)*""".r <~ jsCloseLex) ~ (typeLex ~> funSigType?)) ^^@ { case (a, s ~ t) => JavaScript(s, t, a) }
+  private def javaScript: Parser[Expr] = ((jsOpenLex ~> """(?:(?!\|\}).)*""".r <~ jsCloseLex) ~ (typeLex ~> parseType?)) ^^@ { case (a, s ~ t) => JavaScript(s, t, a) }
   private def parentheses: Parser[Expr] = "(" ~> expr <~ ")"
   private def string: Parser[ConstString] = """"(\\"|[^"])*"""".r ^^@ { (a, s: String) => ConstString(s.substring(1, s.length() - 1), a) }
   private def num: Parser[ConstInt] = """\d+""".r ^^@ { case (a, d) => ConstInt(d.toInt, a) }
@@ -178,16 +178,15 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
     case (a, e) => App(App(ExVar(mulLex), ConstInt(-1), a), e, a)
   }
 
-  private def conDef: Parser[ConstructorDef] = consRegex ~ rep(parseType) ^^@ { case (a, c ~ ts) => ConstructorDef(c, ts, a) }
+  private def cons : Parser[ASTType] = consRegex ^^@ { (a, s) => TyExpr(s, Nil, a) }
+  private def conElem : Parser[ASTType] = typeVar | cons | "(" ~> parseType <~ ")"
+  private def conDef: Parser[ConstructorDef] = consRegex ~ rep(conElem) ^^@ { case (a, c ~ ts) => ConstructorDef(c, ts, a) }
 
-  //Parse Function Signature
-  private def funSigType: Parser[ASTType] = funType | typeVar | tyType | typeExpr
   //  //Parse Types
-  private def parseType: Parser[ASTType] = typeVar | tyType | "(" ~> (typeExpr) <~ ")" | "(" ~> (funType) <~ ")"
+  private def parseType: Parser[ASTType] = baseType ~ (arrowLex ~> rep1sep(baseType, arrowLex)).? ^^@ { case (a, t1 ~ None) => t1 ; case (a, t1 ~ Some(ts)) => FunTy(t1::ts, a) }
   private def typeVar: Parser[TyVar] = varRegex ^^@ { (a, t) => TyVar(t, a) }
   private def typeExpr: Parser[TyExpr] = typeRegex ~ rep(parseType) ^^@ { case (a, t ~ ts) => TyExpr(t, ts, a) }
-  private def tyType: Parser[TyExpr] = typeRegex ^^@ { (a, t) => TyExpr(t, Nil, a) }
-  private def funType: Parser[FunTy] = parseType ~ (arrowLex ~> rep1sep(parseType, arrowLex)) ^^@ { case (a,t1 ~ t) => FunTy(t1::t, a) }
+  private def baseType: Parser[ASTType] = typeVar | typeExpr | "(" ~> (parseType) <~ ")"
 
   //Parse Pattern
   private def ppat: Parser[Pattern] = patVar | patCons | "(" ~> patExpr <~ ")"

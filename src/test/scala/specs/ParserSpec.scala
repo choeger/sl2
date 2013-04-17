@@ -152,7 +152,7 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     }
 
     it("Should parse inline JavaScript with type annotation") {
-      """{|33|} : Int""".as.expr should parse(JavaScript("""33""", Some(TyExpr("Int", Nil))))
+      """{|33|} : (DOM Int)""".as.expr should parse(JavaScript("""33""", Some(TyExpr("DOM", TyExpr("Int", Nil)::Nil))))
     }
 
     it("Should parse function with two definitions") {
