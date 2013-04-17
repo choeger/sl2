@@ -149,7 +149,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
 
   def mkAlt(p : Pattern, e : Expr) = { Alternative(p, e) }
 
-  def mkJs(s : String) = { JavaScript(s, None) }
+  def mkJs(s : String, ty : Option[ASTType]) = { JavaScript(s, ty) }
 
   /* Program constructors */
 
@@ -346,7 +346,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
     char ~> (s => ConstChar(s(1))) ~ spacing |
     (low_ident_token ~> (s => ExVar(s))) ~ spacing ~ !("=" ~ !("=")) |
     up_ident_token ~> (s => ExCon(s)) ~ spacing |
-    js_token ~~> (mkJs _) ~ spacing | 
+    js_token ~ spacing ~ optional(": " ~ type_expr) ~~> (mkJs _) ~ spacing | 
     string_token ~~> (s => ConstString(s)) ~ spacing    
   }
 

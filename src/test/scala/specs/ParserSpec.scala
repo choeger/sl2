@@ -92,6 +92,10 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
       "'c'".as.expr should parse(ConstChar('c'))
     }
 
+    it("Should parse string-literals correctly") {
+      """f "x" x "x"""".as.expr should parse (App(App(App(ExVar("f"), ConstString("x")), ExVar("x")), ConstString("x")))
+    }
+
     it("Should parse variables") {
       "x".as.expr should parse(ExVar("x"))
     }
@@ -145,6 +149,10 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     
     it("Should parse inline JavaScript") {
       """{|alert("Hello!")|}""".as.expr should parse(JavaScript("""alert("Hello!")""", None))
+    }
+
+    it("Should parse inline JavaScript with type annotation") {
+      """{|33|} : Int""".as.expr should parse(JavaScript("""33""", Some(TyExpr("Int", Nil))))
     }
 
     it("Should parse function with two definitions") {

@@ -41,6 +41,7 @@ import scala.util.matching.Regex
 import org.kiama.output.PrettyPrinter
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
+import scala.language.postfixOps
 
 /**
  * Parser implementation module based on scala's combinators
@@ -160,9 +161,9 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   private def lambda: Parser[Lambda] = lambdaLex ~> rep(ppat) ~ dotLex ~ expr ^^@ { case (a, p ~ _ ~ e) => Lambda(p, e, a) }
   private def caseParser: Parser[Case] = caseLex ~> expr ~ rep1(alt) ^^@ { case (a, e ~ as) => Case(e, as, a) }
   private def let: Parser[Let] = letLex ~> rep1(localDef) ~ inLex ~ expr ^^@ { case (a, lds ~ _ ~ e) => Let(lds, e, a) }
-  private def javaScript: Parser[Expr] = jsOpenLex ~> """(?:(?!\|\}).)*""".r <~ jsCloseLex ^^@ { (a, s) => JavaScript(s, None, a) }
+  private def javaScript: Parser[Expr] = ((jsOpenLex ~> """(?:(?!\|\}).)*""".r <~ jsCloseLex) ~ (typeLex ~> funSigType?)) ^^@ { case (a, s ~ t) => JavaScript(s, t, a) }
   private def parentheses: Parser[Expr] = "(" ~> expr <~ ")"
-  private def string: Parser[ConstString] = """".*"""".r ^^@ { (a, s: String) => ConstString(s.substring(1, s.length() - 1), a) }
+  private def string: Parser[ConstString] = """"(\\"|[^"])*"""".r ^^@ { (a, s: String) => ConstString(s.substring(1, s.length() - 1), a) }
   private def num: Parser[ConstInt] = """\d+""".r ^^@ { case (a, d) => ConstInt(d.toInt, a) }
   private def char: Parser[ConstChar] = """\'.\'""".r ^^@ { (a, s: String) => ConstChar(s.apply(1), a) }
   private def exVar: Parser[ExVar] = varRegex ^^@ { (a, s) => ExVar(s, a) }
