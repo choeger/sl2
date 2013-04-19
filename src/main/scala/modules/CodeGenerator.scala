@@ -145,7 +145,7 @@ trait CodeGenerator {
       val defs = JsStmtConcat(p.variables)
       val tmp = freshName()
       val cond = JsIfElse(p.condition, defs & expToJs(expr, tmp), JsThrow("Pattern for lambda expression did not match arguments"))
-      val afun = JsAnonymousFunction(args.toList, cond & JsReturn(Some(tmp)))
+      val afun = (JsAnonymousFunction(args.head::Nil, cond & JsReturn(Some(tmp))) /: args.tail)((x, name) => JsAnonymousFunction(name::Nil, JsReturn(Some(x)))) 
       JsDef(v, afun)
     }
 
