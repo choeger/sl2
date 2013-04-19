@@ -162,6 +162,10 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
     it("Should compile the identity lambda expression correctly") {
       ("(\\ x . x) 42".compiled.evaluated) should equal("42".evaluated)
     }
+
+    it("Should compile lambdas with multiple arguments correctly") {
+      "(\\x y. x) 1 2".compiled.evaluated should equal("1".evaluated)
+    }
   }
 
 
