@@ -155,6 +155,20 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
       """{|33|} : (DOM Int)""".as.expr should parse(JavaScript("""33""", Some(TyExpr("DOM", TyExpr("Int", Nil)::Nil))))
     }
 
+    it("Should parse constructor applications greedy") {
+      inside(parseExpr("""\ Cons Nil Nil . True""").right.get) {
+        case Lambda(l, _, _) => {
+          l.size should be (1)
+          inside(l.head) {
+            case PatternExpr("Cons", p, _) => {
+              val nil = PatternExpr("Nil", Nil)
+              p should be (List(nil, nil))
+            }
+          }
+        }
+      }
+    }
+
     it("Should parse function with two definitions") {
       """DEF f Nil = 0 
          DEF f (Cons a b) = 1""".as.ast should parse((functionDef2Modul("f", List(

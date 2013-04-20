@@ -360,8 +360,13 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
     (up_ident_token ~> (x => x)) ~ spacing ~ pattern_rhs ~~> (mkPattern _)
   }
 
+  def pattern_element : Rule1[Pattern] = rule {
+    "( " ~ pattern ~ ") " |
+    low_ident_token ~> (s => PatternVar(s)) ~ spacing |
+    (up_ident_token ~> (x => x)) ~ spacing ~ push(Nil) ~~> (mkPattern _)
+  }
+
   def pattern_rhs : Rule1[List[Pattern]] = rule {
-    oneOrMore(pattern) |
-    push(Nil)
+    zeroOrMore(pattern_element)
   }
 }

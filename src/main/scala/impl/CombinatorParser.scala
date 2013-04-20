@@ -192,7 +192,13 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   private def ppat: Parser[Pattern] = patVar | patCons | "(" ~> patExpr <~ ")"
   private def pat: Parser[Pattern] = patVar | patExpr
   private def patVar: Parser[PatternVar] = varRegex ^^@ { (a, s) => PatternVar(s, a) }
-  private def patCons: Parser[Pattern] = consRegex ^^@ { (a, c) => PatternExpr(c, Nil, a) }
+  private def patCons: Parser[Pattern] = consRegex ~ rep(patElem) ^^@ { case (a, c ~ elems) => PatternExpr(c, elems, a) }
+
+  private def patElem : Parser[Pattern] = 
+    consRegex ^^@ { (a, c) => PatternExpr(c, Nil, a) } |
+    varRegex ^^@ { (a, s) => PatternVar(s, a) } |
+    "(" ~> patExpr <~ ")"
+
   private def patExpr: Parser[Pattern] = consRegex ~ rep(ppat) ^^@ { case (a, c ~ pp) => PatternExpr(c, pp, a) }
 
   private def consRegex: Parser[String] = not(keyword) ~> """[A-Z][a-zA-Z0-9]*""".r ^^ { case s: String => s }
