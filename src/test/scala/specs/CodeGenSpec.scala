@@ -103,10 +103,14 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
     }
 
     def compileProgramAndExpr(expr: String) = {
+//            println(str+"\n"+parseAst(preludeSl + str))
       val ast = parseAst(preludeSl + str).right.get
+
       val astJs = astToJs(ast)
       val exp = parseExpr(expr).right.get
       val js = expToJs(exp, "tmp") & JsName("tmp")
+//      println("/*import code*/\n%s\n/*program code*/\n%s\n/*test code*/\n%s".format(
+//        preludeJs, JsPrettyPrinter.pretty(astJs), JsPrettyPrinter.pretty(js)))
       "/*import code*/\n%s\n/*program code*/\n%s\n/*test code*/\n%s".format(
         preludeJs, JsPrettyPrinter.pretty(astJs), JsPrettyPrinter.pretty(js))
     }
@@ -197,11 +201,6 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
                       OF Node x y THEN sum x + sum y""".compileProgramAndExpr("sum (Node (Leaf 13) (Node (Leaf 2)(Leaf 3)))").evaluated) should equal("18".evaluated)
     }
 
-    /* This seems to be plain wrong
-    it("Should compile raw js") {
-      ("""DEF hello x = {| "Hello " + $x|}""".compileProgramAndExpr("""hello "World"""").evaluated) should equal(""""Hello World"""".evaluated)
-    }
-    */
 
     it("Should compile mutually recursive even and odd function") {
       ("""DEF even n = IF n == 0 THEN True ELSE odd (n-1)  
@@ -251,10 +250,6 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
   describe("Compiling functions using pattern matching") {
     it("Should compile late matches") {
       lateMatch.compileProgramAndExpr("f (Cons 1 Nil) 3 Nil").evaluated should equal("3".evaluated)
-    }
-
-    it("Should compile late, nested matches") {
-      nestedMatch.compileProgramAndExpr("g True (Cons 1 (Cons 2 Nil)) Nil").evaluated should equal("0".evaluated)
     }
 
     it("Should compile nested matches") {
@@ -420,4 +415,5 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
       shadowedVars.compileProgramAndExpr("f").evaluated should equal("-590".evaluated)
     }
   }
+
 }

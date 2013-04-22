@@ -132,11 +132,11 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
 
   private def updateMap[T](s: String, t: T, m: Map[String, List[T]]) = m + (s -> (t :: m.get(s).getOrElse(Nil)))
   
-  private def functionDef: Parser[(Var, FunctionDef)] = defLex ~> varRegex ~ rep(ppat) ~ funEqLex ~ expr ^^@ {
+  private def functionDef: Parser[(Var, FunctionDef)] = defLex ~> varRegex ~ rep(pat) ~ funEqLex ~ expr ^^@ {
     case (a, v ~ ps ~ _ ~ e) => (v, FunctionDef(ps, e, a))
   }
 
-  private def binaryOpDef: Parser[(Var, FunctionDef)] = defLex ~> rep1(ppat) ~ customOp ~ rep1(ppat) ~ funEqLex ~ expr ^^@ {
+  private def binaryOpDef: Parser[(Var, FunctionDef)] = defLex ~> rep1(pat) ~ customOp ~ rep1(pat) ~ funEqLex ~ expr ^^@ {
     case (a, p1 ~ op ~ p2 ~ _ ~ e) => (op, FunctionDef(p1++p2, e, a))
   }
 
@@ -159,7 +159,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
     | exVar | exCon | string | num | char)
 
   private def conditional: Parser[Conditional] = ifLex ~> expr ~ thenLex ~ expr ~ elseLex ~ expr ^^@ { case (a, c ~ _ ~ e1 ~ _ ~ e2) => Conditional(c, e1, e2, a) }
-  private def lambda: Parser[Lambda] = lambdaLex ~> rep(ppat) ~ dotLex ~ expr ^^@ { case (a, p ~ _ ~ e) => Lambda(p, e, a) }
+  private def lambda: Parser[Lambda] = lambdaLex ~> rep(pat) ~ dotLex ~ expr ^^@ { case (a, p ~ _ ~ e) => Lambda(p, e, a) }
   private def caseParser: Parser[Case] = caseLex ~> expr ~ rep1(alt) ^^@ { case (a, e ~ as) => Case(e, as, a) }
   private def let: Parser[Let] = letLex ~> rep1(localDef) ~ inLex ~ expr ^^@ { case (a, lds ~ _ ~ e) => Let(lds, e, a) }
   private def javaScript: Parser[Expr] = ((jsOpenLex ~> """(?:(?!\|\}).)*""".r <~ jsCloseLex) ~ (typeLex ~> parseType?)) ^^@ { case (a, s ~ t) => JavaScript(s, t, a) }
@@ -190,10 +190,13 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   private def baseType: Parser[ASTType] = typeVar | typeExpr | "(" ~> (parseType) <~ ")"
 
   //Parse Pattern
-  private def ppat: Parser[Pattern] = patVar | patCons | "(" ~> ppat <~ ")"
+  private def ppat: Parser[Pattern] = patVar | patExpr | "(" ~> patExpr <~ ")"
+  private def pat: Parser[Pattern] = patVar | patCons | "(" ~> patExpr <~ ")"
   private def patVar: Parser[PatternVar] = varRegex ^^@ { (a, s) => PatternVar(s, a) }
-  private def patCons: Parser[Pattern] = consRegex ~ rep(ppat) ^^@ { case (a, c ~ pp) => PatternExpr(c, pp, a) }
-
+  private def patCons: Parser[Pattern] = consRegex ^^@ { (a, c) => PatternExpr(c, Nil, a) }
+  private def patExpr: Parser[Pattern] = consRegex ~ rep(pat) ^^@ { case (a, c ~ pp) => PatternExpr(c, pp, a) }
+  
+  
   private def consRegex: Parser[String] = not(keyword) ~> """[A-Z][a-zA-Z0-9]*""".r ^^ { case s: String => s }
   private def typeRegex: Parser[String] = not(keyword) ~> """[A-Z][a-zA-Z0-9]*""".r ^^ { case s: String => s }
   private def varRegex: Parser[String] = """[a-z][a-zA-Z0-9]*""".r ^^ { case s: String => s }
@@ -225,7 +228,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
       while (!input.isEmpty) {
         val o1 = input.dequeue
         if (isOp) {
-          while (!ops.isEmpty && prec(o1) < prec(ops.head)) {
+          while (!ops.isEmpty && prec(o1) <= prec(ops.head)) {
             clearStack(out, ops)
           }
           ops.push(o1)
