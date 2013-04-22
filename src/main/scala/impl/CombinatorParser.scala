@@ -136,9 +136,10 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
     case (a, v ~ ps ~ _ ~ e) => (v, FunctionDef(ps, e, a))
   }
 
-  private def binaryOpDef: Parser[(Var, FunctionDef)] = defLex ~> ppat ~ customOp ~ ppat ~ funEqLex ~ expr ^^@ {
-    case (a, p1 ~ op ~ p2 ~ _ ~ e) => (op, FunctionDef(List(p1, p2), e, a))
+  private def binaryOpDef: Parser[(Var, FunctionDef)] = defLex ~> rep1(ppat) ~ customOp ~ rep1(ppat) ~ funEqLex ~ expr ^^@ {
+    case (a, p1 ~ op ~ p2 ~ _ ~ e) => (op, FunctionDef(p1++p2, e, a))
   }
+
 
   private def dataDef: Parser[DataDef] = dataLex ~> typeRegex ~ rep(varRegex) ~ funEqLex ~ rep1sep(conDef, dataSepLex) ^^@
     { case (a, t ~ tvs ~ _ ~ cs) => DataDef(t, tvs, cs, a) }
@@ -171,7 +172,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
 
   private def localDef: Parser[LetDef] = varRegex ~ funEqLex ~ expr ^^@ { case (a, v ~ _ ~ e) => LetDef(v, e, a) }
 
-  private def alt: Parser[Alternative] = ofLex ~ pat ~ thenLex ~ expr ^^@ { case (a, _ ~ p ~ _ ~ e) => Alternative(p, e, a) }
+  private def alt: Parser[Alternative] = ofLex ~ ppat ~ thenLex ~ expr ^^@ { case (a, _ ~ p ~ _ ~ e) => Alternative(p, e, a) }
 
   private def neg: Parser[Expr] = subLex ~> expr ^^@ {
     case (a1, ConstInt(i, a2)) => ConstInt(-i, a1)
@@ -189,11 +190,9 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   private def baseType: Parser[ASTType] = typeVar | typeExpr | "(" ~> (parseType) <~ ")"
 
   //Parse Pattern
-  private def ppat: Parser[Pattern] = patVar | patCons | "(" ~> patExpr <~ ")"
-  private def pat: Parser[Pattern] = patVar | patExpr
+  private def ppat: Parser[Pattern] = patVar | patCons | "(" ~> ppat <~ ")"
   private def patVar: Parser[PatternVar] = varRegex ^^@ { (a, s) => PatternVar(s, a) }
-  private def patCons: Parser[Pattern] = consRegex ^^@ { (a, c) => PatternExpr(c, Nil, a) }
-  private def patExpr: Parser[Pattern] = consRegex ~ rep(ppat) ^^@ { case (a, c ~ pp) => PatternExpr(c, pp, a) }
+  private def patCons: Parser[Pattern] = consRegex ~ rep(ppat) ^^@ { case (a, c ~ pp) => PatternExpr(c, pp, a) }
 
   private def consRegex: Parser[String] = not(keyword) ~> """[A-Z][a-zA-Z0-9]*""".r ^^ { case s: String => s }
   private def typeRegex: Parser[String] = not(keyword) ~> """[A-Z][a-zA-Z0-9]*""".r ^^ { case s: String => s }

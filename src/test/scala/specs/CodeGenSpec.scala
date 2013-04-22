@@ -315,9 +315,9 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers {
 
     val reverse = """
     |DEF reverse Nil = Nil
-    |DEF reverse xs = _reverse Nil xs
-    |DEF _reverse r Nil = r
-    |DEF _reverse r Cons x xs = _reverse (Cons x r) xs
+    |DEF reverse xs = reverseHelper Nil xs
+    |DEF reverseHelper r Nil = r
+    |DEF reverseHelper r Cons x xs = reverseHelper (Cons x r) xs
     """.stripMargin
 
     describe("compiling reverse") {
