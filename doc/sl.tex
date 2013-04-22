@@ -31,6 +31,7 @@
 \documentclass{article}
 
 \usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
 \usepackage{tipa}
 \usepackage{uebbgrammar}
 \usepackage{listings}
@@ -40,8 +41,8 @@
 % grammar.
 \DeclareTextSymbol{\BackslashTT}{T1}{"5C}
 
-
-\author{Andreas~B\"uchele \and Christoph H\"oger \and Fabian Linges \and Florian~Lorenzen \and Judith~Rohloff \and Martin Zuber}
+\author{Andreas Büchele \and Christoph Höger \and Fabian Linges \and
+        Florian Lorenzen \and Judith Rohloff \and Martin Zuber}
 \title{The SL language and compiler}
 
 \newcommand{\verbatiminput}[2][]{%
@@ -78,6 +79,14 @@
 \def\neint{\texttt{/=}}
 \def\geint{\texttt{>=}}
 \def\gtint{\texttt{>}}
+
+\def\exclamationOp{\texttt{!}}
+\def\paragraphOp{\texttt{§}}
+\def\percentOp{\texttt{\%}}
+\def\ampOp{\texttt{\&}}
+\def\questionOp{\texttt{?}}
+\def\sharpOp{\texttt{\#}}
+\def\pipeOp{\texttt{|}}
 
 \maketitle
 
@@ -143,8 +152,8 @@ following operators:
 
 
 \begin{grammarfigure}[grm:lexical]{Lexical structure of SL.}
-  'binop' ::= '\addint' | '\subint' | '\mulint' | '\divint'
-  \alt '\ltint' | '\leint' | '\eqint' | '\neint' | '\geint' | '\gtint'
+  'binop' ::= '\addint' | '\subint' | '\mulint' | '\divint' | '\ltint' | '\leint' | '\eqint' | '\neint'
+  \alt '\geint' | '\gtint' | '\exclamationOp' | '\paragraphOp' | '\percentOp' | '\ampOp' | '\questionOp' | '\sharpOp' | '\pipeOp'
   'var' ::= 'lowercase' 'alphanum'*
   'cons' ::= 'uppercase' 'alphanum'*
   'type' ::= 'uppercase' 'alphanum'*
@@ -162,8 +171,6 @@ The grammatical structure of SL is shown in Fig.~\ref{grm:sl} with the
 lexical definitions in Fig.~\ref{grm:lexical}. We illustrate the
 different phrases by example.
 
-\TODO{Lexic anpassen (Operatoren)}
-
 
 \subsection{Predefined functions and types}
 \label{sec:pred-funct-types}
@@ -173,8 +180,10 @@ SL has five predefined types: \verb|Int|, \verb|Char|, and
 as the type of the built-in JavaScript-quoting monad \verb|DOM| and
 the unit type \verb|Void|.
 
-To manipulate predefined types SL has the following predefined
-functions:
+\newpage
+
+\noindent To manipulate predefined types SL has the following
+predefined functions:
 \begin{verbatim}
 +   : Int -> Int -> Int
 -   : Int -> Int -> Int
@@ -234,7 +243,6 @@ DATA P2 a b = P2 a b
 
 DATA P3 a b c = P3 a b c
 \end{verbatim}
-
 There are the following context restrictions on data type definitions:
 \begin{itemize}
 \item All names of types in a program must be disjoint.
@@ -308,7 +316,6 @@ defined previously is
 \begin{verbatim}
 map : (a -> b) -> List a -> List b
 \end{verbatim}
-
 Nevertheless, the programmer can still provide a type signature for
 each top-level function definition, i.\,e., to specialize a function
 according to her own choice. Given the \verb|foldr1| function defined
@@ -474,10 +481,10 @@ plain JavaScript quote always has the type \verb|DOM Void|. To be able
 to observe a value encapsulated by the \verb|DOM| monad the programmer
 has to ascribe the JavaScript quote with a corresponding type, e.g.,
 \begin{verbatim}
-DEF ratio = LET getWindowHeight = {| window.outerHeight |} : DOM Int
-                getWindowWidth  = {| window.outerWidth |} : DOM Int
-            IN getWindowWidth  &= (\ width.
-               getWindowHeight &= (\ height.
+DEF ratio = LET getHeight = {| window.outerHeight |} : DOM Int
+                getWidth  = {| window.outerWidth |} : DOM Int
+            IN getWidth  &= (\ width.
+               getHeight &= (\ height.
                yield (width / height)))
 \end{verbatim}
 In this example, we use JavaScript quotes to access the DOM to
@@ -547,15 +554,21 @@ of two data type definitions for lists and booleans (file
 The SL compiler uses the \textit{Simple Build Tool}
 (sbt)\footnote{\url{http://www.scala-sbt.org/}} as its build system.
 
+\bigskip
 
-\bigskip\noindent
-Running the command \verb|assembly| inside the sbt shell
+\noindent Running the command \verb|assembly| inside the sbt shell
 \begin{verbatim}
 sbt> assembly 
 \end{verbatim}
 yields a Java archive containing the bundled SL compiler.
 
-\TODO describe usage of compiler
+\bigskip
+
+\noindent Invoking the compiler on a SL source file
+\begin{verbatim}
+$ java -jar sl-assembly-0.1.0.jar source_file.sl
+\end{verbatim}
+will print the generated JavaScript code to standard out.
 
 \end{document}
 
