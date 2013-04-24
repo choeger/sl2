@@ -223,8 +223,8 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
 
   def fun_def : Rule1[(String, FunctionDef)] = rule {
     kw("DEF") ~ (
-      variable ~ zeroOrMore(pattern) ~ "= " ~ expr ~~> (mkFun _) |
-      pattern ~ custom_op_token ~ pattern ~ "= " ~ expr ~~> (mkCustomOp _)
+      variable ~ zeroOrMore(top_pattern) ~ "= " ~ expr ~~> (mkFun _) |
+      top_pattern ~ custom_op_token ~ top_pattern ~ "= " ~ expr ~~> (mkCustomOp _)
     )
   }
   
@@ -340,7 +340,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   def mkLam(p : List[Pattern], e : Expr) = { Lambda(p, e) }
 
   def primary : Rule1[Expr] = rule {
-    "\\ " ~ oneOrMore(pattern) ~ ". " ~ expr ~~> (mkLam _) |
+    "\\ " ~ oneOrMore(top_pattern) ~ ". " ~ expr ~~> (mkLam _) |
     "( " ~ expr ~ ") " |
     integer ~> (s => ConstInt(s.toInt)) ~ spacing | 
     char ~> (s => ConstChar(s(1))) ~ spacing |
@@ -352,6 +352,12 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
 
   def mkPattern(c : String, p : List[Pattern]) = { 
     PatternExpr(c, p)
+  }
+
+  def top_pattern : Rule1[Pattern] = rule {
+    "( " ~ pattern ~ ") " |
+    low_ident_token ~> (s => PatternVar(s)) ~ spacing |
+    up_ident_token ~> (x => x) ~ spacing ~ push(Nil) ~~> (mkPattern _)
   }
 
   def pattern : Rule1[Pattern] = rule {
