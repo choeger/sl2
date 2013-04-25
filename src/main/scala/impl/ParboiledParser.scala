@@ -94,6 +94,13 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   def digit: Rule0 = rule { "0" - "9" }
 
   def integer: Rule0 = rule { oneOrMore(digit) }
+
+  def exponent : Rule0 = rule { ("E"|"e") ~ optional("-") ~ oneOrMore(digit) }
+
+  def real : Rule0 = rule { 
+    oneOrMore(digit) ~ "." ~ zeroOrMore(digit) ~ optional(exponent) | 
+    "." ~ oneOrMore(digit) ~ optional(exponent)
+  }
   
   def char: Rule0 = rule { "'" ~ !("'") ~ ANY ~ "'" }
   
@@ -141,6 +148,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   def mkLet(ld : List[LetDef], e : Expr) = Let(ld, e)
 
   def mkNeg(e : Expr) = e match {
+    case ConstReal(r, attr) => ConstReal(-r, attr)
     case ConstInt(n, attr) => ConstInt(-n, attr)
     case e2@_ => App(App(ExVar(mulLex), ConstInt(-1)), e2)
   }
@@ -342,6 +350,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   def primary : Rule1[Expr] = rule {
     "\\ " ~ oneOrMore(top_pattern) ~ ". " ~ expr ~~> (mkLam _) |
     "( " ~ expr ~ ") " |
+    real ~> (s => ConstReal(s.toDouble)) ~ spacing |
     integer ~> (s => ConstInt(s.toInt)) ~ spacing | 
     char ~> (s => ConstChar(s(1))) ~ spacing |
     (low_ident_token ~> (s => ExVar(s))) ~ spacing ~ !("=" ~ !("=")) |

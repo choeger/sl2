@@ -191,6 +191,7 @@ trait Syntax {
   case class ConstInt(value: Int, attribute: Attribute = EmptyAttribute) extends Expr
   case class ConstChar(value: Char, attribute: Attribute = EmptyAttribute) extends Expr
   case class ConstString(value: String, attribute: Attribute = EmptyAttribute) extends Expr
+  case class ConstReal(value : Double, attribute: Attribute = EmptyAttribute) extends Expr
   case class JavaScript(jsCode: String, signature: Option[ASTType], attribute: Attribute = EmptyAttribute) extends Expr
 
   /**
@@ -230,6 +231,7 @@ trait Syntax {
     case ConstInt(_, _) => Set()
     case ConstChar(_, _) => Set()
     case ConstString(_, _) => Set()
+    case ConstReal(_, _) => Set()
     case JavaScript(_, _, _) => Set()
     case ExVar(x, _) => Set(x)
     case App(l, r, _) => fv(l) ++ fv(r)
@@ -296,6 +298,7 @@ trait Syntax {
       case ConstInt(v, a) => value(v)
       case ConstChar(c, a) => dquotes(value(c))
       case ConstString(s, a) => dquotes(value(s))
+      case ConstReal(x, _) => x.toString
       case JavaScript(j, s, a) => {
 	val sigDoc = s match {
 	  case None      => empty
