@@ -144,9 +144,14 @@ trait CodeGenerator {
       val p = jsp.reduce((x, y) => x & y)
       val defs = JsStmtConcat(p.variables)
       val tmp = freshName()
-      val cond = JsIfElse(p.condition, defs & expToJs(expr, tmp), JsThrow("Pattern for lambda expression did not match arguments"))
-      val afun = JsAnonymousFunction(args.toList, cond & JsReturn(Some(tmp)))
-      JsDef(v, afun)
+      val body = JsIfElse(p.condition, defs & expToJs(expr, tmp), JsThrow("Pattern for lambda expression did not match arguments")) & JsReturn(Some(tmp))
+      
+      def mergeCurry(args : List[JsName]) : JsExpr = args match {
+        case last::Nil => JsAnonymousFunction(last::Nil, body)
+        case x::rest => JsAnonymousFunction(x::Nil, JsReturn(Some(mergeCurry(rest))))
+      }
+             
+      JsDef(v, mergeCurry(args.toList))
     }
 
     case Case(expr, alternatives, _) => {

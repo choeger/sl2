@@ -256,6 +256,14 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
               App(App(ExCon(consLex), App(varG, varX)), App(App(varMap, varG), varY))),
             FunctionDef(List(patG, PatternExpr(nilLex, Nil)), ExCon(nilLex))))))
     }
+    
+   it("Should parse patter matching in function definition with variable") {
+      ("DEF map Nil g = Nil\n").as.ast should parse(functionDefs2Modul(
+        Map(
+          strMap -> List(
+            FunctionDef(List(PatternExpr(nilLex, Nil), patG), ExCon(nilLex))))))
+    }
+    
   }
 
   describe(testedImplementationName() + " Test case 6: LET-expressions") {
