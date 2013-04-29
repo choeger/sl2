@@ -217,7 +217,22 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     it("Should parse string concatenation") {
       "x +s y".as.expr should parse(App(App(ExVar(strAdd), ExVar("x")), ExVar("y")))
     }
-    
+
+    it("Should parse real division") {
+      "x /r y".as.expr should parse(App(App(ExVar(realDiv), ExVar("x")), ExVar("y")))      
+    }
+
+    it("Should parse real multiplication") {
+      "x *r y".as.expr should parse(App(App(ExVar(realMul), ExVar("x")), ExVar("y")))      
+    }
+
+    it("Should parse real addition") {
+      "x +r y".as.expr should parse(App(App(ExVar(realAdd), ExVar("x")), ExVar("y")))      
+    }
+
+    it("Should parse real subtraction") {
+      "x -r y".as.expr should parse(App(App(ExVar(realSub), ExVar("x")), ExVar("y")))      
+    }    
   }
 
   describe(testedImplementationName() + " Test case 3: operator precedence") {
