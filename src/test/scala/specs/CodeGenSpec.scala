@@ -155,8 +155,16 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
       ("40 / 2".compiled.evaluated) should equal("20".evaluated)
     }
 
+    it("Should round integer division") {
+      ("5 / 2".compiled.evaluated) should equal("2".evaluated)
+    }
+
     it("Should compile subtraction correctly") {
       ("44 - 2".compiled.evaluated) should equal("42".evaluated)
+    }
+
+    it("Should compile real division correctly") {
+      ("5 /r 2".compiled.evaluated) should equal("2.5".evaluated)
     }
 
     it("Should compile if-then-else correctly") {
