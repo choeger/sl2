@@ -42,6 +42,7 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
    * Prelude and built-in functions
    */
   val int  = BaseType(Integer)
+  val real = BaseType(Real)
   val char = BaseType(Character)
   val bool = TypeConstructor("Bool", Nil)
   val α    = TypeVariable("alpha")
@@ -89,6 +90,10 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
       EInt(42) should haveType(int)
     }
 
+    it("Should type check Real values") {
+      EReal(2.0) should haveType(real)
+    }
+
     it("Should type check Character values") {
       EChar('c') should haveType(char)
     }
@@ -130,6 +135,10 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
 
     it("Should type check application of built-in function '+'") {
       ((EVar("+") :@ EInt(1)) :@ EInt(1)) should haveType(int)
+    }
+
+    it("Should type check application of built-in function '+r'") {
+      ((EVar("+r") :@ EReal(1.0)) :@ EReal(1.0)) should haveType(real)
     }
 
     it("Should type check application of built-in function '=='") {

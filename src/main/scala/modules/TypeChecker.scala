@@ -46,6 +46,7 @@ trait TypeChecker {
     */
   def predefsContext: Context = {
     val int  = BaseType(Integer)
+    val real = BaseType(Real)
     val str  = BaseType(String)
     val char = BaseType(Character)
     val bool = TypeConstructor("Bool", Nil)
@@ -57,6 +58,12 @@ trait TypeChecker {
 	 subLex    -> (int --> (int --> int)),
          mulLex    -> (int --> (int --> int)),
          divLex    -> (int --> (int --> int)),
+         
+         realDiv   -> (real --> (real --> real)),
+	 realSub   -> (real --> (real --> real)),
+         realMul   -> (real --> (real --> real)),
+         realAdd   -> (real --> (real --> real)),
+
          ltLex     -> (int --> (int --> bool)),
          leLex     -> (int --> (int --> bool)),
 	 eqLex     -> (int --> (int --> bool)),
