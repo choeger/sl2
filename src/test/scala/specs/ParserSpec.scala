@@ -81,7 +81,9 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     it("Should parse Integer literals") {
       "42".as.expr should parse(ConstInt(42))
     }
-
+    it("Should parse negative Integer literals with parantheses") {
+      "-(42)".as.expr should parse(ConstInt(-42))
+    }
     it("Should parse negative Integer literals") {
       "-42".as.expr should parse(ConstInt(-42))
     }
@@ -99,6 +101,13 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     
     it("Should parse negative real literals") {
       "-1.0".as.expr should parse(ConstReal(-1.0))
+    }
+    
+    it("Should parse negative real literals with whitespace") {
+      "-\t1.0".as.expr should parse(ConstReal(-1.0))
+    }
+    it("Should parse negative real literals with whitespace and parantheses") {
+      "-\t(1.0)".as.expr should parse(ConstReal(-1.0))
     }
     it("Should parse negative real literals with exponent") {
       "-0.5E2".as.expr should parse(ConstReal(-0.5e2))
@@ -244,6 +253,10 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     it("Should bind rhs multiplication over lhs addition") {
       "x + y * z".as.expr should parse(App(App(ExVar(addLex), ExVar("x")), App(App(ExVar(mulLex), ExVar("y")), ExVar("z"))))
     }
+
+    it("Should bind lhs multiplication over rhs subtraction for reals") {
+      "x -r y *r z".as.expr should parse(App(App(ExVar(realSub), ExVar("x")), App(App(ExVar(realMul), ExVar("y")), ExVar("z"))))
+    }    
 
     it("Should bind rhs division over lhs subtraction") {
       "x - y / z".as.expr should parse(App(App(ExVar(subLex), ExVar("x")), App(App(ExVar(divLex), ExVar("y")), ExVar("z"))))
