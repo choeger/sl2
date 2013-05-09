@@ -54,6 +54,12 @@ trait Lexic {
 
   val strAdd = "+s"
 
+  val realDiv = "/r"
+  val realMul = "*r"
+  val realAdd = "+r"
+  val realSub = "-r"
+
+
   val arithOps = List(addLex, subLex, mulLex, divLex)
   val cmpOps = List(ltLex, leLex, eqLex, neLex, geLex, gtLex)
   val monadicOps = List(yieldLex, bindLex, bindNRLex)

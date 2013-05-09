@@ -155,8 +155,20 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
       ("40 / 2".compiled.evaluated) should equal("20".evaluated)
     }
 
+    it("Should round integer division") {
+      ("5 / 2".compiled.evaluated) should equal("2".evaluated)
+    }
+
     it("Should compile subtraction correctly") {
       ("44 - 2".compiled.evaluated) should equal("42".evaluated)
+    }
+
+    it("Should compile real division (on integer literals) correctly") {
+      ("5 /r 2".compiled.evaluated) should equal("2.5".evaluated)
+    }
+
+    it("Should compile real division (on real literals) correctly") {
+      ("5.0 /r 2.0".compiled.evaluated) should equal("2.5".evaluated)
     }
 
     it("Should compile if-then-else correctly") {
@@ -211,6 +223,10 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
       ("""LET even = \ n . IF n == 0 THEN True ELSE odd (n-1)  
               odd = \ n . IF n == 1 THEN True ELSE even (n-1)  
               IN even 22 """.compiled.evaluated) should equal("true".evaluated)
+    }
+
+    it("Should evaluate LETs in dependency-order") {
+      """LET x=y y=5 IN x""".compiled.evaluated should equal("5".evaluated)
     }
 
     it("Should compile nested lets") {

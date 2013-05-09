@@ -101,7 +101,7 @@ trait SLPrograms {
   |	         OF Red      THEN -1
   |	         OF Green    THEN -2
   |              OF Blue     THEN -3
-  |	         OF (Custom i) THEN i
+  |	         OF Custom i THEN i
   """.stripMargin
 
   val nestedConditional = "DEF f a b c = IF (IF a > 2 THEN b ELSE c) > 3 THEN 0 ELSE 1"

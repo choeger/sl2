@@ -94,6 +94,13 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   def digit: Rule0 = rule { "0" - "9" }
 
   def integer: Rule0 = rule { oneOrMore(digit) }
+
+  def exponent : Rule0 = rule { ("E"|"e") ~ optional("-") ~ oneOrMore(digit) }
+
+  def real : Rule0 = rule { 
+    oneOrMore(digit) ~ "." ~ zeroOrMore(digit) ~ optional(exponent) | 
+    "." ~ oneOrMore(digit) ~ optional(exponent)
+  }
   
   def char: Rule0 = rule { "'" ~ !("'") ~ ANY ~ "'" }
   
@@ -141,6 +148,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   def mkLet(ld : List[LetDef], e : Expr) = Let(ld, e)
 
   def mkNeg(e : Expr) = e match {
+    case ConstReal(r, attr) => ConstReal(-r, attr)
     case ConstInt(n, attr) => ConstInt(-n, attr)
     case e2@_ => App(App(ExVar(mulLex), ConstInt(-1)), e2)
   }
@@ -223,8 +231,8 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
 
   def fun_def : Rule1[(String, FunctionDef)] = rule {
     kw("DEF") ~ (
-      variable ~ zeroOrMore(top_pattern) ~ "= " ~ expr ~~> (mkFun _) |
-      top_pattern ~ custom_op_token ~ top_pattern ~ "= " ~ expr ~~> (mkCustomOp _)
+      variable ~ zeroOrMore(def_pattern) ~ "= " ~ expr ~~> (mkFun _) |
+      def_pattern ~ custom_op_token ~ def_pattern ~ "= " ~ expr ~~> (mkCustomOp _)
     )
   }
   
@@ -309,10 +317,15 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def add : Rule1[Expr] = rule { 
+    "+r " ~ push(ExVar(realAdd)) |
     "+s " ~ push(ExVar(strAdd)) |    
     "+ " ~ push(ExVar(addLex))
   }
-  def sub : Rule1[Expr] = rule { "- " ~ push(ExVar(subLex)) }
+
+  def sub : Rule1[Expr] = rule { 
+    "-r " ~ push(ExVar(realSub)) |
+    "- " ~ push(ExVar(subLex)) 
+  }
 
   def arith_rhs : ReductionRule1[Expr, Expr] = rule {
     ((add | sub) ~~> (mkOp _)) ~ (term ~~> (mkApp _))
@@ -322,8 +335,15 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
     factor ~ zeroOrMore(term_rhs)
   }
 
-  def mul : Rule1[Expr] = rule { "* " ~ push(ExVar(mulLex)) }
-  def div : Rule1[Expr] = rule { "/ " ~ push(ExVar(divLex)) }
+  def mul : Rule1[Expr] = rule { 
+    "*r " ~ push(ExVar(realMul)) |
+    "* " ~ push(ExVar(mulLex)) 
+  }
+
+  def div : Rule1[Expr] = rule { 
+    "/r " ~ push(ExVar(realDiv)) |
+    "/ " ~ push(ExVar(divLex)) 
+  }
 
   def term_rhs : ReductionRule1[Expr,Expr] = rule {
     ((mul | div) ~~> (mkOp _)) ~ (factor ~~> (mkApp _))
@@ -340,8 +360,9 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   def mkLam(p : List[Pattern], e : Expr) = { Lambda(p, e) }
 
   def primary : Rule1[Expr] = rule {
-    "\\ " ~ oneOrMore(top_pattern) ~ ". " ~ expr ~~> (mkLam _) |
+    "\\ " ~ oneOrMore(def_pattern) ~ ". " ~ expr ~~> (mkLam _) |
     "( " ~ expr ~ ") " |
+    real ~> (s => ConstReal(s.toDouble)) ~ spacing |
     integer ~> (s => ConstInt(s.toInt)) ~ spacing | 
     char ~> (s => ConstChar(s(1))) ~ spacing |
     (low_ident_token ~> (s => ExVar(s))) ~ spacing ~ !("=" ~ !("=")) |
@@ -354,20 +375,21 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
     PatternExpr(c, p)
   }
 
-  def top_pattern : Rule1[Pattern] = rule {
-    "( " ~ pattern ~ ") " |
+  /* Pattern syntax in DEFs and CASEs differ */
+
+  def def_pattern : Rule1[Pattern] = rule {
+    "( " ~ (up_ident_token ~> (x => x)) ~ spacing ~ pattern_rhs ~~> (mkPattern _) ~ ") " |
     low_ident_token ~> (s => PatternVar(s)) ~ spacing |
     up_ident_token ~> (x => x) ~ spacing ~ push(Nil) ~~> (mkPattern _)
   }
 
   def pattern : Rule1[Pattern] = rule {
-    "( " ~ pattern ~ ") " |
     low_ident_token ~> (s => PatternVar(s)) ~ spacing |
-    (up_ident_token ~> (x => x)) ~ spacing ~ pattern_rhs ~~> (mkPattern _)
+    up_ident_token ~> (x => x) ~ spacing ~ pattern_rhs ~~> (mkPattern _)
   }
 
   def pattern_rhs : Rule1[List[Pattern]] = rule {
-    oneOrMore(pattern) |
+    oneOrMore(def_pattern) |
     push(Nil)
   }
 }

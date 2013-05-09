@@ -68,6 +68,7 @@ trait TypeCheckerImpl extends TypeChecker with Lexic with Syntax with EnrichedLa
     case EInt(_,_)  => Right(empty, BaseType(Integer))
     case EChar(_,_) => Right(empty, BaseType(Character))
     case EStr(_,_)  => Right(empty, BaseType(String))
+    case EReal(_,_) => Right(empty, BaseType(Real))
 
     /* JavaScript quote */
     case EJavaScript(_, sig, _) => Right(empty, sig.getOrElse(TypeConstructor("DOM", List(BaseType(Void)))))

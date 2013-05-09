@@ -34,4 +34,4 @@ import de.tuberlin.uebb.sl2.impl._
 
 import de.tuberlin.uebb.sl2.modules.Syntax.{Var}
 
-class CodeGeneratorTest extends PreProcessing with CodeGenSpec with GraphImpl[Var] with CodeGenerator with NameSupply with JsSyntax with Syntax with SyntaxTraversal with Errors with CombinatorParser
+class CodeGeneratorTest extends PreProcessing with CodeGenSpec with GraphImpl[Var] with CodeGenerator with NameSupply with JsSyntax with Syntax with SyntaxTraversal with Errors with ParboiledParser

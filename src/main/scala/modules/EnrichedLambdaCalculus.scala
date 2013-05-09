@@ -46,6 +46,7 @@ trait EnrichedLambdaCalculus {
   sealed abstract class ELC {
     override def toString() : String = ELCPrettyPrinter.pretty(this)
   }
+  case class EReal(value : Double, attribute: Attribute = EmptyAttribute) extends ELC
   case class EInt(value: Int, attribute: Attribute = EmptyAttribute) extends ELC
   case class EChar(value: Char, attribute: Attribute = EmptyAttribute) extends ELC
   case class EStr(value: String, attribute: Attribute = EmptyAttribute) extends ELC
@@ -81,6 +82,7 @@ trait EnrichedLambdaCalculus {
     */
   def attribute(e: ELC): Attribute = e match {
     case EInt(_, attr) => attr
+    case EReal(_, attr) => attr
     case EChar(_, attr) => attr
     case EStr(_, attr) => attr
     case ECon(_, attr) => attr
@@ -175,6 +177,7 @@ trait EnrichedLambdaCalculus {
     case ExVar(ide, attr) => EVar(ide, attr)
     case ExCon(con, attr) => ECon(con, attr)
     case ConstInt(value, attr) => EInt(value, attr)
+    case ConstReal(value, attr) => EReal(value, attr)
     case ConstChar(value, attr) => EChar(value, attr)
     case ConstString(value, attr) => EStr(value, attr)
     case JavaScript(jsCode, sig, attr) => EJavaScript(jsCode, sig.map(astToType), attr)
@@ -277,6 +280,7 @@ trait EnrichedLambdaCalculus {
       case EVar(i, a) => i
       case ECon(c, a) => c
       case EInt(v, a) => value(v)
+      case EReal(v, a) => value(v)
       case EChar(c, a) => dquotes(value(c))
       case EStr(s, a) => dquotes(value(s))
       case EJavaScript(j, s, a) => {

@@ -88,6 +88,26 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     it("Should parse negative Integer literals with whitespace") {
       "- 42".as.expr should parse(ConstInt(-42))
     }
+    
+    it("Should parse real literals") {
+      "1.0".as.expr should parse(ConstReal(1.0))
+    }
+    
+    it("Should parse other real literals") {
+      ".1".as.expr should parse(ConstReal(.1))
+    }
+    
+    it("Should parse negative real literals") {
+      "-1.0".as.expr should parse(ConstReal(-1.0))
+    }
+    it("Should parse negative real literals with exponent") {
+      "-0.5E2".as.expr should parse(ConstReal(-0.5e2))
+    }
+    it("Should parse negative real literals with negative exponents") {
+      "-0.5E-2".as.expr should parse(ConstReal(-0.5e-2))
+    }
+
+
     it("Should parse Character literals") {
       "'c'".as.expr should parse(ConstChar('c'))
     }
@@ -197,7 +217,22 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     it("Should parse string concatenation") {
       "x +s y".as.expr should parse(App(App(ExVar(strAdd), ExVar("x")), ExVar("y")))
     }
-    
+
+    it("Should parse real division") {
+      "x /r y".as.expr should parse(App(App(ExVar(realDiv), ExVar("x")), ExVar("y")))      
+    }
+
+    it("Should parse real multiplication") {
+      "x *r y".as.expr should parse(App(App(ExVar(realMul), ExVar("x")), ExVar("y")))      
+    }
+
+    it("Should parse real addition") {
+      "x +r y".as.expr should parse(App(App(ExVar(realAdd), ExVar("x")), ExVar("y")))      
+    }
+
+    it("Should parse real subtraction") {
+      "x -r y".as.expr should parse(App(App(ExVar(realSub), ExVar("x")), ExVar("y")))      
+    }    
   }
 
   describe(testedImplementationName() + " Test case 3: operator precedence") {
