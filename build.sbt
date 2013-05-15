@@ -10,7 +10,7 @@ version := "0.1.0"
 
 scalaVersion := "2.10.0"
 
-scalacOptions ++= Seq("-deprecation", "-feature")
+scalacOptions ++= Seq("-deprecation", "-feature", "-Xmax-classfile-name", "140")
 
 libraryDependencies ++= Seq(
 	"org.scalatest" %% "scalatest" % "1.9.1",
