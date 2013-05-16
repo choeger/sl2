@@ -156,7 +156,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
     | let
     | javaScript
     | parentheses
-    | exVar | exCon | string | num | char)
+    | exVar | exCon | string | real | num | char)
 
   private def conditional: Parser[Conditional] = ifLex ~> expr ~ thenLex ~ expr ~ elseLex ~ expr ^^@ { case (a, c ~ _ ~ e1 ~ _ ~ e2) => Conditional(c, e1, e2, a) }
   private def lambda: Parser[Lambda] = lambdaLex ~> rep(pat) ~ dotLex ~ expr ^^@ { case (a, p ~ _ ~ e) => Lambda(p, e, a) }
@@ -166,6 +166,8 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   private def parentheses: Parser[Expr] = "(" ~> expr <~ ")"
   private def string: Parser[ConstString] = """"(\\"|[^"])*"""".r ^^@ { (a, s: String) => ConstString(s.substring(1, s.length() - 1), a) }
   private def num: Parser[ConstInt] = """\d+""".r ^^@ { case (a, d) => ConstInt(d.toInt, a) }
+  private def real: Parser[ConstReal] = """(\d+\.\d*([Ee]-?\d+)?)|(\.\d+([Ee]-?\d+)?)""".r ^^@ { 
+                                            case (a, d) => ConstReal(d.toDouble, a) }
   private def char: Parser[ConstChar] = """\'.\'""".r ^^@ { (a, s: String) => ConstChar(s.apply(1), a) }
   private def exVar: Parser[ExVar] = varRegex ^^@ { (a, s) => ExVar(s, a) }
   private def exCon: Parser[ExCon] = consRegex ^^@ { (a, s) => ExCon(s, a) }
@@ -176,6 +178,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
 
   private def neg: Parser[Expr] = subLex ~> expr ^^@ {
     case (a1, ConstInt(i, a2)) => ConstInt(-i, a1)
+    case (a1, ConstReal(i, a2)) => ConstReal(-i, a1)
     case (a, e) => App(App(ExVar(mulLex), ConstInt(-1), a), e, a)
   }
 
@@ -200,9 +203,9 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   private def consRegex: Parser[String] = not(keyword) ~> """[A-Z][a-zA-Z0-9]*""".r ^^ { case s: String => s }
   private def typeRegex: Parser[String] = not(keyword) ~> """[A-Z][a-zA-Z0-9]*""".r ^^ { case s: String => s }
   private def varRegex: Parser[String] = """[a-z][a-zA-Z0-9]*""".r ^^ { case s: String => s }
-  private def reservedOpsRegex: Parser[String] = """(\+s)|[\+\-\*><]|/|<=|==|/=|>=""".r ^^ { case s: String => s }
+  private def reservedOpsRegex: Parser[String] = """(\+s|([\+\-\*/]r))|[\+\-\*><]|/|<=|==|/=|>=""".r ^^ { case s: String => s }
   private def binopRegex: Parser[ExVar] = (opRegex | reservedOpsRegex) ^^@ { (a, s) => ExVar(s, a) }
-  private def opRegex: Parser[String] = """[!§%&/=\?\+\*#\-\<\>|][s!§%&/=\?\+\*#\-\<\>|]*""".r ^^ { case s: String => s }
+  private def opRegex: Parser[String] = """[!§%&/=\?\+\*#\-\<\>|][sr!§%&/=\?\+\*#\-\<\>|]*""".r ^^ { case s: String => s }
   private def customOp: Parser[String] = Parser { in =>
     opRegex(in) match {
       case Success(t, in1) =>
@@ -263,10 +266,14 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
     case ExVar(`bindLex`, a) => 1
     case ExVar(`bindNRLex`, a) => 1
     case ExVar(`addLex`, a) => 2
+    case ExVar(`realAdd`, a) => 2
     case ExVar(`strAdd`, a) => 2
     case ExVar(`subLex`, a) => 2
+    case ExVar(`realSub`, a) => 2
     case ExVar(`mulLex`, a) => 3
+    case ExVar(`realMul`, a) => 3
     case ExVar(`divLex`, a) => 3
+    case ExVar(`realDiv`, a) => 3
     case _ => 0
   }
 
