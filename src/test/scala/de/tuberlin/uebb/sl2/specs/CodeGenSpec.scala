@@ -40,7 +40,11 @@ import java.net._
 import scala.collection.JavaConversions._
 import scala.io.Source
 
-trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLPrograms {
+trait CodeGenSpec	
+  extends FunSpec
+  with Inside
+  with ShouldMatchers
+  with SLPrograms {
 
   this: Syntax with Parser with JsSyntax with CodeGenerator =>
 

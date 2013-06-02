@@ -31,6 +31,6 @@ package de.tuberlin.uebb.sl2.tests.impl
 import de.tuberlin.uebb.sl2.tests.specs._
 import de.tuberlin.uebb.sl2.impl._
 import de.tuberlin.uebb.sl2.modules._
-import de.tuberlin.uebb.sl2.modules.Syntax.{Var}
+import de.tuberlin.uebb.sl2.modules.Syntax.{VarFirstClass}
 
-class ContextAnalysisTest extends ContextAnalysisSpec with Lexic with Syntax with Context with Type with ProgramCheckerImpl with EnrichedLambdaCalculus with FDCheckerImpl with DTCheckerImpl with GraphImpl[Var] with LetRecSplitter with TypeCheckerImpl with NameSupply with SLExpressions with Errors
+class ContextAnalysisTest extends ContextAnalysisSpec with Lexic with Syntax with Context with Type with ProgramCheckerImpl with EnrichedLambdaCalculus with FDCheckerImpl with DTCheckerImpl with GraphImpl[VarFirstClass] with LetRecSplitter with TypeCheckerImpl with NameSupply with SLExpressions with Errors

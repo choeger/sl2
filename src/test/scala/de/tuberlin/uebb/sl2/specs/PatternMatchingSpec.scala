@@ -36,52 +36,52 @@ import de.tuberlin.uebb.sl2.modules._
 trait PatternMatchingSpec extends FunSpec with Inside with ShouldMatchers {
   this : Syntax with PatternMatching => 
 
-  private def cons(hd : String, tl : String) = { PatternExpr("Cons", PatternVar(hd)::PatternVar(tl)::Nil) }
+  private def cons(hd : String, tl : String) = { PatternExpr(Syntax.ConVar("Cons"), PatternVar(hd)::PatternVar(tl)::Nil) }
   
-  private def nil = PatternExpr("Nil", Nil)
+  private def nil = PatternExpr(Syntax.ConVar("Nil"), Nil)
 
   def arity(c : ConVar) = c match {
-    case "Cons" => 2
+    case Syntax.ConVar("Cons", _) => 2
     case _ => 0
   }
 
   def constructors(c : ConVar) = c match {
-    case "Cons" | "Nil" => Set("Cons", "Nil")
+    case Syntax.ConVar("Cons", _) | Syntax.ConVar("Nil", _) => Set(Syntax.ConVar("Cons"), Syntax.ConVar("Nil"))
     case _ => Set[ConVar]()
   }
 
   val ctxt = PatternMatchingCtxt(arity, constructors, 1)
 
-  val demoeq = List(Equation(PatternVar("f")::nil::PatternVar("ys")::Nil, ExVar("a")),
-                    Equation(PatternVar("f")::PatternVar("xs")::nil::Nil, ExVar("b")),
-                    Equation(PatternVar("f")::cons("x", "xs")::cons("y","ys")::Nil, ExVar("c")))
+  val demoeq = List(Equation(PatternVar("f")::nil::PatternVar("ys")::Nil, ExVar(Syntax.Var("a"))),
+                    Equation(PatternVar("f")::PatternVar("xs")::nil::Nil, ExVar(Syntax.Var("b"))),
+                    Equation(PatternVar("f")::cons("x", "xs")::cons("y","ys")::Nil, ExVar(Syntax.Var("c"))))
 
   describe("The pattern matching optimizer") {
     it("Should create a simple constant match expression") {
-      val testeq = Equation(PatternExpr("Nil", Nil)::Nil, ExVar("y"))::Nil
-      inside(createSimpleCaseMatch(ctxt, testeq, List("x"))) { 
+      val testeq = Equation(PatternExpr(Syntax.ConVar("Nil"), Nil)::Nil, ExVar(Syntax.Var("y")))::Nil
+      inside(createSimpleCaseMatch(ctxt, testeq, List(Syntax.Var("x")))) { 
         case Case(_, alt1::alt2::Nil, _) => {
-          alt1 should be(Alternative(cons("u1", "u2"), ExVar("MATCHFAIL")))          
-          alt2 should be(Alternative(nil, ExVar("y")))
+          alt1 should be(Alternative(cons("u1", "u2"), ExVar(Syntax.Var("MATCHFAIL"))))          
+          alt2 should be(Alternative(nil, ExVar(Syntax.Var("y"))))
         }
      }
     }
 
     it("should forward nested patterns") {
-      val testeq = Equation(PatternExpr("Cons", PatternVar("hd")::PatternExpr("Nil", Nil)::Nil)::Nil, ExVar("y"))::Nil
-      inside(createSimpleCaseMatch(ctxt.copy(k=2), testeq, List("u1"))) {
+      val testeq = Equation(PatternExpr(Syntax.ConVar("Cons"), PatternVar("hd")::PatternExpr(Syntax.ConVar("Nil"), Nil)::Nil)::Nil, ExVar(Syntax.Var("y")))::Nil
+      inside(createSimpleCaseMatch(ctxt.copy(k=2), testeq, List(Syntax.Var("u1")))) {
         case Case(_, alt1::alt2::Nil, _) => {
           alt2.pattern should be (nil)
-          alt2.expr should be (ExVar("MATCHFAIL"))
+          alt2.expr should be (ExVar(Syntax.Var("MATCHFAIL")))
 
           alt1.pattern should be (cons("u2", "u3"))
           inside(alt1.expr) {
             case Case (_, alt1::alt2::Nil, _) => {
               alt1.pattern should be (cons("u4", "u5"))
-              alt1.expr should be (ExVar("MATCHFAIL"))
+              alt1.expr should be (ExVar(Syntax.Var("MATCHFAIL")))
 
               alt2.pattern should be (nil)
-              alt2.expr should be(ExVar("y"))
+              alt2.expr should be(ExVar(Syntax.Var("y")))
             }
           }
         }
@@ -89,42 +89,42 @@ trait PatternMatchingSpec extends FunSpec with Inside with ShouldMatchers {
     }
 
     it("Should simply rename variables") {
-      val testeq = Equation(PatternVar("x")::Nil, ExVar("x"))::Nil
-      createSimpleCaseMatch(ctxt, testeq, List("y")) should be(ExVar("y"))
+      val testeq = Equation(PatternVar("x")::Nil, ExVar(Syntax.Var("x")))::Nil
+      createSimpleCaseMatch(ctxt, testeq, List(Syntax.Var("y"))) should be(ExVar(Syntax.Var("y")))
     }
 
     it("Should work correctly on Wadler's demo") {
 
-      inside(createSimpleCaseMatch(ctxt.copy(k=4), demoeq, List("u1", "u2", "u3"))) {
+      inside(createSimpleCaseMatch(ctxt.copy(k=4), demoeq, List(Syntax.Var("u1"), Syntax.Var("u2"), Syntax.Var("u3")))) {
         case Case(v, alt1::alt2::Nil, _) => {
-          v should be (ExVar("u2"))
+          v should be (ExVar(Syntax.Var("u2")))
           alt2.pattern should be (nil)
           alt1.pattern should be (cons("u4", "u5"))
           
-          alt2.expr should be(ExVar("a"))
+          alt2.expr should be(ExVar(Syntax.Var("a")))
           inside (alt1.expr) {
             case Case(v, alt1::alt2::Nil, _) => {
-              v should be(ExVar("u3"))
+              v should be(ExVar(Syntax.Var("u3")))
               alt2.pattern should be (nil)
-              alt2.expr should be(ExVar("b"))
+              alt2.expr should be(ExVar(Syntax.Var("b")))
               
               alt1.pattern should be (cons("u4", "u5"))
               
               inside (alt1.expr) {
                 case Case(v, alt1::alt2::Nil, _) => {
-                  v should be(ExVar("u2"))
+                  v should be(ExVar(Syntax.Var("u2")))
                   alt2.pattern should be(nil)
-                  alt2.expr should be (ExVar("MATCHFAIL"))
+                  alt2.expr should be (ExVar(Syntax.Var("MATCHFAIL")))
 
                   alt1.pattern should be(cons("u4","u5"))
                   inside(alt1.expr) {
                     case Case(v, alt1::alt2::Nil,_) => {
-                      v should be (ExVar("u3"))
+                      v should be (ExVar(Syntax.Var("u3")))
                       alt2.pattern should be (nil)
-                      alt2.expr should be(ExVar("MATCHFAIL"))
+                      alt2.expr should be(ExVar(Syntax.Var("MATCHFAIL")))
                       
                       alt1.pattern should be(cons("u6", "u7"))
-                      alt1.expr should be (ExVar("c"))
+                      alt1.expr should be (ExVar(Syntax.Var("c")))
                     }
                   }
                 }

@@ -44,7 +44,9 @@ trait LetRecSplitterSpec extends FunSpec with ShouldMatchers {
    */
   case class LetRecSplittingMatcher(expected: ELC) extends Matcher[ELC] {
 
-    val predefs = predefinedFuns.toSet ++ Set("True", "False", "List", "Cons", "Nil")
+    val predefs: Set[Syntax.VarFirstClass] =
+      predefinedFuns.toSet ++
+      Set("True", "False", "List", "Cons", "Nil").map(Syntax.ConVar(_))
 
     def apply(expr: ELC) = {
       val result = splitLetRecs(predefs, expr)
@@ -90,10 +92,10 @@ trait LetRecSplitterSpec extends FunSpec with ShouldMatchers {
        * in ...
        */
       val letrec = ELetRec(List( "a" := EInt(23) ,
-			         "b" := EVar("a") ,
-			         "c" := EVar("b") ,
-			         "d" := EVar("c") ,
-			         "e" := EVar("d") ),
+			         "b" := eVar("a") ,
+			         "c" := eVar("b") ,
+			         "d" := eVar("c") ,
+			         "e" := eVar("d") ),
 			   EInt(0))
 
       /*
@@ -105,10 +107,10 @@ trait LetRecSplitterSpec extends FunSpec with ShouldMatchers {
        * in ...
        */
       val splittedLetRec = ELet("a" := EInt(23),
-				ELet("b" := EVar("a"),
-				     ELet("c" := EVar("b"),
-					  ELet("d" := EVar("c"),
-					       ELet("e" := EVar("d"),
+				ELet("b" := eVar("a"),
+				     ELet("c" := eVar("b"),
+					  ELet("d" := eVar("c"),
+					       ELet("e" := eVar("d"),
 						    EInt(0))))))
 
       letrec should splitTo(splittedLetRec)
@@ -129,14 +131,14 @@ trait LetRecSplitterSpec extends FunSpec with ShouldMatchers {
        * in ...
        */
       val letrec = ELetRec(List( "a" := EInt(42) ,
-			         "b" := EVar("chr") :@ EVar("a") ,
-			         "c" := EVar("h") :@ (EVar("b") :@ EVar("d")) ,
-			         "d" := pVar("x") :=> (EVar("c") :@ EVar("x")) ,
-			         "f" := EVar("g") :@ (EVar("h") :@ EVar("a")) ,
-			         "g" := EVar("f") ,
-			         "h" := pVar("y") :=> eCase(EVar("y"),
-							    EAlternative(pApp("True"), EVar("True")),
-							    EAlternative(pApp("False"), EVar("g"))) ),
+			         "b" := eVar("chr") :@ eVar("a") ,
+			         "c" := eVar("h") :@ (eVar("b") :@ eVar("d")) ,
+			         "d" := pVar("x") :=> (eVar("c") :@ eVar("x")) ,
+			         "f" := eVar("g") :@ (eVar("h") :@ eVar("a")) ,
+			         "g" := eVar("f") ,
+			         "h" := pVar("y") :=> eCase(eVar("y"),
+							    EAlternative(pApp("True"), eVar("True")),
+							    EAlternative(pApp("False"), eVar("g"))) ),
 			   EInt(0))
 
       /*
@@ -150,14 +152,14 @@ trait LetRecSplitterSpec extends FunSpec with ShouldMatchers {
        * in ...
        */
       val splittedLetRec = ELet( "a" := EInt(42) ,
-				 ELetRec(List( "f" := EVar("g") :@ (EVar("h") :@ EVar("a")) ,
-					       "g" := EVar("f") ,
-					       "h" := pVar("y") :=> eCase(EVar("y"),
-									  EAlternative(pApp("True"), EVar("True")),
-									  EAlternative(pApp("False"), EVar("g"))) ),
-					 ELet( "b" := EVar("chr") :@ EVar("a") ,
-					       ELetRec(List( "d" := pVar("x") :=> (EVar("c") :@ EVar("x")) ,
-							     "c" := EVar("h") :@ (EVar("b") :@ EVar("d")) ),
+				 ELetRec(List( "f" := eVar("g") :@ (eVar("h") :@ eVar("a")) ,
+					       "g" := eVar("f") ,
+					       "h" := pVar("y") :=> eCase(eVar("y"),
+									  EAlternative(pApp("True"), eVar("True")),
+									  EAlternative(pApp("False"), eVar("g"))) ),
+					 ELet( "b" := eVar("chr") :@ eVar("a") ,
+					       ELetRec(List( "d" := pVar("x") :=> (eVar("c") :@ eVar("x")) ,
+							     "c" := eVar("h") :@ (eVar("b") :@ eVar("d")) ),
 						       EInt(0)))))
 
       letrec should splitTo(splittedLetRec)
