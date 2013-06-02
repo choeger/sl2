@@ -31,12 +31,33 @@ package de.tuberlin.uebb.sl2.impl
 import scala.collection.mutable.ListBuffer
 import de.tuberlin.uebb.sl2.modules._
 import de.tuberlin.uebb.sl2.impl._
-import de.tuberlin.uebb.sl2.modules.Syntax.{Var}
+import de.tuberlin.uebb.sl2.modules.Syntax.{VarFirstClass}
 import scala.io.Source
 
-object Main extends ParboiledParser with CodeGenerator with Syntax with SyntaxTraversal with Errors with JsSyntax with PreProcessing with Lexic with EnrichedLambdaCalculus with Type with NameSupply with Context with Substitution  with Unification with GraphImpl[Var] with LetRecSplitter  with DTCheckerImpl with FDCheckerImpl with TypeCheckerImpl with ProgramCheckerImpl with SimpleDriver {
+object Main
+    extends ParboiledParser 
+    with CodeGenerator
+    with Syntax
+    with SyntaxTraversal
+    with Errors
+    with JsSyntax
+    with PreProcessing
+    with Lexic
+    with EnrichedLambdaCalculus
+    with Type
+    with NameSupply
+    with Context
+    with Substitution
+    with Unification
+    with GraphImpl[VarFirstClass]
+    with LetRecSplitter
+    with DTCheckerImpl
+    with FDCheckerImpl
+    with TypeCheckerImpl
+    with ProgramCheckerImpl
+    with SimpleDriver {
 
-  val usage = """Usage: <sl> file(s)"""
+  val usage = """Usage:B <sl> file(s)"""
 
   def main(args: Array[String]) {
     if (args.isEmpty)

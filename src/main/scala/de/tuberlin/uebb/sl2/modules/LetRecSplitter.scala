@@ -28,7 +28,7 @@
 
 package de.tuberlin.uebb.sl2.modules
 
-import de.tuberlin.uebb.sl2.modules.Syntax.{ Var }
+import de.tuberlin.uebb.sl2.modules.Syntax.{ VarFirstClass }
 import scala.collection.immutable.List.{ fill }
 import scala.util.Either.{ cond }
 
@@ -37,7 +37,7 @@ import scala.util.Either.{ cond }
  */
 trait LetRecSplitter {
 
-  self: Syntax with EnrichedLambdaCalculus with Graph[Var] with Errors =>
+  self: Syntax with EnrichedLambdaCalculus with Graph[VarFirstClass] with Errors =>
 
   /**
    * Letrec splitting
@@ -48,7 +48,7 @@ trait LetRecSplitter {
    * @param boundVars Variables bound in outer context
    * @param expr Expression to split
    */
-  def splitLetRecs(boundVars: Set[Var], expr: ELC): Either[Error, ELC] = expr match {
+  def splitLetRecs(boundVars: Set[VarFirstClass], expr: ELC): Either[Error, ELC] = expr match {
     case ELetRec(defs, body, attr) => {
       /*
        * Build a dependency graph; the left-hand sides of the letrec are the
@@ -95,7 +95,7 @@ trait LetRecSplitter {
 	     * the outer context, since they are all truly visible in the body.
 	     */
         splitBody <- {
-          val lhsVars = defs.map(_.lhs).toSet
+          val lhsVars = defs.map(_.lhs.asInstanceOf[VarFirstClass]).toSet
           splitLetRecs(boundVars union lhsVars, body).right
         }
       ) yield {
@@ -112,7 +112,7 @@ trait LetRecSplitter {
 	 * into a simple, non-recursive let-binding. Otherwise, we generate
 	 * a recursive let-binding for each strongly connected component.
 	 */
-        def split(scc: Set[Var], body: ELC) = {
+        def split(scc: Set[VarFirstClass], body: ELC) = {
           // A definition depends on no other function definitions
           if (scc.size == 1) {
             val lhs = scc.head
@@ -180,7 +180,7 @@ trait LetRecSplitter {
     case _ => Right(expr)
   }
 
-  type Successors = Map[Var, List[Var]]
+  type Successors = Map[VarFirstClass, List[VarFirstClass]]
 
   type DependencyGraph = (Graph, Successors)
 
@@ -189,14 +189,14 @@ trait LetRecSplitter {
    *
    * This method detects undefined variables in the given expression.
    */
-  def buildDepGraph(outerCtx: Set[Var], expr: ELC): Either[Error, DependencyGraph] = {
+  def buildDepGraph(outerCtx: Set[VarFirstClass], expr: ELC): Either[Error, DependencyGraph] = {
 
     var succs: Successors = Map.empty
 
     /**
      * Record a dependency edge.
      */
-    def recordEdge(from: Var, to: Var) = succs.get(from) match {
+    def recordEdge(from: VarFirstClass, to: VarFirstClass) = succs.get(from) match {
       case None => succs = succs + (from -> List(to))
       case Some(vs) => succs = succs + (from -> (to :: vs))
     }
@@ -208,7 +208,7 @@ trait LetRecSplitter {
      * @param lhs      Left-hand sides of current letrec
      * @param d        Definition to look at
      */
-    def traverseDef(outerCtx: Set[Var], lhs: Set[Var])(d: EDefinition): Either[Error, Unit] = {
+    def traverseDef(outerCtx: Set[VarFirstClass], lhs: Set[VarFirstClass])(d: EDefinition): Either[Error, Unit] = {
       traverseRhs(d.lhs, lhs, outerCtx, d.rhs)
     }
 
@@ -219,7 +219,7 @@ trait LetRecSplitter {
      * @param lhs      Left-hand sides bound in current letrec
      * @param outerCtx Names available in outer context
      */
-    def traverseRhs(f: Var, lhs: Set[Var], outerCtx: Set[Var], expr: ELC): Either[Error, Unit] = expr match {
+    def traverseRhs(f: VarFirstClass, lhs: Set[VarFirstClass], outerCtx: Set[VarFirstClass], expr: ELC): Either[Error, Unit] = expr match {
       case EVar(v, attr) => cond(isKnown(v)(lhs, outerCtx),
         // Only do something if v is bound in the current letrec
         if (isDep(v)(lhs, outerCtx)) recordEdge(f, v),
@@ -230,7 +230,7 @@ trait LetRecSplitter {
 
       case ELam(pattern, body, _) => {
         // Body has to be traversed with pattern variables in outer context
-        val patVars = pattern.vars.map(Syntax.Var(_)).toSet
+        val patVars = pattern.vars.map(Syntax.Var(_).asInstanceOf[VarFirstClass]).toSet
         traverseRhs(f, lhs, outerCtx union patVars, body)
       }
 
@@ -242,10 +242,10 @@ trait LetRecSplitter {
 
       case ELetRec(defs, body, _) => {
         /*
-	 * Right-hand sides are traversed with all left-hand sides
-	 * in the outer context. This realizes that bindings in inner
-	 * letrecs shadow bindings in outer letrecs.
-	 */
+		 * Right-hand sides are traversed with all left-hand sides
+		 * in the outer context. This realizes that bindings in inner
+		 * letrecs shadow bindings in outer letrecs.
+		 */
         val knownVars = outerCtx union (defs map (_.lhs)).toSet
         val rightHandSides = defs map (_.rhs)
 
@@ -262,11 +262,11 @@ trait LetRecSplitter {
 
       case ECase(e, alts, _) => {
         /*
-	 * Traverse each branch of the case expression like a
-	 * lambda-abstraction or a let-binding.
-	 */
+		 * Traverse each branch of the case expression like a
+		 * lambda-abstraction or a let-binding.
+		 */
         def traverseAlt(alt: EAlternative) = {
-          val patVars = alt.pattern.vars.map(Syntax.Var(_)).toSet
+          val patVars = alt.pattern.vars.map(Syntax.Var(_).asInstanceOf[VarFirstClass]).toSet
           traverseRhs(f, lhs, outerCtx union patVars, alt.expr)
         }
 
@@ -283,7 +283,7 @@ trait LetRecSplitter {
      * Variable 'v' is known in the left-hand sides of the current letrec
      * or is available in the outer context, i.e., 'v' is known at all.
      */
-    def isKnown(v: Var)(lhs: Set[Var], outerCtx: Set[Var]) = {
+    def isKnown(v: VarFirstClass)(lhs: Set[VarFirstClass], outerCtx: Set[VarFirstClass]) = {
       (lhs contains v) || (outerCtx contains v)
     }
 
@@ -291,7 +291,7 @@ trait LetRecSplitter {
      * Variable 'v' is known in the left-hand sides of the current letrec and is
      * not in the outer context, i.e., a dependency edge has to be inserted for v.
      */
-    def isDep(v: Var)(lhs: Set[Var], outerCtx: Set[Var]) = {
+    def isDep(v: VarFirstClass)(lhs: Set[VarFirstClass], outerCtx: Set[VarFirstClass]) = {
       (lhs contains v) && (!outerCtx.contains(v))
     }
 
@@ -300,7 +300,7 @@ trait LetRecSplitter {
         val leftHandSides = defs map { (d: EDefinition) => d.lhs }
 
         /* Set up the graph with the left-hand sides as vertices and no edges. */
-        succs = (leftHandSides map { (lhs: Var) => (lhs -> Nil) }).toMap
+        succs = (leftHandSides map { (lhs: VarFirstClass) => (lhs -> Nil) }).toMap
 
         for (_ <- errorMap(defs, traverseDef(outerCtx, leftHandSides.toSet)).right) yield {
           val vertices = succs.keySet

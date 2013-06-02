@@ -156,13 +156,13 @@ trait TypeCheckerImpl extends TypeChecker with Lexic with Syntax with EnrichedLa
 	       * Calcualte types and a substitution of the right-hand sides
 	       * with respect to the outer context and bindings given in 'lhsCtx'.
 	       */
-          inferType(lhsCtx <++> ctx, defs map (_.rhs)).right
+          inferType(lhsCtx <++> ctx, defs.map(_.rhs)).right
         };
         (φ, lhsTypes) <- {
           /*
 	       * Unify the left-hand side and the right-hand side types.
 	       */
-          val lhsTypes = σ(lhsCtx).lookupList(defs map (_.lhs)).get
+          val lhsTypes = σ(lhsCtx).lookupList(defs.map(_.lhs)).get
           val equations = equationBuilder(lhsTypes, rhsTypes)
           handleUnifyError("letrec", attr)(unify(equations)).right.map((χ: Substitution) => (χ <+> σ, lhsTypes)).right
         };

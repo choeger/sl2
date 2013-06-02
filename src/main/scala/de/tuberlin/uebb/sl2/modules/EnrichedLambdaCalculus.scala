@@ -60,7 +60,7 @@ trait EnrichedLambdaCalculus {
   case class ECase(expr: ELC, alternatives: List[EAlternative], attribute: Attribute = EmptyAttribute) extends ELC
   case class EJavaScript(jsCode: String, sig: Option[Type], attribute: Attribute = EmptyAttribute) extends ELC
 
-  sealed case class EDefinition(lhs: Var, sig: Option[Type], rhs: ELC, attribute: Attribute = EmptyAttribute)
+  sealed case class EDefinition(lhs: VarFirstClass, sig: Option[Type], rhs: ELC, attribute: Attribute = EmptyAttribute)
 
   sealed case class EAlternative(pattern: EPattern, expr: ELC, attribute: Attribute = EmptyAttribute)
 

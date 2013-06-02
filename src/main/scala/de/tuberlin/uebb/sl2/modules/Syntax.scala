@@ -64,18 +64,17 @@ object Syntax {
     }
   }
   
-  abstract class VarFirstClass(module: ModuleVar = LocalMod) extends QualifiedVar(module)
-
-  case class Var(ide: VarName, module: ModuleVar = LocalMod) extends VarFirstClass(module) {
+  abstract class VarFirstClass(val ide: VarName, val module: ModuleVar = LocalMod) extends QualifiedVar(module) {
     override def nameToString = ide
   }
+
+  case class Var(override val ide: VarName, override val module: ModuleVar = LocalMod) extends VarFirstClass(ide, module) 
   //type TypeVar = Syntax.TypeVar // Should not exist...
 //  case class TypeVar(ide: TypeVarName, module: ModuleVar = LocalMod) extends QualifiedVar(module) {
 //    override def nameToString = ide
 //  }
-  case class ConVar(ide: ConVarName, module: ModuleVar = LocalMod) extends VarFirstClass(module) {
-    override def nameToString = ide
-  }
+  case class ConVar(override val ide: ConVarName, override val module: ModuleVar = LocalMod) extends VarFirstClass(ide, module)
+  
   case class TConVar(ide: TConVarName, module: ModuleVar = LocalMod) extends QualifiedVar(module) {
     override def nameToString = ide
   }

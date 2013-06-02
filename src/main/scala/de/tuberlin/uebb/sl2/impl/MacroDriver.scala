@@ -30,7 +30,7 @@ package de.tuberlin.uebb.sl2.impl
 
 import scala.collection.mutable.ListBuffer
 import de.tuberlin.uebb.sl2.modules._
-import de.tuberlin.uebb.sl2.modules.Syntax.{Var}
+import de.tuberlin.uebb.sl2.modules.Syntax.{VarFirstClass}
 
 import language.experimental.macros
 
@@ -43,7 +43,7 @@ object MacroDriver extends CombinatorParser with CodeGenerator with Syntax
   with PreProcessing with Lexic with EnrichedLambdaCalculus 
   with Type with NameSupply 
   with Context with Substitution 
-  with Unification with GraphImpl[Var] 
+  with Unification with GraphImpl[VarFirstClass] 
   with LetRecSplitter  with DTCheckerImpl 
   with FDCheckerImpl with TypeCheckerImpl 
   with ProgramCheckerImpl with Driver {

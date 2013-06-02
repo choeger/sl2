@@ -76,7 +76,7 @@ trait Context {
      * @return A list of the corresponding types, if and only if
      *         this context contains all of the given identifiers.
      */
-    def lookupList(vars: List[Var]): Option[List[Type]] = vars match {
+    def lookupList(vars: List[VarFirstClass]): Option[List[Type]] = vars match {
       case Nil => Some(Nil)
       case v :: vs => for (
         t <- ctx.get(v);

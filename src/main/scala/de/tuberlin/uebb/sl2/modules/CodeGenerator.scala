@@ -31,10 +31,10 @@ package de.tuberlin.uebb.sl2.modules
 import de.tuberlin.uebb.sl2.impl.CombinatorParser
 import scala.language.implicitConversions
 import scala.collection.mutable.ListBuffer
-import de.tuberlin.uebb.sl2.modules.Syntax.{Var}
+import de.tuberlin.uebb.sl2.modules.Syntax.{VarFirstClass}
 
 trait CodeGenerator {
-  self: Syntax with JsSyntax with Errors with PreProcessing with NameSupply with Graph[Var] =>
+  self: Syntax with JsSyntax with Errors with PreProcessing with NameSupply with Graph[VarFirstClass] =>
 
   //TODO: the original compiler created tmp variables named _0, _1 ... At the moment we create $0, $1 ...
 
@@ -98,7 +98,7 @@ trait CodeGenerator {
         val funs = functionDefs(v.ide)
         val args = (for (i <- 0 to (funs(0).patterns.length - 1)) yield (JsName("_arg" + i))).toList
         if (args.length != 0) {
-          new JsFunction($(v.ide), args(0)::Nil, functionBodyToJs(args.tail, args, v, funs))
+          new JsFunction($(v.ide), args(0)::Nil, functionBodyToJs(args.tail, args, v.asInstanceOf[Var], funs))
         } else {
           JsDef($(v.ide), JsFunctionCall(JsAnonymousFunction(Nil, expToJs(funs(0).expr, $(v.ide)) & JsReturn(Some($(v.ide))))))
         }
@@ -178,7 +178,7 @@ trait CodeGenerator {
       f & arg & JsDef(v, JsFunctionCall(tmpF, JsName(tmpArg)))
     }
 
-    case ExVar(Var(ide,_), _) => JsDef(v, JsName(escapeJsIde(ide)))
+    case ExVar(Syntax.Var(ide,_), _) => JsDef(v, JsName(escapeJsIde(ide)))
     case ExCon(Syntax.ConVar(con,_) , _) => JsDef(v, JsName(escapeJsIde(con)))
     case ConstInt(value, _) => JsDef(v, JsNum(value))
     case ConstReal(value, _) => JsDef(v, JsNum(value))

@@ -31,9 +31,9 @@ package de.tuberlin.uebb.sl2.tests.impl
 import de.tuberlin.uebb.sl2.tests.specs._
 import de.tuberlin.uebb.sl2.modules._
 import de.tuberlin.uebb.sl2.impl.{GraphImpl}
-import de.tuberlin.uebb.sl2.modules.Syntax.{Var}
+import de.tuberlin.uebb.sl2.modules.Syntax.{VarFirstClass}
 
-class LetRecSplitterTest extends LetRecSplitterSpec with LetRecSplitter with Lexic with Syntax with EnrichedLambdaCalculus with Type with NameSupply with Context with Substitution with Unification with ELCExpressions with GraphImpl[Var] with Errors {
+class LetRecSplitterTest extends LetRecSplitterSpec with LetRecSplitter with Lexic with Syntax with EnrichedLambdaCalculus with Type with NameSupply with Context with Substitution with Unification with ELCExpressions with GraphImpl[VarFirstClass] with Errors {
   
   def testedImplementationName = "LetRecSplitter"
 
