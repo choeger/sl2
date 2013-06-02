@@ -38,7 +38,7 @@ trait AlphaConversion {
 
   type NewName = Unit => String
 
-  def substitute(fresh : NewName, subst : Map[Var, Var], a : Alternative) : Alternative = {
+  def substitute(fresh : NewName, subst : Map[VarName, VarName], a : Alternative) : Alternative = {
     val bound = vars(a.pattern)
     val rename = bound.intersect(subst.values.toSet)
     if (rename.isEmpty) {
@@ -50,13 +50,13 @@ trait AlphaConversion {
     }
   }
 
-  def substitute(subst : Map[Var, Var], pattern : Pattern) : Pattern = pattern match {
+  def substitute(subst : Map[VarName, VarName], pattern : Pattern) : Pattern = pattern match {
     case PatternExpr(c, patterns, _) => PatternExpr(c, patterns map (substitute(subst, _)))
     case PatternVar(x, _) if subst.contains(x) => PatternVar(subst(x))
     case p@_ => p
   }
 
-  def substitute(fresh : NewName, subst : Map[Var, Var], e : Expr) : Expr = e match {
+  def substitute(fresh : NewName, subst : Map[VarName, VarName], e : Expr) : Expr = e match {
 
     case Conditional(i, t, e, attr) => Conditional(substitute(fresh, subst, i), 
                                                    substitute(fresh, subst, t), 
@@ -91,9 +91,11 @@ trait AlphaConversion {
     }
 
     case App(l, r, attr) => App(substitute(fresh, subst, l), substitute(fresh, subst, r), attr)
-    case ExVar(x, attr) => ExVar(subst.get(x).getOrElse(x), attr)
+    case ExVar(Syntax.Var(x,Syntax.LocalMod), attr) => ExVar(Syntax.Var(subst.get(x).getOrElse(x)), attr)
+    case c@ExVar(_, _) => c
     case c@ExCon(_, _) => c
     case c@ConstInt(_, _) => c
+    case c@ConstReal(_, _) => c
     case c@ConstChar(_, _) => c
     case c@ConstString(_, _) => c
     case c@JavaScript(_, _, _) => c

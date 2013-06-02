@@ -120,13 +120,13 @@ trait Type {
     override def toString: String = pprint(this)
   }
 
-  case class TypeVariable(ide: TypeVar) extends Type
+  case class TypeVariable(ide: TypeVarName) extends Type
 
   case class FunctionType(s: Type, t: Type) extends Type
 
   case class BaseType(b: Base) extends Type
 
-  case class TypeConstructor(con: ConVar, types: List[Type]) extends Type
+  case class TypeConstructor(con: TConVar, types: List[Type]) extends Type
 
   case class TypeScheme(vars: List[TypeVariable], ty: Type) extends Type {
 
@@ -170,11 +170,11 @@ trait Type {
     */
   def astToType(astType: ASTType): Type = astType match {
     /* Base types: Int, Char, String, Void */
-    case TyExpr("Int", Nil, _)    => BaseType(Integer)
-    case TyExpr("Char", Nil, _)   => BaseType(Character)
-    case TyExpr("String", Nil, _) => BaseType(String)
-    case TyExpr("Void", Nil, _)   => BaseType(Void)
-    case TyExpr("Real", Nil, _)   => BaseType(Real)
+    case TyExpr(Syntax.TConVar("Int", LocalMod), Nil, _)    => BaseType(Integer)
+    case TyExpr(Syntax.TConVar("Char", LocalMod), Nil, _)   => BaseType(Character)
+    case TyExpr(Syntax.TConVar("String", LocalMod), Nil, _) => BaseType(String)
+    case TyExpr(Syntax.TConVar("Void", LocalMod), Nil, _)   => BaseType(Void)
+    case TyExpr(Syntax.TConVar("Real", LocalMod), Nil, _)   => BaseType(Real)
 
     /* Function types */
     case FunTy(types, _) => {

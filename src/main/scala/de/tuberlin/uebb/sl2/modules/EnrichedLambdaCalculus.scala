@@ -68,12 +68,12 @@ trait EnrichedLambdaCalculus {
     /**
       * Extract all variables from pattern.
       */
-    def vars: List[Var] = this match {
+    def vars: List[VarName] = this match {
       case EPatternVar(v, _)       => List(v)
       case EPatternApp(_, pats, _) => pats.map(_.vars).flatten.distinct
     }
   }
-  case class EPatternVar(ide: Var, attribute: Attribute = EmptyAttribute) extends EPattern
+  case class EPatternVar(ide: VarName, attribute: Attribute = EmptyAttribute) extends EPattern
   case class EPatternApp(con: ConVar, conParams: List[EPattern], attribute: Attribute = EmptyAttribute) extends EPattern
 
 
@@ -110,12 +110,12 @@ trait EnrichedLambdaCalculus {
     /*
      * Transform a top-level function into a local definition of a let-binding.
      */
-    def makeEDef(name: Var, funDefs: List[FunctionDef]) = funDefs match {
+    def makeEDef(v: Var, funDefs: List[FunctionDef]) = funDefs match {
       /* Function with a single definition */
       case List(funDef) => {
         val rhs = translateDef(funDef)
-        val ty = lookupSig(name)
-        EDefinition(name, ty, rhs, attribute(rhs))
+        val ty = lookupSig(v)
+        EDefinition(v, ty, rhs, attribute(rhs))
       }
 
       /*
@@ -131,9 +131,9 @@ trait EnrichedLambdaCalculus {
        */
       case _ => {
         val rhs = funDefs.map(translateDef)
-        val ty = lookupSig(name)
+        val ty = lookupSig(v)
         val attr = attribute(rhs.head) // TODO: combine the attributes of all defs
-        EDefinition(name, ty, EChoice(rhs, attr), attr)
+        EDefinition(v, ty, EChoice(rhs, attr), attr)
       }
     }
 
@@ -157,14 +157,14 @@ trait EnrichedLambdaCalculus {
      * main function, i.e., the user is programming a library, we will use a dummy
      * function consisting just of an empty JavaScript quotation. 
      */
-    val main = funDefs.getOrElse("main", List(FunctionDef(Nil, JavaScript("", None)))).head.expr
+    val main = funDefs.getOrElse(Syntax.Var("main"), List(FunctionDef(Nil, JavaScript("", None)))).head.expr
 
     /*
      * Translate all function definitions into local definitions for a
      * recursive let binding and annotate these definitions with the types
      * from the function's signature
      */
-    val localDefs = (funDefs - "main").toList map (makeEDef _ tupled)
+    val localDefs = (funDefs - Syntax.Var("main")).toList map (makeEDef _ tupled)
 
     ELetRec(localDefs, exprToELC(main), EmptyAttribute)
   }
@@ -198,8 +198,8 @@ trait EnrichedLambdaCalculus {
       val elseELC = exprToELC(elseE)
 
       ECase(condELC, List(
-        EAlternative(EPatternApp("True", Nil), thenELC, attribute(thenE)),
-        EAlternative(EPatternApp("False", Nil), elseELC, attribute(elseE))), attr)
+        EAlternative(EPatternApp(Syntax.ConVar("True"), Nil), thenELC, attribute(thenE)),
+        EAlternative(EPatternApp(Syntax.ConVar("False"), Nil), elseELC, attribute(elseE))), attr)
     }
 
     /*
@@ -249,7 +249,7 @@ trait EnrichedLambdaCalculus {
     * Translate local definitions in a let-binding into ELC definitions.
     */
   def defToEDef(ldef: LetDef) = {
-    EDefinition(ldef.lhs, None, exprToELC(ldef.rhs), ldef.attribute)
+    EDefinition(Syntax.Var(ldef.lhs), None, exprToELC(ldef.rhs), ldef.attribute)
   }
 
 
@@ -277,8 +277,8 @@ trait EnrichedLambdaCalculus {
       case ELet(d, e, a) => letLex <+> showEDefinition(d) <@> inLex <> nest(line <> showELC(e))
       case ELetRec(ds, e, a) => "LETREC" <+> nest(line <> cat(ds.map(showEDefinition))) <@> inLex <> nest(line <> showELC(e))
       case EApp(f, e, a) => parens(showELC(f) <+> showELC(e))
-      case EVar(i, a) => i
-      case ECon(c, a) => c
+      case EVar(i, a) => i.toString
+      case ECon(c, a) => c.toString
       case EInt(v, a) => value(v)
       case EReal(v, a) => value(v)
       case EChar(c, a) => dquotes(value(c))
@@ -293,11 +293,11 @@ trait EnrichedLambdaCalculus {
       case EChoice(cs, a) => "CHOICE"<+>catList(cs.map(showELC),line)
     }
 
-    def showEDefinition(l: EDefinition): Doc = l.lhs <+> funEqLex <> nest(line <> showELC(l.rhs))
+    def showEDefinition(l: EDefinition): Doc = text(l.lhs.toString) <+> funEqLex <> nest(line <> showELC(l.rhs))
     def showEAlternative(a: EAlternative): Doc = ofLex <+> showEPattern(a.pattern) <+> thenLex <+> showELC(a.expr)
     def showEPattern(p: EPattern): Doc = p match {
       case EPatternVar(v, a) => v
-      case EPatternApp(c, ps, a) => c <+> catList(ps.map(showEPattern), "")
+      case EPatternApp(c, ps, a) => text(c.toString) <+> catList(ps.map(showEPattern), "")
     }
 
     def catList(l: List[Doc], sep: Doc): Doc = (group(nest(lsep(l, sep))))

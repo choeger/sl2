@@ -126,7 +126,7 @@ object MacroDriver extends CombinatorParser with CodeGenerator with Syntax
           case Left(a) => return Left(a)
         }
       }
-      val m = ast.foldLeft[Either[Error, Program]](Right(Program(Map(), Map(), Nil)))((z, x) =>
+      val m = ast.foldLeft[Either[Error, Program]](Right(Program(List(), Map(), Map(), Nil)))((z, x) =>
         z.right.flatMap(y => mergeAst(y, x)))
       for (
         mo <- m.right;
@@ -141,7 +141,7 @@ object MacroDriver extends CombinatorParser with CodeGenerator with Syntax
         funs <- mergeMap(a.functionDefs, b.functionDefs).right
       ) yield {
         val defs = a.dataDefs ++ b.dataDefs
-        Program(sigs, funs, defs)
+        Program(List(), sigs, funs, defs)
       }
 
     }

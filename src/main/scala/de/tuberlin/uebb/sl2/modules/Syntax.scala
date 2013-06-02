@@ -28,6 +28,58 @@
 
 package de.tuberlin.uebb.sl2.modules
 
+/**
+ * The type aliases are needed at some points for instantiating traits,
+ * thus we need a companion object to be able to import these type values.
+ */
+object Syntax {
+  /*
+   * All identifiers are currently represented by strings (since we do not
+   * use a symbol table).
+   */
+
+  // TODO: Rename those types such that it's clear that they represent the types for certain kinds of identifiers
+
+  type VarName = String
+
+  type TypeVarName = String
+
+  type ConVarName = String
+
+  type TConVarName = String
+
+  type ModuleVar = String
+  val LocalMod: ModuleVar = ""
+
+  abstract class QualifiedVar(module: ModuleVar = LocalMod) {
+    def isLocal() = (module == LocalMod)
+    def nameToString(): String;
+
+    override def toString() = {
+      if (module == LocalMod) {
+        nameToString
+      } else {
+        module + "." + nameToString
+      }
+    }
+  }
+  
+  abstract class VarFirstClass(module: ModuleVar = LocalMod) extends QualifiedVar(module)
+
+  case class Var(ide: VarName, module: ModuleVar = LocalMod) extends VarFirstClass(module) {
+    override def nameToString = ide
+  }
+  //type TypeVar = Syntax.TypeVar // Should not exist...
+//  case class TypeVar(ide: TypeVarName, module: ModuleVar = LocalMod) extends QualifiedVar(module) {
+//    override def nameToString = ide
+//  }
+  case class ConVar(ide: ConVarName, module: ModuleVar = LocalMod) extends VarFirstClass(module) {
+    override def nameToString = ide
+  }
+  case class TConVar(ide: TConVarName, module: ModuleVar = LocalMod) extends QualifiedVar(module) {
+    override def nameToString = ide
+  }
+}
 
 /**
  * Abstract syntax of SL
@@ -68,20 +120,19 @@ trait Syntax {
   case class AttributeImpl(location: Location) extends Attribute
   case object EmptyAttribute extends Attribute
 
-  /*
-   * All identifiers are currently represented by strings (since we do not
-   * use a symbol table).
-   */
+  type VarName = Syntax.VarName
+  type TypeVarName = Syntax.TypeVarName
+  type ConVarName = Syntax.ConVarName
+  type TConVarName = Syntax.TConVarName
+  type ModuleVar = Syntax.ModuleVar
+  
+  type VarFirstClass = Syntax.VarFirstClass
+  type Var = Syntax.Var
+  //type TypeVar = Syntax.TypeVar // Should not exist...
+  type ConVar = Syntax.ConVar
+  type TConVar = Syntax.TConVar
 
-  // TODO: Rename those types such that it's clear that they represent the types for certain kinds of identifiers
-  type Var = String
-
-  type TypeVar = String
-
-  type ConVar = String
-
-  type TConVar = String
-
+  val LocalMod: ModuleVar = Syntax.LocalMod
 
   /**
    *
@@ -94,8 +145,21 @@ trait Syntax {
    * A program consists of top level definitions which might be
    * annotated with an explicit type signature.
    */
-  case class Program(signatures: Map[Var, FunctionSig], functionDefs: Map[Var, List[FunctionDef]],
-    dataDefs: List[DataDef], attribute: Attribute = EmptyAttribute) extends AST
+  case class Program(
+      imports: List[Import],
+      signatures: Map[VarName, FunctionSig],
+      functionDefs: Map[VarName, List[FunctionDef]],
+      dataDefs: List[DataDef],
+      attribute: Attribute = EmptyAttribute)
+    extends AST
+
+  abstract class Import(path: String)
+
+  case class QualifiedImport(
+      path: String,
+      name: ModuleVar,
+      attribute: Attribute = EmptyAttribute)
+    extends Import(path)
 
   /**
    * Type signature for top-level function definitions.
@@ -111,73 +175,78 @@ trait Syntax {
    * Patterns for top-level function definitions.
    */
   sealed abstract class Pattern
-  case class PatternVar(ide: Var, attribute: Attribute = EmptyAttribute) extends Pattern
+  case class PatternVar(ide: VarName, attribute: Attribute = EmptyAttribute) extends Pattern
   case class PatternExpr(con: ConVar, patExprs: List[Pattern], attribute: Attribute = EmptyAttribute) extends Pattern
 
-  def varsList(p: Pattern): List[Var] = p match {
-    case PatternVar(x, _)       => List(x)
+  def varsList(p: Pattern): List[VarName] = p match {
+    case PatternVar(x, _) => List(x)
     case PatternExpr(_, sub, _) => sub.flatMap(vars)
   }
 
-  def vars(p: Pattern): Set[Var] = varsList(p).toSet
+  def vars(p: Pattern): Set[VarName] = varsList(p).toSet
 
   /**
    * Data type definitions.
    */
-  case class DataDef(ide: TConVar, tvars: List[TypeVar], constructors: List[ConstructorDef], attribute: Attribute = EmptyAttribute)
+  case class DataDef(
+      ide: TConVarName,
+      tvars: List[TypeVarName],
+      constructors: List[ConstructorDef],
+      attribute: Attribute = EmptyAttribute)
 
   /**
    * A datatype consists of a list of data constructors CondDef and
    * the types of the arguments they take.
    */
-  case class ConstructorDef(constructor: ConVar, types: List[ASTType], attribute: Attribute = EmptyAttribute)
+  case class ConstructorDef(constructor: ConVarName, types: List[ASTType], attribute: Attribute = EmptyAttribute)
 
   /**
-    * All type constructors of a program.
-    */
-  def allTypeCons(dataDefs: List[DataDef]): List[TConVar] = dataDefs map (_.ide)
+   * All type constructors of a program.
+   */ 
+  def allTypeCons(dataDefs: List[DataDef]): List[TConVar] =
+    dataDefs.map(_.ide).map(Syntax.TConVar(_))
 
   /**
-    * All data constrcutor of a program.
-    */
-  def allDataCons(dataDefs: List[DataDef]): List[ConVar] = dataDefs.flatMap(_.constructors).map(_.constructor)
+   * All data constrcutor of a program.
+   */
+  def allDataCons(dataDefs: List[DataDef]): List[ConVar] =
+    dataDefs.flatMap(_.constructors).map(_.constructor).map(Syntax.ConVar(_))
 
   /**
-    * All applications of type constructors in type definitions.
-    */
+   * All applications of type constructors in type definitions.
+   */
   def allAppTypeCons(conDefs: List[ConstructorDef]): List[TConVar] = {
     val conTypes: List[ASTType] = conDefs flatMap (_.types)
 
     def selectAppTypeCon(ty: ASTType) = ty match {
       case TyExpr(conType, _, _) => List(conType)
-      case _                     => Nil
+      case _ => Nil
     }
 
     conTypes flatMap selectAppTypeCon
   }
 
   /**
-    * Abstract syntax for types.
-    */
+   * Abstract syntax for types.
+   */
   sealed abstract class ASTType {
-    
+
     /**
-      * Arity of this type.
-      */
+     * Arity of this type.
+     */
     def arity: Int = this match {
       case FunTy(types, _) => types.length - 1
-      case _               => 0
+      case _ => 0
     }
   }
 
-  case class TyVar(ide: TypeVar, attribute: Attribute = EmptyAttribute) extends ASTType
+  case class TyVar(ide: TypeVarName, attribute: Attribute = EmptyAttribute) extends ASTType
   case class FunTy(types: List[ASTType], attribute: Attribute = EmptyAttribute) extends ASTType
   case class TyExpr(conType: TConVar, typeParams: List[ASTType], attribute: Attribute = EmptyAttribute) extends ASTType
 
-
   /**
-    * Right-hand sides of top-level definitions consist of expressions.
-    */
+   * Right-hand sides of top-level definitions consist of expressions.
+   */
   sealed abstract class Expr {
     override def toString(): String = ASTPrettyPrinter.pretty(this)
   }
@@ -191,22 +260,22 @@ trait Syntax {
   case class ConstInt(value: Int, attribute: Attribute = EmptyAttribute) extends Expr
   case class ConstChar(value: Char, attribute: Attribute = EmptyAttribute) extends Expr
   case class ConstString(value: String, attribute: Attribute = EmptyAttribute) extends Expr
-  case class ConstReal(value : Double, attribute: Attribute = EmptyAttribute) extends Expr
+  case class ConstReal(value: Double, attribute: Attribute = EmptyAttribute) extends Expr
   case class JavaScript(jsCode: String, signature: Option[ASTType], attribute: Attribute = EmptyAttribute) extends Expr
 
   /**
-    * Local definition in a let-binding.
-    */
-  case class LetDef(lhs: Var, rhs: Expr, attribute: Attribute = EmptyAttribute)
+   * Local definition in a let-binding.
+   */
+  case class LetDef(lhs: VarName, rhs: Expr, attribute: Attribute = EmptyAttribute)
 
   /**
-    * Alternative in a case expression.
-    */
+   * Alternative in a case expression.
+   */
   case class Alternative(pattern: Pattern, expr: Expr, attribute: Attribute = EmptyAttribute)
 
   /**
-    * Select the attribute of an expression.
-    */
+   * Select the attribute of an expression.
+   */
   def attribute(expr: Expr): Attribute = expr match {
     case Conditional(_, _, _, attr) => attr
     case Lambda(_, _, attr) => attr
@@ -216,17 +285,18 @@ trait Syntax {
     case ExVar(_, attr) => attr
     case ExCon(_, attr) => attr
     case ConstInt(_, attr) => attr
+    case ConstReal(_, attr) => attr
     case ConstChar(_, attr) => attr
     case ConstString(_, attr) => attr
     case JavaScript(_, _, attr) => attr
   }
 
   //TODO: test!
-  def fv(fd : FunctionDef) : Set[Var] = {
-    fv(fd.expr) -- (for (p <- fd.patterns; v <- vars(p)) yield v)
+  def fv(fd: FunctionDef): Set[Var] = {
+    fv(fd.expr) -- (for (p <- fd.patterns; v <- vars(p)) yield Syntax.Var(v))
   }
 
-  def fv(expr : Expr) : Set[Var] = expr match {
+  def fv(expr: Expr): Set[Var] = expr match {
     case ExCon(_, _) => Set()
     case ConstInt(_, _) => Set()
     case ConstChar(_, _) => Set()
@@ -235,16 +305,16 @@ trait Syntax {
     case JavaScript(_, _, _) => Set()
     case ExVar(x, _) => Set(x)
     case App(l, r, _) => fv(l) ++ fv(r)
-    case Let(defs, rhs, _) => fv(rhs) ++ (for(d <- defs; v <- fv(d.rhs)) yield v) -- defs.map(_.lhs)
+    case Let(defs, rhs, _) => fv(rhs) ++ (for (d <- defs; v <- fv(d.rhs)) yield v) -- defs.map(_.lhs).map(Syntax.Var(_))
     case Conditional(c, t, e, _) => fv(c) ++ fv(t) ++ fv(e)
-    case Lambda(p, rhs, _) => fv(rhs) -- (for(pat <- p ; v <- vars(pat)) yield v)
-    case Case(e, a, _) => fv(e) ++ (for(alt <- a; v <- fv(alt.expr)) yield v) -- (for(alt <- a ; v <- vars(alt.pattern)) yield v)
+    case Lambda(p, rhs, _) => fv(rhs) -- (for (pat <- p; v <- vars(pat)) yield Syntax.Var(v))
+    case Case(e, a, _) => fv(e) ++ (for (alt <- a; v <- fv(alt.expr)) yield v) -- 
+    (for (alt <- a; v <- vars(alt.pattern)) yield Syntax.Var(v))
   }
-  
 
   /**
-    * Pretty printer for SL definitions and expressions.
-    */
+   * Pretty printer for SL definitions and expressions.
+   */
   object ASTPrettyPrinter extends org.kiama.output.PrettyPrinter with Lexic {
 
     def pretty(t: Any): String = t match {
@@ -262,14 +332,16 @@ trait Syntax {
       for ((name, s) <- m.signatures)
         doc = doc <@> funLex <+> name <+> typeLex <+> showType(s.typ) <> line
 
-      for ((name, ds) <- m.functionDefs ;
-	   d <- ds) {
-	doc = doc <@> defLex <+> name <+> catList(d.patterns.map(showPattern), "") <+> funEqLex <+> showExpr(d.expr) <> line
+      for (
+        (name, ds) <- m.functionDefs;
+        d <- ds
+      ) {
+        doc = doc <@> defLex <+> name <+> catList(d.patterns.map(showPattern), "") <+> funEqLex <+> showExpr(d.expr) <> line
       }
       doc
     }
 
-    def showDataDef(d : DataDef) : Doc = d match {
+    def showDataDef(d: DataDef): Doc = d match {
       case DataDef(name, Nil, cons, _) => {
         dataLex <+> d.ide <+> funEqLex <+> catList(d.constructors map showConstructor, space <> dataSepLex) <> line
       }
@@ -282,8 +354,8 @@ trait Syntax {
 
     def showType(t: ASTType): Doc = t match {
       case TyVar(i, a) => i
-      case TyExpr(c, Nil, _) => c
-      case TyExpr(c, ts, a) => parens(c <+> hsep(ts.map(showType)))
+      case TyExpr(c, Nil, _) => c.toString
+      case TyExpr(c, ts, a) => parens(c.toString <+> hsep(ts.map(showType)))
       case FunTy(ps, a) => catList(ps map showType, arrowLex)
     }
 
@@ -293,45 +365,29 @@ trait Syntax {
       case Case(e, as, a) => caseLex <+> showExpr(e) <@> ssep(as.map(showAlt), linebreak)
       case Let(ds, e, a) => letLex <+> nest(line <> cat(ds.map(showLefDef))) <@> inLex <> nest(line <> showExpr(e))
       case App(f, e, a) => parens(showExpr(f) <+> showExpr(e))
-      case ExVar(i, a) => i
-      case ExCon(c, a) => c
+      case ExVar(i, a) => i.toString
+      case ExCon(c, a) => c.toString
       case ConstInt(v, a) => value(v)
       case ConstChar(c, a) => dquotes(value(c))
       case ConstString(s, a) => dquotes(value(s))
       case ConstReal(x, _) => x.toString
       case JavaScript(j, s, a) => {
-	val sigDoc = s match {
-	  case None      => empty
-	  case Some(sig) => " :" <+> sig.toString
-	}
-	jsOpenLex <+> j <+> jsCloseLex <> sigDoc
+        val sigDoc = s match {
+          case None => empty
+          case Some(sig) => " :" <+> sig.toString
+        }
+        jsOpenLex <+> j <+> jsCloseLex <> sigDoc
       }
     }
 
-    def showLefDef(l: LetDef): Doc = l.lhs <+> funEqLex <+> showExpr(l.rhs)
+    def showLefDef(l: LetDef): Doc = text(l.lhs) <+> funEqLex <+> showExpr(l.rhs)
     def showAlt(a: Alternative): Doc = ofLex <+> showPattern(a.pattern) <+> thenLex <+> nest(showExpr(a.expr))
     def showPattern(p: Pattern): Doc = p match {
       case PatternVar(v, a) => v
-      case PatternExpr(c, ps, a) => c <+> catList(ps.map(showPattern), "")
+      case PatternExpr(c, ps, a) => text(c.toString) <+> catList(ps.map(showPattern), "")
     }
 
     def catList(l: List[Doc], sep: Doc): Doc = (group(nest(lsep(l, sep))))
   }
 
-  
-}
-
-
-/**
-  * The type aliases are needed at some points for instantiating traits,
-  * thus we need a companion object to be able to import these type values.
-  */
-object Syntax {
-  type Var = String
-
-  type TypeVar = String
-
-  type ConVar = String
-
-  type TConVar = String
 }

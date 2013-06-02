@@ -42,7 +42,7 @@ class Scala2Sl(val universe : Universe, rename : Map[String, String], val syntax
   case class SerializationException(msg : String) extends Exception(msg)
 
   var datadefs : List[DataDef] = Nil
-  var scala2Sl : Map[String, ConVar] = Map("List" -> "List")
+  var scala2Sl : Map[String, TConVar] = Map("List" -> Syntax.TConVar("List"))
 
   val stringType = typeOf[String].typeSymbol.asClass.typeSignature
   val charType = typeOf[Char].typeSymbol.asClass.typeSignature
@@ -52,7 +52,7 @@ class Scala2Sl(val universe : Universe, rename : Map[String, String], val syntax
   val builtins = Set(stringType, charType, intType, boolType)
 
   def currentProgram : Program = {
-    Program(Map(), Map(), datadefs)
+    Program(List(), Map(), Map(), datadefs)
   }
   
   def fields(unapply : MethodSymbol, xargs : List[Type] = Nil) : List[Type] = {
@@ -79,12 +79,12 @@ class Scala2Sl(val universe : Universe, rename : Map[String, String], val syntax
     for (p <- klazz.typeParams ; name = p.name.toString) yield rename.get(name).getOrElse(name) 
   }
 
-  def scala2SlDataDef(klazz : ClassSymbol) : ConVar = {
+  def scala2SlDataDef(klazz : ClassSymbol) : TConVar = {
     val name = klazz.name.toString
     val slname = rename.get(name).getOrElse(name)
 
     if (!scala2Sl.contains(name)) {
-      scala2Sl = scala2Sl + (name -> slname)
+      scala2Sl = scala2Sl + (name -> Syntax.TConVar(slname))
       val nonAlgebraics = klazz.knownDirectSubclasses filter ({subClass => !subClass.asClass.isCaseClass })
 
       if (builtins.contains(klazz.typeSignature)) {        

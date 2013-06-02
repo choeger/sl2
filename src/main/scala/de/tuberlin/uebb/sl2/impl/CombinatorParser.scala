@@ -106,9 +106,9 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   //ignore whitespace and comments between parsers
   override protected val whiteSpace = """(\s|--.*|(?m)\{-(\*(?!/)|[^*])*-\})+""".r
 
-  private def parseTopLevel: Parser[AST] = rep(makeDataDef|makeFunctionDef|makeFunctionSig) ^^ 
-      { _.foldLeft(Program(Map(),Map(),Nil): AST)((z,f) =>f(z))}
-  
+  private def parseTopLevel: Parser[AST] = rep(makeDataDef | makeFunctionDef | makeFunctionSig) ^^
+    { _.foldLeft(Program(List(), Map(), Map(), Nil): AST)((z, f) => f(z)) }
+
   private def makeDataDef: Parser[AST => AST] = dataDef ^^ { d =>
     (a: AST) =>
       a match {
@@ -116,7 +116,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
       }
   }
 
-  def makeFunctionDef: Parser[AST => AST] = (functionDef|binaryOpDef) ^^ { x =>
+  def makeFunctionDef: Parser[AST => AST] = (functionDef | binaryOpDef) ^^ { x =>
     (a: AST) =>
       a match {
         case m: Program => m.copy(functionDefs = updateMap(x._1, x._2, m.functionDefs))
@@ -131,20 +131,23 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   }
 
   private def updateMap[T](s: String, t: T, m: Map[String, List[T]]) = m + (s -> (t :: m.get(s).getOrElse(Nil)))
-  
-  private def functionDef: Parser[(Var, FunctionDef)] = defLex ~> varRegex ~ rep(pat) ~ funEqLex ~ expr ^^@ {
-    case (a, v ~ ps ~ _ ~ e) => (v, FunctionDef(ps, e, a))
-  }
 
-  private def binaryOpDef: Parser[(Var, FunctionDef)] = defLex ~> rep1(pat) ~ customOp ~ rep1(pat) ~ funEqLex ~ expr ^^@ {
-    case (a, p1 ~ op ~ p2 ~ _ ~ e) => (op, FunctionDef(p1++p2, e, a))
-  }
+  private def functionDef: Parser[(VarName, FunctionDef)] =
+    defLex ~> varRegex ~ rep(pat) ~ funEqLex ~ expr ^^@ {
+      case (a, v ~ ps ~ _ ~ e) => (v, FunctionDef(ps, e, a))
+    }
 
+  private def binaryOpDef: Parser[(VarName, FunctionDef)] =
+    defLex ~> rep1(pat) ~ customOp ~ rep1(pat) ~ funEqLex ~ expr ^^@ {
+      case (a, p1 ~ op ~ p2 ~ _ ~ e) => (op, FunctionDef(p1 ++ p2, e, a))
+    }
 
-  private def dataDef: Parser[DataDef] = dataLex ~> typeRegex ~ rep(varRegex) ~ funEqLex ~ rep1sep(conDef, dataSepLex) ^^@
-    { case (a, t ~ tvs ~ _ ~ cs) => DataDef(t, tvs, cs, a) }
+  private def dataDef: Parser[DataDef] =
+    dataLex ~> typeRegex ~ rep(varRegex) ~ funEqLex ~ rep1sep(conDef, dataSepLex) ^^@
+      { case (a, t ~ tvs ~ _ ~ cs) => DataDef(t, tvs, cs, a) }
 
-  private def functionSig: Parser[Tuple2[Var, FunctionSig]] = funLex ~> varRegex ~ typeLex ~ parseType ^^@ { case (a, v ~ _ ~ t) => (v, FunctionSig(t, a)) }
+  private def functionSig: Parser[Tuple2[VarName, FunctionSig]] =
+    funLex ~> varRegex ~ typeLex ~ parseType ^^@ { case (a, v ~ _ ~ t) => (v, FunctionSig(t, a)) }
 
   private def expr: Parser[Expr] = binop
   private def simpleexpr: Parser[Expr] = neg | app
@@ -166,11 +169,12 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   private def parentheses: Parser[Expr] = "(" ~> expr <~ ")"
   private def string: Parser[ConstString] = """"(\\"|[^"])*"""".r ^^@ { (a, s: String) => ConstString(s.substring(1, s.length() - 1), a) }
   private def num: Parser[ConstInt] = """\d+""".r ^^@ { case (a, d) => ConstInt(d.toInt, a) }
-  private def real: Parser[ConstReal] = """(\d+\.\d*([Ee]-?\d+)?)|(\.\d+([Ee]-?\d+)?)""".r ^^@ { 
-                                            case (a, d) => ConstReal(d.toDouble, a) }
+  private def real: Parser[ConstReal] = """(\d+\.\d*([Ee]-?\d+)?)|(\.\d+([Ee]-?\d+)?)""".r ^^@ {
+    case (a, d) => ConstReal(d.toDouble, a)
+  }
   private def char: Parser[ConstChar] = """\'.\'""".r ^^@ { (a, s: String) => ConstChar(s.apply(1), a) }
-  private def exVar: Parser[ExVar] = varRegex ^^@ { (a, s) => ExVar(s, a) }
-  private def exCon: Parser[ExCon] = consRegex ^^@ { (a, s) => ExCon(s, a) }
+  private def exVar: Parser[ExVar] = varRegex ^^@ { (a, s) => ExVar(Syntax.Var(s), a) }
+  private def exCon: Parser[ExCon] = consRegex ^^@ { (a, s) => ExCon(Syntax.ConVar(s), a) }
 
   private def localDef: Parser[LetDef] = varRegex ~ funEqLex ~ expr ^^@ { case (a, v ~ _ ~ e) => LetDef(v, e, a) }
 
@@ -179,32 +183,45 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   private def neg: Parser[Expr] = subLex ~> expr ^^@ {
     case (a1, ConstInt(i, a2)) => ConstInt(-i, a1)
     case (a1, ConstReal(i, a2)) => ConstReal(-i, a1)
-    case (a, e) => App(App(ExVar(mulLex), ConstInt(-1), a), e, a)
+    case (a, e) => App(App(ExVar(Syntax.Var(mulLex)), ConstInt(-1), a), e, a)
   }
 
-  private def cons : Parser[ASTType] = consRegex ^^@ { (a, s) => TyExpr(s, Nil, a) }
-  private def conElem : Parser[ASTType] = typeVar | cons | "(" ~> parseType <~ ")"
+  private def cons: Parser[ASTType] = consRegex ^^@ { (a, s) => TyExpr(Syntax.TConVar(s), Nil, a) }
+  private def conElem: Parser[ASTType] = typeVar | cons | "(" ~> parseType <~ ")"
   private def conDef: Parser[ConstructorDef] = consRegex ~ rep(conElem) ^^@ { case (a, c ~ ts) => ConstructorDef(c, ts, a) }
 
   //  //Parse Types
-  private def parseType: Parser[ASTType] = baseType ~ (arrowLex ~> rep1sep(baseType, arrowLex)).? ^^@ { case (a, t1 ~ None) => t1 ; case (a, t1 ~ Some(ts)) => FunTy(t1::ts, a) }
-  private def typeVar: Parser[TyVar] = varRegex ^^@ { (a, t) => TyVar(t, a) }
-  private def typeExpr: Parser[TyExpr] = typeRegex ~ rep(parseType) ^^@ { case (a, t ~ ts) => TyExpr(t, ts, a) }
+  private def parseType: Parser[ASTType] =
+    baseType ~ (arrowLex ~> rep1sep(baseType, arrowLex)).? ^^@ {
+      case (a, t1 ~ None) => t1; case (a, t1 ~ Some(ts)) => FunTy(t1 :: ts, a)
+    }
+  private def typeVar: Parser[TyVar] = varRegex ^^@ {
+    (a, t) => TyVar(t, a)
+  }
+  private def typeExpr: Parser[TyExpr] =
+    typeRegex ~ rep(parseType) ^^@ {
+      case (a, t ~ ts) => TyExpr(Syntax.TConVar(t), ts, a)
+    }
   private def baseType: Parser[ASTType] = typeVar | typeExpr | "(" ~> (parseType) <~ ")"
 
   //Parse Pattern
   private def ppat: Parser[Pattern] = patVar | patExpr | "(" ~> patExpr <~ ")"
   private def pat: Parser[Pattern] = patVar | patCons | "(" ~> patExpr <~ ")"
-  private def patVar: Parser[PatternVar] = varRegex ^^@ { (a, s) => PatternVar(s, a) }
-  private def patCons: Parser[Pattern] = consRegex ^^@ { (a, c) => PatternExpr(c, Nil, a) }
-  private def patExpr: Parser[Pattern] = consRegex ~ rep(pat) ^^@ { case (a, c ~ pp) => PatternExpr(c, pp, a) }
-  
-  
+  private def patVar: Parser[PatternVar] = varRegex ^^@ {
+    (a, s) => PatternVar(s, a)
+  }
+  private def patCons: Parser[Pattern] = consRegex ^^@ {
+    (a, c) => PatternExpr(Syntax.ConVar(c), Nil, a)
+  }
+  private def patExpr: Parser[Pattern] = consRegex ~ rep(pat) ^^@ {
+    case (a, c ~ pp) => PatternExpr(Syntax.ConVar(c), pp, a)
+  }
+
   private def consRegex: Parser[String] = not(keyword) ~> """[A-Z][a-zA-Z0-9]*""".r ^^ { case s: String => s }
   private def typeRegex: Parser[String] = not(keyword) ~> """[A-Z][a-zA-Z0-9]*""".r ^^ { case s: String => s }
   private def varRegex: Parser[String] = """[a-z][a-zA-Z0-9]*""".r ^^ { case s: String => s }
   private def reservedOpsRegex: Parser[String] = """(\+s|([\+\-\*/]r))|[\+\-\*><]|/|<=|==|/=|>=""".r ^^ { case s: String => s }
-  private def binopRegex: Parser[ExVar] = (opRegex | reservedOpsRegex) ^^@ { (a, s) => ExVar(s, a) }
+  private def binopRegex: Parser[ExVar] = (opRegex | reservedOpsRegex) ^^@ { (a, s) => ExVar(Syntax.Var(s), a) }
   private def opRegex: Parser[String] = """[!§%&/=\?\+\*#\-\<\>|][sr!§%&/=\?\+\*#\-\<\>|]*""".r ^^ { case s: String => s }
   private def customOp: Parser[String] = Parser { in =>
     opRegex(in) match {
@@ -258,22 +275,22 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
     }
 
   private def prec(op: Any): Int = op match {
-    case ExVar(`ltLex`, a) => 1
-    case ExVar(`leLex`, a) => 1
-    case ExVar(`eqLex`, a) => 1
-    case ExVar(`neLex`, a) => 1
-    case ExVar(`geLex`, a) => 1
-    case ExVar(`bindLex`, a) => 1
-    case ExVar(`bindNRLex`, a) => 1
-    case ExVar(`addLex`, a) => 2
-    case ExVar(`realAdd`, a) => 2
-    case ExVar(`strAdd`, a) => 2
-    case ExVar(`subLex`, a) => 2
-    case ExVar(`realSub`, a) => 2
-    case ExVar(`mulLex`, a) => 3
-    case ExVar(`realMul`, a) => 3
-    case ExVar(`divLex`, a) => 3
-    case ExVar(`realDiv`, a) => 3
+    case ExVar(Syntax.Var(`ltLex`, _), a) => 1
+    case ExVar(Syntax.Var(`leLex`, _), a) => 1
+    case ExVar(Syntax.Var(`eqLex`, _), a) => 1
+    case ExVar(Syntax.Var(`neLex`, _), a) => 1
+    case ExVar(Syntax.Var(`geLex`, _), a) => 1
+    case ExVar(Syntax.Var(`bindLex`, _), a) => 1
+    case ExVar(Syntax.Var(`bindNRLex`, _), a) => 1
+    case ExVar(Syntax.Var(`addLex`, _), a) => 2
+    case ExVar(Syntax.Var(`realAdd`, _), a) => 2
+    case ExVar(Syntax.Var(`strAdd`, _), a) => 2
+    case ExVar(Syntax.Var(`subLex`, _), a) => 2
+    case ExVar(Syntax.Var(`realSub`, _), a) => 2
+    case ExVar(Syntax.Var(`mulLex`, _), a) => 3
+    case ExVar(Syntax.Var(`realMul`, _), a) => 3
+    case ExVar(Syntax.Var(`divLex`, _), a) => 3
+    case ExVar(Syntax.Var(`realDiv`, _), a) => 3
     case _ => 0
   }
 

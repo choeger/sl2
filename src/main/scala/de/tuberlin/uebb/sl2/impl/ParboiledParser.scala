@@ -150,7 +150,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   def mkNeg(e : Expr) = e match {
     case ConstReal(r, attr) => ConstReal(-r, attr)
     case ConstInt(n, attr) => ConstInt(-n, attr)
-    case e2@_ => App(App(ExVar(mulLex), ConstInt(-1)), e2)
+    case e2@_ => App(App(ExVar(Syntax.Var(mulLex)), ConstInt(-1)), e2)
   }
 
   def mkCase(e : Expr, a : List[Alternative]) = {  Case(e, a)  }
@@ -166,7 +166,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   def mkCustomOp(l : Pattern, s : String, r : Pattern, e : Expr) = (s -> FunctionDef(l::r::Nil, e))
 
   def mkProgram() = {
-    Program(Map(), Map(), Nil)
+    Program(List(), Map(), Map(), Nil)
   }
 
   private def updateMap[T](s : String, t : T, m : Map[String, List[T]]) = m + (s -> (t::m.get(s).getOrElse(Nil)))
@@ -185,7 +185,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
 
   def mkFunSig(t : ASTType) = FunctionSig(t)
   
-  def mkTyExpr(s : String, ts : List[ASTType]) = TyExpr(s, ts)
+  def mkTyExpr(s : String, ts : List[ASTType]) = TyExpr(Syntax.TConVar(s), ts)
 
   def mkFunType(t : ASTType, ts : List[ASTType]) = FunTy(t::ts)
   
@@ -207,7 +207,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def custom_op : Rule1[Expr] = rule {
-    custom_op_token ~~> (s => ExVar(s))
+    custom_op_token ~~> (s => ExVar(Syntax.Var(s)))
   }
 
   def custom_op_token : Rule1[String] = rule {    
@@ -296,12 +296,12 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
     arith ~ zeroOrMore(relation_rhs)
   }
 
-  def gt : Rule1[Expr] = rule { "> " ~ push(ExVar(gtLex)) } 
-  def lt : Rule1[Expr] = rule { "< " ~ push(ExVar(ltLex)) }
-  def ge : Rule1[Expr] = rule { ">= " ~ push(ExVar(geLex)) } 
-  def le : Rule1[Expr] = rule { "<= " ~ push(ExVar(leLex)) }
-  def ne : Rule1[Expr] = rule { "/= " ~ push(ExVar(neLex)) }
-  def eq : Rule1[Expr] = rule { "== " ~ push(ExVar(eqLex)) }
+  def gt : Rule1[Expr] = rule { "> " ~ push(ExVar(Syntax.Var(gtLex))) } 
+  def lt : Rule1[Expr] = rule { "< " ~ push(ExVar(Syntax.Var(ltLex))) }
+  def ge : Rule1[Expr] = rule { ">= " ~ push(ExVar(Syntax.Var(geLex))) } 
+  def le : Rule1[Expr] = rule { "<= " ~ push(ExVar(Syntax.Var(leLex))) }
+  def ne : Rule1[Expr] = rule { "/= " ~ push(ExVar(Syntax.Var(neLex))) }
+  def eq : Rule1[Expr] = rule { "== " ~ push(ExVar(Syntax.Var(eqLex))) }
   
   def relation_rhs : ReductionRule1[Expr,Expr] = rule {
     (( gt | lt | ge | le | ne | eq ) ~~> (mkOp _)) ~ (arith ~~> (mkApp _))
@@ -317,14 +317,14 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def add : Rule1[Expr] = rule { 
-    "+r " ~ push(ExVar(realAdd)) |
-    "+s " ~ push(ExVar(strAdd)) |    
-    "+ " ~ push(ExVar(addLex))
+    "+r " ~ push(ExVar(Syntax.Var(realAdd))) |
+    "+s " ~ push(ExVar(Syntax.Var(strAdd))) |    
+    "+ " ~ push(ExVar(Syntax.Var(addLex)))
   }
 
   def sub : Rule1[Expr] = rule { 
-    "-r " ~ push(ExVar(realSub)) |
-    "- " ~ push(ExVar(subLex)) 
+    "-r " ~ push(ExVar(Syntax.Var(realSub))) |
+    "- " ~ push(ExVar(Syntax.Var(subLex))) 
   }
 
   def arith_rhs : ReductionRule1[Expr, Expr] = rule {
@@ -336,13 +336,13 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def mul : Rule1[Expr] = rule { 
-    "*r " ~ push(ExVar(realMul)) |
-    "* " ~ push(ExVar(mulLex)) 
+    "*r " ~ push(ExVar(Syntax.Var(realMul))) |
+    "* " ~ push(ExVar(Syntax.Var(mulLex))) 
   }
 
   def div : Rule1[Expr] = rule { 
-    "/r " ~ push(ExVar(realDiv)) |
-    "/ " ~ push(ExVar(divLex)) 
+    "/r " ~ push(ExVar(Syntax.Var(realDiv))) |
+    "/ " ~ push(ExVar(Syntax.Var(divLex))) 
   }
 
   def term_rhs : ReductionRule1[Expr,Expr] = rule {
@@ -365,14 +365,14 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
     real ~> (s => ConstReal(s.toDouble)) ~ spacing |
     integer ~> (s => ConstInt(s.toInt)) ~ spacing | 
     char ~> (s => ConstChar(s(1))) ~ spacing |
-    (low_ident_token ~> (s => ExVar(s))) ~ spacing ~ !("=" ~ !("=")) |
-    up_ident_token ~> (s => ExCon(s)) ~ spacing |
+    (low_ident_token ~> (s => ExVar(Syntax.Var(s)))) ~ spacing ~ !("=" ~ !("=")) |
+    up_ident_token ~> (s => ExCon(Syntax.ConVar(s))) ~ spacing |
     js_token ~ spacing ~ optional(": " ~ type_expr) ~~> (mkJs _) ~ spacing | 
     string_token ~~> (s => ConstString(s)) ~ spacing    
   }
 
   def mkPattern(c : String, p : List[Pattern]) = { 
-    PatternExpr(c, p)
+    PatternExpr(Syntax.ConVar(c), p)
   }
 
   /* Pattern syntax in DEFs and CASEs differ */

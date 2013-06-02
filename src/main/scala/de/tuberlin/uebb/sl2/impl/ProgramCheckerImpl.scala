@@ -64,11 +64,11 @@ trait ProgramCheckerImpl extends ProgramChecker {
   def checkMain(signatures: Map[Var, FunctionSig], inferredType: Type): Either[Error, Unit] = {
     
     val checkInferredType = inferredType match {
-      case TypeConstructor("DOM", List(BaseType(Void))) => Right()
+      case TypeConstructor(Syntax.TConVar("DOM", _), List(BaseType(Void))) => Right()
       case _ => Left(GenericError("Function `main' must be of type `DOM Void', but found: " + quote(inferredType.toString)))
     }
 
-    val checkMainSignature = signatures.get("main") match {
+    val checkMainSignature = signatures.get(Syntax.Var("main")) match {
       case None => Right()
       case Some(FunctionSig(signature, attr)) => {
 	val mainSignature = astToType(signature)

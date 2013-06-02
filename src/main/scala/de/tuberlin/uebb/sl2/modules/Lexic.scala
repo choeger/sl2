@@ -69,7 +69,7 @@ trait Lexic {
   val ordLex = "ord"
   val chrLex = "chr"
 
-  val predefinedFuns = predefinedOps ++ List(ordLex, chrLex)
+  val predefinedFuns = (predefinedOps ++ List(ordLex, chrLex)).map(Syntax.Var(_))
 
   // Keywords and symbols.
 
@@ -110,7 +110,7 @@ trait Lexic {
   val domLex = "DOM"
   val voidLex = "Void"
 
-  val predefinedTypes = List(intLex, charLex, strLex, domLex, voidLex)
+  val predefinedTypes = List(intLex, charLex, strLex, domLex, voidLex).map(Syntax.TConVar(_))
 
   // Predefined list and bool constructors.
 
@@ -120,5 +120,5 @@ trait Lexic {
   val trueLex = "True"
   val falseLex = "False"
 
-  val predefCons = List(listLex, consLex, nilLex, trueLex, falseLex)
+  val predefCons = List(listLex, consLex, nilLex, trueLex, falseLex).map(Syntax.ConVar(_))
 }

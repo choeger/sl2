@@ -39,7 +39,8 @@ trait CodeGenerator {
   //TODO: the original compiler created tmp variables named _0, _1 ... At the moment we create $0, $1 ...
 
   def astToJs(ast: AST): JsStmt = ast match { //TODO
-    case Program(signatures, functionDefs, dataDefs, attribute) => dataDefsToJs(dataDefs) & functionDefsToJs(functionDefs)
+    case Program(imports, signatures, functionDefs, dataDefs, attribute) =>
+      dataDefsToJs(dataDefs) & functionDefsToJs(functionDefs)
   }
 
   def dataDefsToJs(ds: List[DataDef]): JsStmt = (ds map dataDefToJs).foldLeft(Noop:JsStmt)(_ & _)
@@ -86,20 +87,20 @@ trait CodeGenerator {
     for(d <- rhs ; v <- fv(d); if (defs.contains(v)) ) yield (x -> v)
   }
 
-  def functionDefsToJs(functionDefs: Map[Var, List[FunctionDef]]): JsStmt = {
-    val defs = functionDefs.keys.toSet
-    val dependencies = (for(v <- defs; deps <- dep(v, defs, functionDefs(v))) yield deps).toList
-    val depGraph = directedGraph(functionDefs.keys.toSet, dependencies)
+  def functionDefsToJs(functionDefs: Map[VarName, List[FunctionDef]]): JsStmt = {
+    val defs = functionDefs.keys.map(Syntax.Var(_)).toSet
+    val dependencies = (for(v <- defs; deps <- dep(v, defs, functionDefs(v.ide))) yield deps).toList
+    val depGraph = directedGraph(functionDefs.keys.map(Syntax.Var(_)).toSet, dependencies)
     val sorted = topologicalSort(stronglyConnectedComponents(depGraph), depGraph)
 
     val l = sorted.map {vs =>
       JsStmtConcat(vs.toList.map { v => 
-        val funs = functionDefs(v)
+        val funs = functionDefs(v.ide)
         val args = (for (i <- 0 to (funs(0).patterns.length - 1)) yield (JsName("_arg" + i))).toList
         if (args.length != 0) {
-          new JsFunction($(v), args(0)::Nil, functionBodyToJs(args.tail, args, v, funs))
+          new JsFunction($(v.ide), args(0)::Nil, functionBodyToJs(args.tail, args, v, funs))
         } else {
-          JsDef($(v), JsFunctionCall(JsAnonymousFunction(Nil, expToJs(funs(0).expr, $(v)) & JsReturn(Some($(v))))))
+          JsDef($(v.ide), JsFunctionCall(JsAnonymousFunction(Nil, expToJs(funs(0).expr, $(v.ide)) & JsReturn(Some($(v.ide))))))
         }
       })
     }
@@ -137,7 +138,7 @@ trait CodeGenerator {
 
     case Lambda(patterns, expr, _) => {
       /* build a closure */
-      val closed = for (x <- fv(expr)) yield JsDef($(x), $(x))
+      val closed = for (x <- fv(expr)) yield JsDef($(x.ide), $(x.ide))
 
       val args = for (i <- 0 to (patterns.length - 1)) yield (JsName("_arg" + i))
       val jsp = (patterns.zip(args)).map(x => patternToJs(x._1, x._2))
@@ -177,8 +178,8 @@ trait CodeGenerator {
       f & arg & JsDef(v, JsFunctionCall(tmpF, JsName(tmpArg)))
     }
 
-    case ExVar(ide, _) => JsDef(v, JsName(escapeJsIde(ide)))
-    case ExCon(con, _) => JsDef(v, JsName(escapeJsIde(con)))
+    case ExVar(Var(ide,_), _) => JsDef(v, JsName(escapeJsIde(ide)))
+    case ExCon(Syntax.ConVar(con,_) , _) => JsDef(v, JsName(escapeJsIde(con)))
     case ConstInt(value, _) => JsDef(v, JsNum(value))
     case ConstReal(value, _) => JsDef(v, JsNum(value))
     case ConstChar(value, _) => JsDef(v, JsStr(value.toString))
@@ -209,7 +210,7 @@ trait CodeGenerator {
         if (subPatterns.size > 0) {
           JsBinOp(JsMemberAccess(matchee, JsStr("_cid")), "===", "_" + cons)
         } else
-          JsBinOp(matchee, "===", $(cons))
+          JsBinOp(matchee, "===", $(cons.ide))
 
       (JsPattern(test, Nil) /: subPatterns)(_ & _)
     }
