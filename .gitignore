@@ -14,3 +14,9 @@ project/plugins/project/
 
 # automatically generated backup files
 *~
+
+# eclipse
+.classpath
+.project
+.settings/
+
