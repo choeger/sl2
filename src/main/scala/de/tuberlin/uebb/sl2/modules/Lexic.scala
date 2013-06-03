@@ -111,4 +111,14 @@ trait Lexic {
   val voidLex = "Void"
 
   val predefinedTypes = List(intLex, charLex, strLex, domLex, voidLex).map(Syntax.TConVar(_))
+
+  // Predefined list and bool constructors.
+
+  val listLex = "List"
+  val consLex = "Cons"
+  val nilLex = "Nil"
+  val trueLex = "True"
+  val falseLex = "False"
+
+  val predefCons = List(listLex, consLex, nilLex, trueLex, falseLex).map(Syntax.ConVar(_))
 }

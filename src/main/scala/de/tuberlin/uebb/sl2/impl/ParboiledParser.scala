@@ -137,6 +137,8 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   
   /* actual AST generating rules */
 
+  def mkQualVar(mod : String, name : String) = ExVar(Syntax.Var(name, mod))
+
   def mkApp(e1 : Expr, e2 : Expr) = App(e1,e2)
 
   def mkOp(e1 : Expr, e2 : Expr) = App(e2,e1)
@@ -202,9 +204,14 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
     up_ident_token ~> (s => s) ~ spacing
   }
 
+  def qualification : Rule1[String] = rule {
+    up_ident_token ~> (s => s) ~ spacing ~ "." ~ spacing
+  }
+
   /* TODO these rules have to change to support qualified ops/functions */
   def custom_op : Rule1[Expr] = rule {
     custom_op_token ~~> (s => ExVar(Syntax.Var(s)))
+    qualification ~ custom_op_token ~~> (mkQualVar _)
   }
 
   def custom_op_token : Rule1[String] = rule {    
@@ -215,6 +222,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
 
   def relation_op : Rule1[Expr] = rule {
     relation_op_token ~~> (s => ExVar(Syntax.Var(s)))
+    qualification ~ relation_op_token ~~> (mkQualVar _)
   }
 
   def relation_op_token : Rule1[String] = rule {
@@ -223,6 +231,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
 
   def arith_op : Rule1[Expr] = rule {
     arith_op_token ~~> (s => ExVar(Syntax.Var(s)))
+    qualification ~ arith_op_token ~~> (mkQualVar _)
   }
 
   def arith_op_token : Rule1[String] = rule {
@@ -230,7 +239,8 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def term_op : Rule1[Expr] = rule {
-    relation_op_token ~~> (s => ExVar(Syntax.Var(s)))
+    term_op_token ~~> (s => ExVar(Syntax.Var(s)))
+    qualification ~ term_op_token ~~> (mkQualVar _)
   }
 
   def term_op_token : Rule1[String] = rule {
