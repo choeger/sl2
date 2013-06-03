@@ -227,9 +227,10 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
     opRegex(in) match {
       case Success(t, in1) =>
         {
-          if (predefinedOps.contains(t))
-            Failure("Reserved operators are here not allowed", in1)
-          else
+          // TODO: clean this up
+          // if (predefinedOps.contains(t))
+          //   Failure("Reserved operators are here not allowed", in1)
+          // else
             Success(t, in1)
         }
       case ns: NoSuccess => ns

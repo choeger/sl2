@@ -202,10 +202,6 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
     up_ident_token ~> (s => s) ~ spacing
   }
 
-  def builtin_op : Rule0 = rule {
-    (NOTHING /: predefinedOps)({(x,y) => x | y}) ~ (!anyOf("!§%&/=?+*#-:<>|"))
-  }
-
   def custom_op : Rule1[Expr] = rule {
     custom_op_token ~~> (s => ExVar(Syntax.Var(s)))
   }
