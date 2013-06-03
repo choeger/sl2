@@ -139,6 +139,12 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
 
   def mkQualVar(mod : String, name : String) = ExVar(Syntax.Var(name, mod))
 
+  def mkQualConVar(mod : String, name : String) = ExCon(Syntax.ConVar(name, mod))
+
+  def mkQualType(mod : String, name : String) = TyExpr(Syntax.TConVar(name, mod), Nil)
+
+  def mkQualTyExpr(mod : String, name : String, ts : List[ASTType]) = TyExpr(Syntax.TConVar(name, mod), ts)
+
   def mkApp(e1 : Expr, e2 : Expr) = App(e1,e2)
 
   def mkOp(e1 : Expr, e2 : Expr) = App(e2,e1)
@@ -208,9 +214,8 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
     up_ident_token ~> (s => s) ~ spacing ~ "." ~ spacing
   }
 
-  /* TODO these rules have to change to support qualified ops/functions */
   def custom_op : Rule1[Expr] = rule {
-    custom_op_token ~~> (s => ExVar(Syntax.Var(s)))
+    custom_op_token ~~> (s => ExVar(Syntax.Var(s))) |
     qualification ~ custom_op_token ~~> (mkQualVar _)
   }
 
@@ -221,7 +226,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def relation_op : Rule1[Expr] = rule {
-    relation_op_token ~~> (s => ExVar(Syntax.Var(s)))
+    relation_op_token ~~> (s => ExVar(Syntax.Var(s))) |
     qualification ~ relation_op_token ~~> (mkQualVar _)
   }
 
@@ -230,7 +235,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def arith_op : Rule1[Expr] = rule {
-    arith_op_token ~~> (s => ExVar(Syntax.Var(s)))
+    arith_op_token ~~> (s => ExVar(Syntax.Var(s))) |
     qualification ~ arith_op_token ~~> (mkQualVar _)
   }
 
@@ -239,7 +244,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def term_op : Rule1[Expr] = rule {
-    term_op_token ~~> (s => ExVar(Syntax.Var(s)))
+    term_op_token ~~> (s => ExVar(Syntax.Var(s))) |
     qualification ~ term_op_token ~~> (mkQualVar _)
   }
 
@@ -277,6 +282,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
 
   def cons_def_element : Rule1[ASTType] = rule {
     constructor ~~> (c => mkTyExpr(c, Nil)) |
+    qualification ~ constructor ~~> (mkQualType _) |
     "( " ~ type_expr ~ ") " |
     variable ~~> (s => TyVar(s))
   }
@@ -289,6 +295,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
 
   def type_expr_base : Rule1[ASTType] = rule {
     constructor ~ zeroOrMore(type_expr) ~~> (mkTyExpr _) |
+    qualification ~ constructor ~ zeroOrMore(type_expr) ~~> (mkQualTyExpr _) |
     "( " ~ type_expr ~ ") " |
     variable ~~> (s => TyVar(s))
   }
@@ -370,7 +377,9 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
     integer ~> (s => ConstInt(s.toInt)) ~ spacing | 
     char ~> (s => ConstChar(s(1))) ~ spacing |
     (low_ident_token ~> (s => ExVar(Syntax.Var(s)))) ~ spacing ~ !("=" ~ !("=")) |
-    up_ident_token ~> (s => ExCon(Syntax.ConVar(s))) ~ spacing |
+    up_ident_token ~> (s => ExCon(Syntax.ConVar(s))) ~ spacing ~ !(".") |          // constructor, not module
+    qualification ~ variable ~~> (mkQualVar _) |
+    qualification ~ constructor ~~> (mkQualConVar _) |
     js_token ~ spacing ~ optional(": " ~ type_expr) ~~> (mkJs _) ~ spacing | 
     string_token ~~> (s => ConstString(s)) ~ spacing    
   }
