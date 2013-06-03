@@ -34,8 +34,38 @@ package de.tuberlin.uebb.sl2.modules
 trait Lexic {
   val mainLex = "main"
 
-  // TODO remove these from language core and put them in prelude
-  // The predefined functions
+  // The predefined functions.
+
+  val addLex = "+"
+  val subLex = "-"
+  val mulLex = "*"
+  val divLex = "/"
+  val ltLex = "<"
+  val leLex = "<="
+  val eqLex = "=="
+  val neLex = "/="
+  val geLex = ">="
+  val gtLex = ">"
+  val yieldLex = "yield"
+  val bindLex = "&="
+  val bindNRLex = "&"
+  val stolLex = "stol"
+  val ltosLex = "ltos"
+
+  val strAdd = "+s"
+
+  val realDiv = "/r"
+  val realMul = "*r"
+  val realAdd = "+r"
+  val realSub = "-r"
+
+
+  val arithOps = List(addLex, subLex, mulLex, divLex)
+  val cmpOps = List(ltLex, leLex, eqLex, neLex, geLex, gtLex)
+  val monadicOps = List(yieldLex, bindLex, bindNRLex)
+  val stringOps = List(stolLex, ltosLex)
+  val predefinedOps = monadicOps ++ arithOps ++ cmpOps ++ stringOps
+
   val ordLex = "ord"
   val chrLex = "chr"
 

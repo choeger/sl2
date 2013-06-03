@@ -202,6 +202,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
     up_ident_token ~> (s => s) ~ spacing
   }
 
+  /* TODO these rules have to change to support qualified ops/functions */
   def custom_op : Rule1[Expr] = rule {
     custom_op_token ~~> (s => ExVar(Syntax.Var(s)))
   }
@@ -210,6 +211,30 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
     // TODO: if we change binding we might need to check for builtin ops first
     //(!builtin_op) ~ oneOrMore(anyOf("!§%&/=?+*#-:<>|")) ~> (s => ExVar(s)) ~ spacing
     oneOrMore(anyOf("!§%&/=?+*#-:<>|")) ~> (s => s) ~ spacing
+  }
+
+  def relation_op : Rule1[Expr] = rule {
+    relation_op_token ~~> (s => ExVar(Syntax.Var(s)))
+  }
+
+  def relation_op_token : Rule1[String] = rule {
+    ("<"|">"|"<="|">="|"/="|"==") ~> (s => s) ~ spacing
+  }
+
+  def arith_op : Rule1[Expr] = rule {
+    arith_op_token ~~> (s => ExVar(Syntax.Var(s)))
+  }
+
+  def arith_op_token : Rule1[String] = rule {
+    anyOf("+-") ~> (s => s) ~ spacing
+  }
+
+  def term_op : Rule1[Expr] = rule {
+    relation_op_token ~~> (s => ExVar(Syntax.Var(s)))
+  }
+
+  def term_op_token : Rule1[String] = rule {
+    anyOf("*/") ~> (s => s) ~ spacing
   }
 
   /**
@@ -291,16 +316,9 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   def relation : Rule1[Expr] = rule {      
     arith ~ zeroOrMore(relation_rhs)
   }
-
-  def gt : Rule1[Expr] = rule { "> " ~ push(ExVar(Syntax.Var(gtLex))) } 
-  def lt : Rule1[Expr] = rule { "< " ~ push(ExVar(Syntax.Var(ltLex))) }
-  def ge : Rule1[Expr] = rule { ">= " ~ push(ExVar(Syntax.Var(geLex))) } 
-  def le : Rule1[Expr] = rule { "<= " ~ push(ExVar(Syntax.Var(leLex))) }
-  def ne : Rule1[Expr] = rule { "/= " ~ push(ExVar(Syntax.Var(neLex))) }
-  def eq : Rule1[Expr] = rule { "== " ~ push(ExVar(Syntax.Var(eqLex))) }
   
   def relation_rhs : ReductionRule1[Expr,Expr] = rule {
-    (( gt | lt | ge | le | ne | eq ) ~~> (mkOp _)) ~ (arith ~~> (mkApp _))
+    (relation_op ~~> (mkOp _)) ~ (arith ~~> (mkApp _))
   }
 
   def arith : Rule1[Expr] = rule {
@@ -308,41 +326,21 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def arith_lhs : Rule1[Expr] = rule {
-    "- " ~ term ~~> (mkNeg _) |
+    // TODO find some less dangerous way to implement negation
+    // "- " ~ term ~~> (mkNeg _) |
     term
   }
 
-  def add : Rule1[Expr] = rule { 
-    "+r " ~ push(ExVar(Syntax.Var(realAdd))) |
-    "+s " ~ push(ExVar(Syntax.Var(strAdd))) |    
-    "+ " ~ push(ExVar(Syntax.Var(addLex)))
-  }
-
-  def sub : Rule1[Expr] = rule { 
-    "-r " ~ push(ExVar(Syntax.Var(realSub))) |
-    "- " ~ push(ExVar(Syntax.Var(subLex))) 
-  }
-
   def arith_rhs : ReductionRule1[Expr, Expr] = rule {
-    ((add | sub) ~~> (mkOp _)) ~ (term ~~> (mkApp _))
+    (arith_op ~~> (mkOp _)) ~ (term ~~> (mkApp _))
   }
 
   def term : Rule1[Expr] = {
     factor ~ zeroOrMore(term_rhs)
   }
 
-  def mul : Rule1[Expr] = rule { 
-    "*r " ~ push(ExVar(Syntax.Var(realMul))) |
-    "* " ~ push(ExVar(Syntax.Var(mulLex))) 
-  }
-
-  def div : Rule1[Expr] = rule { 
-    "/r " ~ push(ExVar(Syntax.Var(realDiv))) |
-    "/ " ~ push(ExVar(Syntax.Var(divLex))) 
-  }
-
   def term_rhs : ReductionRule1[Expr,Expr] = rule {
-    ((mul | div) ~~> (mkOp _)) ~ (factor ~~> (mkApp _))
+    (term_op ~~> (mkOp _)) ~ (factor ~~> (mkApp _))
   }   
 
   def factor : Rule1[Expr] = rule {
