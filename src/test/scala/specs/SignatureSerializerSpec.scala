@@ -24,7 +24,8 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
 	
 	case class SignatureMatcher() extends Matcher[ParseSerializeDeserializeResult] {
 		def apply(delivered : ParseSerializeDeserializeResult) = {
-			println(delivered.serialized)
+			println("serialized:   " + delivered.serialized)
+			println("reserialized: " + serialize(delivered.deserialized))
 		
 			var result = true
 			
@@ -40,10 +41,10 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
 		}
 		
 		def compareSignature(parsedSig : Map[Var, FunctionSig], deserializedSig : Map[Var, FunctionSig]) : Boolean = {
-			if (parsedSig == null)
-				println("parsedSig == null");
-			if (deserializedSig == null)
-				println("deserializedSig == null");
+			// if (parsedSig == null)
+				// println("parsedSig == null");
+			// if (deserializedSig == null)
+				// println("deserializedSig == null");
 			
 			if (parsedSig.size != deserializedSig.size)
 				return false
@@ -69,9 +70,13 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
 		}
 	}
 
-	describe(testedImplementationName() + " stub") {
-		it("test2") {
-			"FUN f : x -> y".parsedSerializedAndDeserialized should equalParsed()
+	describe(testedImplementationName() + " serialize and deserialize") {
+		it("Should serialize and deserialize function signatures") {
+			"FUN f : (X a) -> y".parsedSerializedAndDeserialized should equalParsed()
+		}
+		
+		it("Should serialize and deserialize data definitions") {
+			"DATA Type a b c = Cons1 a b | Cons2 c".parsedSerializedAndDeserialized should equalParsed()
 		}
 	}
 	
