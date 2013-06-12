@@ -137,7 +137,7 @@ trait LetRecSplitterSpec extends FunSpec with ShouldMatchers {
 			         "f" := eVar("g") :@ (eVar("h") :@ eVar("a")) ,
 			         "g" := eVar("f") ,
 			         "h" := pVar("y") :=> eCase(eVar("y"),
-							    EAlternative(pApp("True"), eVar("True")),
+							    EAlternative(pApp("True"), eCon("True")),
 							    EAlternative(pApp("False"), eVar("g"))) ),
 			   EInt(0))
 
@@ -155,7 +155,7 @@ trait LetRecSplitterSpec extends FunSpec with ShouldMatchers {
 				 ELetRec(List( "f" := eVar("g") :@ (eVar("h") :@ eVar("a")) ,
 					       "g" := eVar("f") ,
 					       "h" := pVar("y") :=> eCase(eVar("y"),
-									  EAlternative(pApp("True"), eVar("True")),
+									  EAlternative(pApp("True"), eCon("True")),
 									  EAlternative(pApp("False"), eVar("g"))) ),
 					 ELet( "b" := eVar("chr") :@ eVar("a") ,
 					       ELetRec(List( "d" := pVar("x") :=> (eVar("c") :@ eVar("x")) ,

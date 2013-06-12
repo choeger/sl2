@@ -55,7 +55,7 @@ trait PreProcessing {
   
   
   val replaceBuiltinMap = Map ( "+"  -> "_add"
-                              , "+s" -> "_adds"
+                              , "++" -> "_adds"
                               , "+r" -> "_addr"
                               , "*r" -> "_mulr"
                               , "/r" -> "_divr"

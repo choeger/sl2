@@ -163,7 +163,7 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
     }
 
     it("Should type check polymorphic let-binding") {
-      val body = (eCon("Pair") :@ (eVar("id") :@ EInt(5))) :@ (eVar("id") :@ eVar("True"))
+      val body = (eCon("Pair") :@ (eVar("id") :@ EInt(5))) :@ (eVar("id") :@ eCon("True"))
       ELet(idDef, body) should haveType(TypeConstructor(Syntax.TConVar("Pair"), List(int, bool)))
     }
   }

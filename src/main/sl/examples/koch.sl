@@ -29,7 +29,7 @@ DEF snowflake c n x y len =
 	    (leg (n-1)) &         -- Recurse for the first sub-leg
             (rotate c 60) &       -- Turn 60 degrees clockwise
             (leg (n-1)) &         -- Second sub-leg
-            (rotate c (-120)) &   -- Rotate 120 degrees back
+            (rotate c (0-120)) &   -- Rotate 120 degrees back
             (leg (n-1)) &         -- Third sub-leg
             (rotate c 60) &       -- Rotate back to our original heading
             (leg (n-1))           -- Final sub-leg
@@ -42,9 +42,9 @@ DEF snowflake c n x y len =
     (translate c x y) & -- Translate origin to starting point
     (moveTo c 0 0) &  	-- Begin a new subpath at the new origin
     (leg n) & 	   	-- Draw the first leg of the snowflake
-    (rotate c (-1 * 120)) &   -- Now rotate 120 degrees counterclockwise
+    (rotate c ((0-1) * 120)) &   -- Now rotate 120 degrees counterclockwise
     (leg n) &           -- Draw the second leg
-    (rotate c (-1 * 120)) &    -- Rotate again
+    (rotate c ((0-1) * 120)) &    -- Rotate again
     (leg n) &           -- Draw the final leg
     (closePath c) &     -- Close the subpath
     (restore c)         -- And restore original transformation

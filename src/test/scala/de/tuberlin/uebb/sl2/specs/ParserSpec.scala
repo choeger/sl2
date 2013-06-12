@@ -223,23 +223,23 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     }
 
     it("Should parse string concatenation") {
-      "x +s y".as.expr should parse(App(App(exVar(strAdd), exVar("x")), exVar("y")))
+      "x ++ y".as.expr should parse(App(App(exVar(strAdd), exVar("x")), exVar("y")))
     }
 
     it("Should parse real division") {
-      "x /r y".as.expr should parse(App(App(exVar(realDiv), exVar("x")), exVar("y")))
+      "x Real./ y".as.expr should parse(App(App(ExVar(Syntax.Var("/", "Real")), exVar("x")), exVar("y")))
     }
 
     it("Should parse real multiplication") {
-      "x *r y".as.expr should parse(App(App(exVar(realMul), exVar("x")), exVar("y")))
+      "x Real.* y".as.expr should parse(App(App(ExVar(Syntax.Var("*", "Real")), exVar("x")), exVar("y")))
     }
 
     it("Should parse real addition") {
-      "x +r y".as.expr should parse(App(App(exVar(realAdd), exVar("x")), exVar("y")))
+      "x Real.+ y".as.expr should parse(App(App(ExVar(Syntax.Var("+", "Real")), exVar("x")), exVar("y")))
     }
 
     it("Should parse real subtraction") {
-      "x -r y".as.expr should parse(App(App(exVar(realSub), exVar("x")), exVar("y")))
+      "x Real.- y".as.expr should parse(App(App(ExVar(Syntax.Var("-", "Real")), exVar("x")), exVar("y")))
     }
   }
 
@@ -254,7 +254,8 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     }
 
     it("Should bind lhs multiplication over rhs subtraction for reals") {
-      "x -r y *r z".as.expr should parse(App(App(exVar(realSub), exVar("x")), App(App(exVar(realMul), exVar("y")), exVar("z"))))
+      "x Real.- y Real.* z".as.expr should parse(
+          App(App(ExVar(Syntax.Var("-", "Real")), exVar("x")), App(App(ExVar(Syntax.Var("*", "Real")), exVar("y")), exVar("z"))))
     }
 
     it("Should bind rhs division over lhs subtraction") {

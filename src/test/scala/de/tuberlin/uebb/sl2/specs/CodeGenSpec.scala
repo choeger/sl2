@@ -148,7 +148,7 @@ trait CodeGenSpec
     }
 
     it("Should compile string concatenation correctly") {
-      (""""a" +s "b"""".compiled.evaluated) should equal(""" "ab" """.evaluated)
+      (""""a" ++ "b"""".compiled.evaluated) should equal(""" "ab" """.evaluated)
     }
 
     it("Should compile multiplication correctly") {
@@ -288,23 +288,23 @@ trait CodeGenSpec
 
   describe("Compiling list concatenation") {
     it("Should work on the empty lists") {
-      concat.compileProgramAndExpr("""Nil ++ Nil""").evaluated should equal("Nil".compiled.evaluated)
+      concat.compileProgramAndExpr("""Nil +++ Nil""").evaluated should equal("Nil".compiled.evaluated)
     }
 
     it("Should work on the singleton list") {
-      concat.compileProgramAndExpr("""(Cons 1 Nil) ++ Nil""").evaluated should equal("Cons 1 Nil".compiled.evaluated)
+      concat.compileProgramAndExpr("""(Cons 1 Nil) +++ Nil""").evaluated should equal("Cons 1 Nil".compiled.evaluated)
     }
 
     it("Should be symmetric on the empty list") {
-      concat.compileProgramAndExpr("""Nil ++ (Cons 1 Nil)""").evaluated should equal("Cons 1 Nil".compiled.evaluated)
+      concat.compileProgramAndExpr("""Nil +++ (Cons 1 Nil)""").evaluated should equal("Cons 1 Nil".compiled.evaluated)
     }
 
     it("Should append to the end of the list") {
-      concat.compileProgramAndExpr("""(Cons 2 Nil) ++ (Cons 1 Nil)""").evaluated should equal("Cons 2 (Cons 1 Nil)".compiled.evaluated)
+      concat.compileProgramAndExpr("""(Cons 2 Nil) +++ (Cons 1 Nil)""").evaluated should equal("Cons 2 (Cons 1 Nil)".compiled.evaluated)
     }
 
     it("Should work on slightly larger lists") {
-      concat.compileProgramAndExpr("""(Cons 4 (Cons 3 (Cons 2 (Cons 1 Nil)))) ++ (Cons 4 (Cons 3 (Cons 2 (Cons 1 Nil))))""").evaluated should equal("""(Cons 4 (Cons 3 (Cons 2 (Cons 1 (Cons 4 (Cons 3 (Cons 2 (Cons 1 Nil))))))))""".compiled.evaluated)
+      concat.compileProgramAndExpr("""(Cons 4 (Cons 3 (Cons 2 (Cons 1 Nil)))) +++ (Cons 4 (Cons 3 (Cons 2 (Cons 1 Nil))))""").evaluated should equal("""(Cons 4 (Cons 3 (Cons 2 (Cons 1 (Cons 4 (Cons 3 (Cons 2 (Cons 1 Nil))))))))""".compiled.evaluated)
     }
   }
 
