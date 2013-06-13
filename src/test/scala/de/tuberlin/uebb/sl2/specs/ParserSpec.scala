@@ -449,6 +449,39 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     }
   }
 
+  describe(testedImplementationName() + " Test case 11 : Qualified identifiers") {
+    it("Should parse qualified operators") {
+      ("12.1 Real.+ 14.6").as.expr should parse(App(App(ExVar(Syntax.Var("+","Real")), ConstReal(12.1)),ConstReal(14.6)))
+    }
+
+    it("Should parse qualified variables") {
+      ("Real.pi").as.expr should parse(ExVar(Syntax.Var("pi","Real")))
+    }
+
+    it("Should parse qualified constructors") {
+      ("Real.Number").as.expr should parse(ExCon(Syntax.ConVar("Number","Real")))
+    }
+
+     it("Should parse simple constant signature with qualified type") {
+      "FUN x : Real.Number".as.ast should
+        parse(Program(
+          List(),
+          Map((strX) -> FunctionSig(TyExpr(Syntax.TConVar("Number","Real"), Nil))),
+          Map.empty, Nil))
+     }
+  }
+
+  describe(testedImplementationName() + " Test case 12 : Import statements") {
+    it("should parse import statement") {
+      ("IMPORT \"my/test/module\" AS Mtm").as.ast should 
+        parse(Program(
+          List(QualifiedImport("my/test/module","Mtm")),
+          Map.empty,
+          Map.empty,
+          Nil))
+    }
+  }
+
   //expr01 := (g x)
 
   val strF = "f"

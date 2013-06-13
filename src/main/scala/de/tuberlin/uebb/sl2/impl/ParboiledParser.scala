@@ -107,7 +107,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   /**
    * avoid parsing keywords as ide-prefixes
    */
-  def keyword : Rule0 = rule { ("DEF" | "IF" | "THEN" | "ELSE" | "LET" | "IN" | "CASE" | "OF" | "DATA") ~ !(digit | non_digit) }
+  def keyword : Rule0 = rule { ("DEF" | "IF" | "THEN" | "ELSE" | "LET" | "IN" | "CASE" | "OF" | "DATA" | "IMPORT" | "AS") ~ !(digit | non_digit) }
 
   def kw(string : String) : Rule0 = {
     string ~ !(digit | non_digit) ~ spacing
@@ -136,6 +136,8 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   def s_char: Rule0 = rule { !anyOf("\"\\") ~ ANY }
   
   /* actual AST generating rules */
+
+  def mkQualImport(path : String, mod : String) = QualifiedImport(path, mod)
 
   def mkQualVar(mod : String, name : String) = ExVar(Syntax.Var(name, mod))
 
@@ -178,6 +180,10 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   private def updateMap[T](s : String, t : T, m : Map[String, List[T]]) = m + (s -> (t::m.get(s).getOrElse(Nil)))
+
+  def mkProgramImport(a : AST, x : Import) = a match {
+    case m:Program => m.copy(imports = x::m.imports)
+  }
 
   def mkProgramDef(a : AST, x : (String, FunctionDef)) = a match {
     case m:Program => m.copy(functionDefs = updateMap(x._1, x._2, m.functionDefs))
@@ -260,9 +266,14 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def continueProgram : ReductionRule1[AST, AST] = rule {
+    import_def ~~> (mkProgramImport _) |
     fun_def ~~> (mkProgramDef _) |
     data_def ~~> (mkProgramData _) |
     fun_sig ~~> (mkProgramSig _) 
+  }
+
+  def import_def : Rule1[Import] = rule {
+    kw("IMPORT") ~ string_token ~ kw("AS") ~ constructor ~~> (mkQualImport _)
   }
 
   def fun_def : Rule1[(String, FunctionDef)] = rule {
@@ -281,7 +292,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def cons_def_element : Rule1[ASTType] = rule {
-    constructor ~~> (c => mkTyExpr(c, Nil)) |
+    constructor ~ !(".") ~~> (c => mkTyExpr(c, Nil)) |
     qualification ~ constructor ~~> (mkQualType _) |
     "( " ~ type_expr ~ ") " |
     variable ~~> (s => TyVar(s))
@@ -294,7 +305,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   def type_expr : Rule1[ASTType] = rule { type_expr_base ~ optional(fun_rhs) }
 
   def type_expr_base : Rule1[ASTType] = rule {
-    constructor ~ zeroOrMore(type_expr) ~~> (mkTyExpr _) |
+    constructor ~ !(".") ~ zeroOrMore(type_expr) ~~> (mkTyExpr _) |
     qualification ~ constructor ~ zeroOrMore(type_expr) ~~> (mkQualTyExpr _) |
     "( " ~ type_expr ~ ") " |
     variable ~~> (s => TyVar(s))
