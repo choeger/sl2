@@ -83,14 +83,9 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     it("Should parse Integer literals") {
       "42".as.expr should parse(ConstInt(42))
     }
-    it("Should parse negative Integer literals with parantheses") {
-      "-(42)".as.expr should parse(ConstInt(-42))
-    }
+
     it("Should parse negative Integer literals") {
       "-42".as.expr should parse(ConstInt(-42))
-    }
-    it("Should parse negative Integer literals with whitespace") {
-      "- 42".as.expr should parse(ConstInt(-42))
     }
 
     it("Should parse real literals") {
@@ -105,15 +100,10 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
       "-1.0".as.expr should parse(ConstReal(-1.0))
     }
 
-    it("Should parse negative real literals with whitespace") {
-      "-\t1.0".as.expr should parse(ConstReal(-1.0))
-    }
-    it("Should parse negative real literals with whitespace and parantheses") {
-      "-\t(1.0)".as.expr should parse(ConstReal(-1.0))
-    }
     it("Should parse negative real literals with exponent") {
       "-0.5E2".as.expr should parse(ConstReal(-0.5e2))
     }
+
     it("Should parse negative real literals with negative exponents") {
       "-0.5E-2".as.expr should parse(ConstReal(-0.5e-2))
     }
