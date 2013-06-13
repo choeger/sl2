@@ -54,7 +54,7 @@ trait PreProcessing {
                              )    
   
   
-  val replaceBuiltinMap = Map ( "+"  -> "_add"
+  /*val replaceBuiltinMap = Map ( "+"  -> "_add"
                               , "++" -> "_adds"
                               , "+r" -> "_addr"
                               , "*r" -> "_mulr"
@@ -74,7 +74,7 @@ trait PreProcessing {
                               , "stol" -> "_stol"
                               , "ltos" -> "_ltos"
 			      )
-  
+ */ 
 
   def renameIdentifier(a: AST): AST = {
     val f : PartialFunction[String, String] = {case s: String => escapeJsIde(s)}
@@ -85,9 +85,7 @@ trait PreProcessing {
 
   def escapeJsIde(x: String): String = {
     var a = x
-
-    if (replaceBuiltinMap.contains(x)) a = replaceBuiltinMap(x)
-    
+ 
     replaceCustomMap.foreach {
       case (k, v) => a = a.replaceAll(k, v)
     }

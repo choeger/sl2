@@ -49,9 +49,9 @@ trait ProgramCheckerImpl extends ProgramChecker {
   def checkProgram(in: AST): Either[Error, Unit] = {
     for ( initialContext <- checkDataTypes(in).right ;
 	  (funSigs, funDefs) <- checkFunctions(in).right ;
-	  elc <- splitLetRecs(predefinedFuns.toSet, programToELC(funSigs, funDefs)).right ;
+	  elc <- splitLetRecs(Set(), programToELC(funSigs, funDefs)).right ;
 	  mainType <- {
-	    checkTypes(initialContext <++> predefsContext, elc).right
+	    checkTypes(initialContext, elc).right
 	  } ;
 	  _ <- checkMain(funSigs, mainType).right )
     yield ()

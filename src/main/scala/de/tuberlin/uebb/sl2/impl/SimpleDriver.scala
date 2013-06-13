@@ -39,7 +39,7 @@ trait SimpleDriver extends Driver{
       val ast: ListBuffer[Program] = new ListBuffer
       for (f <- input) {
         parseAst(f) match {
-          case Right(a) => ast += a.asInstanceOf[Program]
+          case Right(a) => {println(a.toString); ast += a.asInstanceOf[Program]}
           case Left(a) => return Left(a)
         }
       }

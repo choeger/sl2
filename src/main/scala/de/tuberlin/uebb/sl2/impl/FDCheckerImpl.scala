@@ -42,7 +42,6 @@ trait FDCheckerImpl extends FDChecker {
    *
    * The following properties are checked:
    * $ - Each defining clause of a function `f' must have the same arity.
-   * $ - No top-level function may have the name of a predefined function.
    * $ - All variables in patterns must be disjoint.
    *
    * @return Definitions and signatures of all top-level functions
@@ -62,7 +61,6 @@ trait FDCheckerImpl extends FDChecker {
   def checkFunctions(funDefs: Map[Var, List[FunctionDef]], funSigs: Map[Var, FunctionSig]): Either[Error, Unit] = {
     for (
       _ <- checkArities(funDefs, funSigs).right;
-      _ <- checkPredefClash(funDefs).right;
       _ <- checkDuplicatePatVars(funDefs).right
     ) yield ()
   }
@@ -85,40 +83,20 @@ trait FDCheckerImpl extends FDChecker {
         val message = "Definitions of " + quote(funName.toString) + " have different arities."
         Left(AttributedError(message, attribute))
       } else if (!matchingSig) {
-        /*
-	 * If a type signature is given for this function definition, we hint on
-	 * the position of the signature. Otherwise we take the position of the
-	 * first function definition.
-	 */
+	    /*
+		 * If a type signature is given for this function definition, we hint on
+		 * the position of the signature. Otherwise we take the position of the
+		 * first function definition.
+		 */
         val attribute = funSigs.get(funName).map(_.attribute).getOrElse(defs.head.attribute)
-        val message = "Signature and definitions of " + quote(funName.toString) + " have different arities."
+        val message = "Signature and definition of "+ quote(funName.toString) +" have different arities." + 
+        			" Signature arity: " + funSigs.get(funName).map(_.typ.arity.toString) +
+        			" Arguments: "+arguments.toString
         Left(AttributedError(message, attribute))
       } else Right()
     }
 
     for (_ <- errorMap(funDefs.toList, checkArities _ tupled).right)
-      yield ()
-  }
-
-  /**
-   * Check that no function uses the name of a predefined function.
-   */
-  def checkPredefClash(funDefs: Map[Var, List[FunctionDef]]): Either[Error, Unit] = {
-    val funNames = funDefs.keySet.toList
-
-    def checkPredefClash(funName: Var): Either[Error, Unit] = {
-      if (predefinedFuns.toSet contains funName) {
-        /*
-	 * We hint on the first definition of a function when
-	 * its name clashes with the names of the predefined ones.
-	 */
-        val attribute = funDefs.get(funName).get.head.attribute
-        val message = "Function name " + quote(funName.toString) + " clashes with predefined function."
-        Left(AttributedError(message, attribute))
-      } else Right()
-    }
-
-    for (_ <- errorMap(funNames, checkPredefClash).right)
       yield ()
   }
 

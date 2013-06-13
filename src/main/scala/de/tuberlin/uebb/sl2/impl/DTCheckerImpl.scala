@@ -75,8 +75,8 @@ trait DTCheckerImpl extends DTChecker with Lexic with Syntax with Context with T
    * Check that the names of all type constructors are disjoint.
    */
   def checkTypeConsDisjoint(dataDefs: List[DataDef]): Either[Error, Unit] = {
-    val typeConstructors = allTypeCons(dataDefs) ++ predefinedTypes
-
+    val typeConstructors = allTypeCons(dataDefs)
+    
     def handleDuplicate(tcon: TConVar) = {
       val duplicateDefs = dataDefs filter {
         (dataDef: DataDef) => tcon == Syntax.TConVar(dataDef.ide)
@@ -134,7 +134,7 @@ trait DTCheckerImpl extends DTChecker with Lexic with Syntax with Context with T
    * Check that no undefined type constructors are used in any right-hand side.
    */
   def checkNoUndefinedTypeCons(dataDefs: List[DataDef]): Either[Error, Unit] = {
-    val typeConstructors = (allTypeCons(dataDefs) ++ predefinedTypes).toSet
+    val typeConstructors = (allTypeCons(dataDefs)).toSet
 
     def checkType(dataDef: DataDef): Either[Error, Unit] = {
       val rhsConstructors = allAppTypeCons(dataDef.constructors).toSet
@@ -190,9 +190,8 @@ trait DTCheckerImpl extends DTChecker with Lexic with Syntax with Context with T
    */
   def checkTypeConsApp(dataDefs: List[DataDef]): Either[Error, Unit] = {
     val constructorArities: Map[TConVar, Int] = {
-      val predefArities = (predefinedTypes, fill(predefinedTypes.length)(0)).zipped
       val constructorArity = (dataDef: DataDef) => (Syntax.TConVar(dataDef.ide), dataDef.tvars.length)
-      (dataDefs.map(constructorArity) ++ predefArities).toMap
+      (dataDefs.map(constructorArity)).toMap
     }
 
     def checkTypeConsApp(dataDef: DataDef) = {

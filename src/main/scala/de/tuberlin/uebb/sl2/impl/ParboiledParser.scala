@@ -107,7 +107,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   /**
    * avoid parsing keywords as ide-prefixes
    */
-  def keyword : Rule0 = rule { ("DEF" | "IF" | "THEN" | "ELSE" | "LET" | "IN" | "CASE" | "OF" | "DATA") ~ !(digit | non_digit) }
+  def keyword : Rule0 = rule { ("FUN" | "DEF" | "IF" | "THEN" | "ELSE" | "LET" | "IN" | "CASE" | "OF" | "DATA") ~ !(digit | non_digit) }
 
   def kw(string : String) : Rule0 = {
     string ~ !(digit | non_digit) ~ spacing
@@ -219,10 +219,14 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
     qualification ~ custom_op_token ~~> (mkQualVar _)
   }
 
+  def custom_op_token_ref : Rule1[String] = rule {    
+    "( " ~ oneOrMore(anyOf("!§%&/=?+*#-<>|")) ~> (s => s) ~ ") "
+  }
+  
   def custom_op_token : Rule1[String] = rule {    
     // TODO: if we change binding we might need to check for builtin ops first
     //(!builtin_op) ~ oneOrMore(anyOf("!§%&/=?+*#-:<>|")) ~> (s => ExVar(s)) ~ spacing
-    oneOrMore(anyOf("!§%&/=?+*#-:<>|")) ~> (s => s) ~ spacing
+    oneOrMore(anyOf("!§%&/=?+*#-<>|")) ~> (s => s) ~ spacing
   }
 
   def relation_op : Rule1[Expr] = rule {
@@ -288,6 +292,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def fun_sig : Rule2[String, FunctionSig] = rule {
+    kw("FUN") ~ custom_op_token_ref ~ ": " ~ type_expr ~~> (mkFunSig _) | 
     kw("FUN") ~ variable ~ ": " ~ type_expr ~~> (mkFunSig _)
   }
   

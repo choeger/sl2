@@ -69,9 +69,9 @@ object Main
         source.close()
         code
       }
-      val prelude = Source.fromURL(getClass.getResource("/prelude.sl")).getLines.mkString("\n")
+      //val prelude = Source.fromURL(getClass.getResource("/prelude.sl")).getLines.mkString("\n")
       val preludeJs = Source.fromURL(getClass.getResource("/prelude.js")).getLines.mkString("\n")
-      val res = run(prelude +: input.toList)     
+      val res = run(input.toList)     
       if (res.isLeft)
         res.left.map(x => println("Error: " + x))
       else
