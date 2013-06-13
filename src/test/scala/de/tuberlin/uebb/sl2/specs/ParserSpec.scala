@@ -434,6 +434,23 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
             TyExpr(Syntax.TConVar(strList), List(TyVar(strY))))))),
           Map.empty, Nil))
     }
+
+    it("Should parse other  higher order function signature") {
+      ("FUN &= : (DOM a) -> (a -> (DOM b)) -> (DOM b)").as.ast should
+        parse(Program(
+          List(),
+          Map(("&=") -> FunctionSig(
+            FunTy(List(
+              TyExpr(Syntax.TConVar("DOM"), List(TyVar("a"))),
+              FunTy(List(
+                TyVar("a"), 
+                TyExpr(Syntax.TConVar("DOM"), List(TyVar("b")))
+              )),
+              TyExpr(Syntax.TConVar("DOM"), List(TyVar("b")))
+            ))
+          )),
+          Map.empty, Nil))
+    }
   }
 
   describe(testedImplementationName() + " Test case 11 : Qualified identifiers") {
@@ -447,6 +464,14 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
 
     it("Should parse qualified constructors") {
       ("Real.Number").as.expr should parse(ExCon(Syntax.ConVar("Number","Real")))
+    }
+
+    it("Should parse qualified identifiers with whitespace around the dot") {
+      ("Real. pi Real . + Real .pi").as.expr should parse(
+        App(App(
+          ExVar(Syntax.Var("+","Real")),
+          ExVar(Syntax.Var("pi","Real"))),
+          ExVar(Syntax.Var("pi","Real"))))
     }
 
      it("Should parse simple constant signature with qualified type") {

@@ -109,7 +109,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   /**
    * avoid parsing keywords as ide-prefixes
    */
-  def keyword : Rule0 = rule { ("DEF" | "IF" | "THEN" | "ELSE" | "LET" | "IN" | "CASE" | "OF" | "DATA" | "IMPORT" | "AS") ~ !(digit | non_digit) }
+  def keyword : Rule0 = rule { ("FUN" | "DEF" | "IF" | "THEN" | "ELSE" | "LET" | "IN" | "CASE" | "OF" | "DATA" | "IMPORT" | "AS") ~ !(digit | non_digit) }
 
   def kw(string : String) : Rule0 = {
     string ~ !(digit | non_digit) ~ spacing
@@ -301,7 +301,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def fun_sig : Rule2[String, FunctionSig] = rule {
-    kw("FUN") ~ variable ~ ": " ~ type_expr ~~> (mkFunSig _)
+    kw("FUN") ~ (variable|custom_op_token) ~ ": " ~ type_expr ~~> (mkFunSig _)
   }
   
   def type_expr : Rule1[ASTType] = rule { type_expr_base ~ optional(fun_rhs) }
