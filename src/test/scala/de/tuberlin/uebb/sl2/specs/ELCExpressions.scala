@@ -121,7 +121,7 @@ trait ELCExpressions {
     pVar("f") :=> {
       pVar("l") :=> {
 	eCase(eVar("l"),
-	      EAlternative(pApp("Nil"), eVar("Nil")),
+	      EAlternative(pApp("Nil"), eCon("Nil")),
 	      EAlternative(pApp("Cons", pVar("x"), pVar("xs")),
 			   (eCon("Cons") :@ (eVar("f") :@ eVar("x"))) :@ ((eVar("map") :@ eVar("f")) :@ eVar("xs"))))
       }
@@ -136,7 +136,7 @@ trait ELCExpressions {
    */
   val mapChoiceDef = "map" := {
     eChoice( pVar("f") :=> {
-               pApp("Nil") :=> eVar("Nil")
+               pApp("Nil") :=> eCon("Nil")
              },
 	     pVar("f") :=> {
 	       pApp("Cons", pVar("x"), pVar("xs")) :=> ((eCon("Cons") :@ (eVar("f") :@ eVar("x"))) :@ ((eVar("map") :@ eVar("f")) :@ eVar("xs")))
@@ -151,7 +151,7 @@ trait ELCExpressions {
    */
   val evenDef = "even" := {
     pVar("n") :=> eCase((eVar("==") :@ eVar("n")) :@ EInt(0),
-		        EAlternative(pApp("True"), eVar("True")),
+		        EAlternative(pApp("True"), eCon("True")),
 		        EAlternative(pApp("False"), eVar("odd") :@ ((eVar("-") :@ eVar("n")) :@ EInt(1))))
   }
 
@@ -163,7 +163,7 @@ trait ELCExpressions {
    */
   val oddDef = "odd" := {
     pVar("n") :=> eCase((eVar("==") :@ eVar("n")) :@ EInt(1),
-		        EAlternative(pApp("True"), eVar("True")),
+		        EAlternative(pApp("True"), eCon("True")),
 		        EAlternative(pApp("False"), eVar("even") :@ ((eVar("-") :@ eVar("n")) :@ EInt(1))))
   }
 

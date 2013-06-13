@@ -52,7 +52,7 @@ trait Lexic {
   val stolLex = "stol"
   val ltosLex = "ltos"
 
-  val strAdd = "+s"
+  val strAdd = "++"
 
   val realDiv = "/r"
   val realMul = "*r"

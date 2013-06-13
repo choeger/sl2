@@ -48,9 +48,9 @@ trait SLPrograms {
 
 
   val concat = """
-  |DEF xs        ++ Nil = xs
-  |DEF Nil       ++ xs  = xs
-  |DEF (Cons x xs) ++ ys  = Cons x (xs ++ ys)
+  |DEF xs        +++ Nil = xs
+  |DEF Nil       +++ xs  = xs
+  |DEF (Cons x xs) +++ ys  = Cons x (xs +++ ys)
     """.stripMargin
 
 
@@ -78,7 +78,7 @@ trait SLPrograms {
   |DEF quicksort Nil        = Nil
   |DEF quicksort (Cons x Nil) = Cons x Nil
   |DEF quicksort (Cons x xs) = LET lessThanX = \ y . y < x
-  |                          IN (filter xs lessThanX) ++ (Cons x (filterNot xs lessThanX))
+  |                          IN (filter xs lessThanX) +++ (Cons x (filterNot xs lessThanX))
   """.stripMargin
 
 
@@ -199,7 +199,7 @@ trait SLPrograms {
 
   var shadowedVars = """
   | DEF f = LET v = 10
-  |             x = (LET v = 20 IN \ x y . v * x) (LET v = -30 IN v) v
+  |             x = (LET v = 20 IN \ x y . v * x) (LET v = 0-30 IN v) v
   |         IN v + x
   """.stripMargin
 }

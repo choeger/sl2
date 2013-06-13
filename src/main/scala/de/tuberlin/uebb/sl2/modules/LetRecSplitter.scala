@@ -4,14 +4,14 @@
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *   * Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *   * Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution.
- *   * Neither the name of the TU Berlin nor the
- *     names of its contributors may be used to endorse or promote products
- *     derived from this software without specific prior written permission.
+ * * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ * * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * * Neither the name of the TU Berlin nor the
+ * names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -51,37 +51,36 @@ trait LetRecSplitter {
   def splitLetRecs(boundVars: Set[VarFirstClass], expr: ELC): Either[Error, ELC] = expr match {
     case ELetRec(defs, body, attr) => {
       /*
-       * Build a dependency graph; the left-hand sides of the letrec are the
-       * vertices of the graph and edges `f' -> `g' are added whenever the
-       * definition of the left-hand side `f' requires the definition of the
-       * left-hand side `g'.
-       */
+	 * Build a dependency graph; the left-hand sides of the letrec are the
+	 * vertices of the graph and edges `f' -> `g' are added whenever the
+	 * definition of the left-hand side `f' requires the definition of the
+	 * left-hand side `g'.
+	 */
       for (
-        depGraph <- buildDepGraph(boundVars, expr).right;
+        (graph, succs) <- buildDepGraph(boundVars, expr).right;
 
         /*
-	     * Split the right-hand sides of the letrec's definitions which
-	     * might contain letrecs themselves. Care has to be taken regarding
-	     * the outer context. For each definition v = e only those left-hand
-	     * sides of the letrec may be added to the outer context the expression
-	     * e depends on, i.e., those v has a dependency edge to. Otherwise,
-	     * expressions in which inner recursive functions shadow outer bindings
-	     * are not split correctly, like:
-	     *
-	     * letrec f = \ x . x
-	     *        main = letrec f = \ x . case x <= 1 of
-	     *                                  True  -> 1
-	     *                                  False -> f (x - 1)
-	     *               in f 3
-	     * in main
-	     *
-	     * If we put {f, main} in the outer context when splitting the
-	     * right-hand side of the `main' definition, the inner `f' is not
-	     * recognized as recursive
-	     */
+			 * Split the right-hand sides of the letrec's definitions which
+			 * might contain letrecs themselves. Care has to be taken regarding
+			 * the outer context. For each definition v = e only those left-hand
+			 * sides of the letrec may be added to the outer context the expression
+			 * e depends on, i.e., those v has a dependency edge to. Otherwise,
+			 * expressions in which inner recursive functions shadow outer bindings
+			 * are not split correctly, like:
+			 *
+			 * letrec f = \ x . x
+			 * main = letrec f = \ x . case x <= 1 of
+			 * True -> 1
+			 * False -> f (x - 1)
+			 * in f 3
+			 * in main
+			 *
+			 * If we put {f, main} in the outer context when splitting the
+			 * right-hand side of the `main' definition, the inner `f' is not
+			 * recognized as recursive
+			 */
         splitRhs <- {
           def splitRhs(d: EDefinition) = {
-            val (graph, succs) = depGraph
             val visibleLhsVars = succs.get(d.lhs).get.toSet
             splitLetRecs(boundVars union visibleLhsVars, d.rhs)
           }
@@ -90,12 +89,12 @@ trait LetRecSplitter {
         };
 
         /*
-	     * Split the body. In contrast to the right-hand sides of the
-	     * definitions we split the body with all left-hand sides in
-	     * the outer context, since they are all truly visible in the body.
-	     */
+			 * Split the body. In contrast to the right-hand sides of the
+			 * definitions we split the body with all left-hand sides in
+			 * the outer context, since they are all truly visible in the body.
+			 */
         splitBody <- {
-          val lhsVars = defs.map(_.lhs.asInstanceOf[VarFirstClass]).toSet
+          val lhsVars = defs.map(_.lhs).toSet
           splitLetRecs(boundVars union lhsVars, body).right
         }
       ) yield {
@@ -103,20 +102,18 @@ trait LetRecSplitter {
         val leftHandSides = defs map (_.lhs)
         val signatures = leftHandSides.zip(defs.map(_.sig)).toMap
         val splitDefs = leftHandSides.zip(splitRhs).toMap
-        val (graph, succs) = depGraph
         val sccs = topologicalSort(stronglyConnectedComponents(graph), graph)
 
         /*
-	 * Split the definition(s) in the strongly connected component.
-	 * Non-recursive functions with no dependencies will be transformed
-	 * into a simple, non-recursive let-binding. Otherwise, we generate
-	 * a recursive let-binding for each strongly connected component.
-	 */
+		 * Split the definition(s) in the strongly connected component.
+		 * Non-recursive functions with no dependencies will be transformed
+		 * into a simple, non-recursive let-binding. Otherwise, we generate
+		 * a recursive let-binding for each strongly connected component.
+		 */
         def split(scc: Set[VarFirstClass], body: ELC) = {
           // A definition depends on no other function definitions
           if (scc.size == 1) {
             val lhs = scc.head
-            val (graph, succs) = depGraph
             val lhsSuccessors = succs.get(lhs).get
             val definition = EDefinition(lhs, signatures.get(lhs).get, splitDefs.get(lhs).get, attr)
             // Recursive function in defintion
@@ -135,11 +132,11 @@ trait LetRecSplitter {
     }
 
     /*
-     * The following cases are syntax traversal splitting each
-     * subexpression. Lexical scoping of non-recursive let-,
-     * lambda-, and case-expressions is respected by adding the
-     * bound variables to 'splitLetRecs' first argument.
-     */
+ * The following cases are syntax traversal splitting each
+ * subexpression. Lexical scoping of non-recursive let-,
+ * lambda-, and case-expressions is respected by adding the
+ * bound variables to 'splitLetRecs' first argument.
+ */
     case EApp(fun, arg, attr) => {
       for (
         splitFun <- splitLetRecs(boundVars, fun).right;
@@ -205,8 +202,8 @@ trait LetRecSplitter {
      * Traverse a definition.
      *
      * @param outerCtx Outer context
-     * @param lhs      Left-hand sides of current letrec
-     * @param d        Definition to look at
+     * @param lhs Left-hand sides of current letrec
+     * @param d Definition to look at
      */
     def traverseDef(outerCtx: Set[VarFirstClass], lhs: Set[VarFirstClass])(d: EDefinition): Either[Error, Unit] = {
       traverseRhs(d.lhs, lhs, outerCtx, d.rhs)
@@ -215,8 +212,8 @@ trait LetRecSplitter {
     /**
      * Traverse the right-hand side of a definition.
      *
-     * @param f        Name of the current definition (source of vertices added, if any)
-     * @param lhs      Left-hand sides bound in current letrec
+     * @param f Name of the current definition (source of vertices added, if any)
+     * @param lhs Left-hand sides bound in current letrec
      * @param outerCtx Names available in outer context
      */
     def traverseRhs(f: VarFirstClass, lhs: Set[VarFirstClass], outerCtx: Set[VarFirstClass], expr: ELC): Either[Error, Unit] = expr match {
@@ -262,9 +259,9 @@ trait LetRecSplitter {
 
       case ECase(e, alts, _) => {
         /*
-		 * Traverse each branch of the case expression like a
-		 * lambda-abstraction or a let-binding.
-		 */
+	 * Traverse each branch of the case expression like a
+	 * lambda-abstraction or a let-binding.
+	 */
         def traverseAlt(alt: EAlternative) = {
           val patVars = alt.pattern.vars.map(Syntax.Var(_).asInstanceOf[VarFirstClass]).toSet
           traverseRhs(f, lhs, outerCtx union patVars, alt.expr)
@@ -315,3 +312,4 @@ trait LetRecSplitter {
   }
 
 }
+
