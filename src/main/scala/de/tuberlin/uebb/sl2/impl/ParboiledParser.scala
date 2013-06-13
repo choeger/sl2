@@ -93,13 +93,15 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   
   def digit: Rule0 = rule { "0" - "9" }
 
-  def integer: Rule0 = rule { oneOrMore(digit) }
+  def integer: Rule0 = rule { optional("-") ~ oneOrMore(digit) }
 
   def exponent : Rule0 = rule { ("E"|"e") ~ optional("-") ~ oneOrMore(digit) }
 
   def real : Rule0 = rule { 
-    oneOrMore(digit) ~ "." ~ zeroOrMore(digit) ~ optional(exponent) | 
-    "." ~ oneOrMore(digit) ~ optional(exponent)
+    optional("-") ~ (
+      oneOrMore(digit) ~ "." ~ zeroOrMore(digit) |
+      "." ~ oneOrMore(digit)
+    ) ~ optional(exponent)
   }
   
   def char: Rule0 = rule { "'" ~ !("'") ~ ANY ~ "'" }
