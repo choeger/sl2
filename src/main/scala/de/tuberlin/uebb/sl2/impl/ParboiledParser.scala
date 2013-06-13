@@ -273,7 +273,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def import_def : Rule1[Import] = rule {
-    kw("IMPORT") ~ string_token ~ kw("AS") ~ constructor ~~> (mkQualImport _)
+    kw("IMPORT") ~ string_token ~ spacing  ~ kw("AS") ~ constructor ~~> (mkQualImport _)
   }
 
   def fun_def : Rule1[(String, FunctionDef)] = rule {
