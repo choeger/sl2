@@ -14,6 +14,7 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Parbo
 			val jsonAst = result.asInstanceOf[JsonImportAst]
 			
 			json2Ast(jsonAst)
+		case None => null
 	}
 	
 	// syntax' json export types
