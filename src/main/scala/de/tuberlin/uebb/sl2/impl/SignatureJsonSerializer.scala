@@ -21,7 +21,7 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Parbo
 	type JsonExportAst                = JSONObject
 	type JsonExportAstType            = Any
 	type JsonExportAstTypeList        = JSONArray
-	type JsonExportTyVar              = JsonExportTypeVar
+	type JsonExportTyVar              = JsonExportTypeVarName
 	type JsonExportFunTy              = JsonExportAstTypeList
 	type JsonExportTyExpr             = JSONObject
 	type JsonExportFunctionSig        = JsonExportAstType
@@ -35,7 +35,7 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Parbo
 	type JsonImportAst                = Map[String, Any]
 	type JsonImportAstType            = Any
 	type JsonImportAstTypeList        = List[JsonImportAstType]
-	type JsonImportTyVar              = JsonImportTypeVar
+	type JsonImportTyVar              = JsonImportTypeVarName
 	type JsonImportFunTy              = JsonImportAstTypeList
 	type JsonImportTyExpr             = Map[String, Any]
 	type JsonImportFunctionSig        = JsonImportAstType
@@ -46,95 +46,114 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Parbo
 	type JsonImportConstructorDefList = List[JsonImportConstructorDef]
 	
 	// identifier's json export types
-	type JsonExportVar     = String
-	type JsonExportTypeVar = String
-	type JsonExportTypeVarList = JSONArray
-	type JsonExportConVar  = String
-	type JsonExportTConVar = String
+	type JsonExportVar         = String
+	type JsonExportConVar      = String
+	type JsonExportTConVar     = String
+	
+	type JsonExportVarName         = String
+	type JsonExportTypeVarName     = String
+	type JsonExportTypeVarNameList = JSONArray
+	type JsonExportConVarName      = String
+	type JsonExportTConVarName     = String	
 	
 	// identifier's json import types
 	type JsonImportVar     = String
-	type JsonImportTypeVar = String
-	type JsonImportTypeVarList = List[JsonImportTypeVar]
 	type JsonImportConVar  = String
 	type JsonImportTConVar = String
+
+	type JsonImportVarName         = String
+	type JsonImportTypeVarName     = String
+	type JsonImportTypeVarNameList = List[JsonImportTypeVarName]
+	type JsonImportConVarName      = String
+	type JsonImportTConVarName     = String
 	
 	// identifier conversion to json
-	private def     var2Json(var : Var    ) : JsonExportVar     = var.module + "." + var.ide
-	private def typeVar2Json(var : TypeVarName) : JsonExportTypeVar = ide
-	private def  conVar2Json(var : ConVar ) : JsonExportConVar  = var.module + "." + var.ide
-	private def tConVar2Json(var : TConVar) : JsonExportTConVar = var.module + "." + var.ide
+	private def     var2Json(v : Var        ) : JsonExportVar     = v.module + "." + v.ide
+	private def  conVar2Json(v : ConVar     ) : JsonExportConVar  = v.module + "." + v.ide
+	private def tConVar2Json(v : TConVar    ) : JsonExportTConVar = v.module + "." + v.ide
+	
+	private def     varName2Json(v : VarName    ) : JsonExportVarName     = v
+	private def typeVarName2Json(v : TypeVarName) : JsonExportTypeVarName = v
+	private def  conVarName2Json(v : ConVarName ) : JsonExportConVarName  = v
+	private def tConVarName2Json(v : TConVarName) : JsonExportTConVarName = v
 	
 	// identifier conversion from json	
-	private def json2Var    (json : JsonImportVar    ) : Var     = { val (module, ide) = splitQualified(json); Var(ide, module) }
-	private def json2TypeVar(json : JsonImportTypeVar) : TypeVarName = json
-	private def json2ConVar (json : JsonImportConVar ) : ConVar  = { val (module, ide) = splitQualified(json); ConVar(ide, module) }
-	private def json2TConVar(json : JsonImportTConVar) : TConVar = { val (module, ide) = splitQualified(json); TConVar(ide, module) }
+	private def json2Var    (json : JsonImportVar    ) : Var         = { val (module, ide) = splitQualified(json); Syntax.Var(ide, module) }
+	private def json2ConVar (json : JsonImportConVar ) : ConVar      = { val (module, ide) = splitQualified(json); Syntax.ConVar(ide, module) }
+	private def json2TConVar(json : JsonImportTConVar) : TConVar     = { val (module, ide) = splitQualified(json); Syntax.TConVar(ide, module) }
+	
+	private def json2VarName    (json : JsonImportVarName    ) : VarName     = json
+	private def json2TypeVarName(json : JsonImportTypeVarName) : TypeVarName = json
+	private def json2ConVarName (json : JsonImportConVarName ) : ConVarName  = json
+	private def json2TConVarName(json : JsonImportTypeVarName) : TConVarName = json
+
 	
 	private def splitQualified(json : String) : (String, String) = {
 		val chunks = json.split('.')
 		
-		(chunks[0], chunks[1])
+		(chunks(0), chunks(1))
 	}
 
 	// some map macros
 	
-	private def typeVars2Json(ides : List[TypeVarName]) : JsonExportTypeVarList = JSONArray(ides.map(typeVar2Json))
+	private def typeVars2Json(ides : List[TypeVarName]) : JsonExportTypeVarNameList = JSONArray(ides.map(typeVarName2Json))
 	
-	private def json2TypeVars(jsonIdes : JsonImportTypeVarList) : List[TypeVarName] = jsonIdes.map(json2TypeVar)
+	private def json2TypeVars(jsonIdes : JsonImportTypeVarNameList) : List[TypeVarName] = jsonIdes.map(json2TypeVarName)
 	
-	private def  sigs2Json(sigs  : Map[Var, FunctionSig]) : JsonExportFunctionSigMap     = JSONObject(sigs.map(sig2Json))
-	private def types2Json(types : List[ASTType]        ) : JsonExportAstTypeList        = JSONArray(types.map(type2Json))
-	private def datas2Json(datas : List[DataDef]        ) : JsonExportDataDefList        = JSONArray(datas.map(data2Json))
-	private def ctors2Json(ctors : List[ConstructorDef] ) : JsonExportConstructorDefList = JSONArray(ctors.map(ctor2Json))
+	private def  sigs2Json(sigs  : Map[VarName, FunctionSig]) : JsonExportFunctionSigMap     = JSONObject(sigs.map(sig2Json))
+	private def types2Json(types : List[ASTType]            ) : JsonExportAstTypeList        = JSONArray(types.map(type2Json))
+	private def datas2Json(datas : List[DataDef]            ) : JsonExportDataDefList        = JSONArray(datas.map(data2Json))
+	private def ctors2Json(ctors : List[ConstructorDef]     ) : JsonExportConstructorDefList = JSONArray(ctors.map(ctor2Json))
 
-	private def json2Sigs (jsonSigs  : JsonImportFunctionSigMap)     : Map[Var, FunctionSig] = jsonSigs .map(json2Sig)
-	private def json2Types(jsonTypes : JsonImportAstTypeList)        : List[ASTType]         = jsonTypes.map(json2Type)
-	private def json2Datas(jsonDatas : JsonImportDataDefList)        : List[DataDef]         = jsonDatas.map(json2Data)
-	private def json2Ctors(jsonCtors : JsonImportConstructorDefList) : List[ConstructorDef]  = jsonCtors.map(json2Ctor)
+	private def json2Sigs (jsonSigs  : JsonImportFunctionSigMap)     : Map[VarName, FunctionSig] = jsonSigs .map(json2Sig)
+	private def json2Types(jsonTypes : JsonImportAstTypeList)        : List[ASTType]             = jsonTypes.map(json2Type)
+	private def json2Datas(jsonDatas : JsonImportDataDefList)        : List[DataDef]             = jsonDatas.map(json2Data)
+	private def json2Ctors(jsonCtors : JsonImportConstructorDefList) : List[ConstructorDef]      = jsonCtors.map(json2Ctor)
 
 	// actual (de)serialization implementation starts here
 	
-	private def ast2Json(ast : AST) : JsonExportAst = ast match { case Program(sigs, _, datas, _) =>
+	// TODO import
+	private def ast2Json(ast : AST) : JsonExportAst = ast match { case Program(_, sigs, _, datas, _) =>
 		var root : Map[String, Any] = Map()
-		root += ("signatures" -> sigs2Json(sigs))
+		root += ("signatures" -> sigs2Json (sigs ))
 		root += ("dataDefs"   -> datas2Json(datas))
 		
 		JSONObject(root)
 	}
-		
+	
+	// TODO import
 	private def json2Ast(jsonAst : JsonImportAst) : AST = {
 		val jsonSigs  = jsonAst.get("signatures").get.asInstanceOf[JsonImportFunctionSigMap]
 		val jsonDatas = jsonAst.get("dataDefs"  ).get.asInstanceOf[JsonImportDataDefList]
 		
-		Program(json2Sigs(jsonSigs), Map(), json2Datas(jsonDatas))
+		Program(List(), json2Sigs(jsonSigs), Map(), json2Datas(jsonDatas))
 	}
 
-	private def sig2Json(sig : (Var, FunctionSig)) : (JsonExportVar, JsonExportFunctionSig) = {
+	private def sig2Json(sig : (VarName, FunctionSig)) : (JsonExportVarName, JsonExportFunctionSig) = {
 		val (ide, funSig) = sig
 		
-		(var2Json(ide), type2Json(funSig.typ))
+		(varName2Json(ide), type2Json(funSig.typ))
 	}
 		
-	private def json2Sig(jsonSig : (JsonImportVar, JsonImportFunctionSig)) : (Var, FunctionSig) = {
+	private def json2Sig(jsonSig : (JsonImportVarName, JsonImportFunctionSig)) : (VarName, FunctionSig) = {
 		var (fun, sig) = jsonSig
 		
-		(json2Var(fun), FunctionSig(json2Type(sig)))
+		(json2VarName(fun), FunctionSig(json2Type(sig)))
 	}
 
 	private def type2Json(typ : ASTType) : JsonExportAstType = typ match {
-		case TyVar(ide, _) => typeVar2Json(ide)
+		case TyVar(ide, _) => typeVarName2Json(ide)
 		case TyExpr(con, params, _) =>
 			var map : Map[String, Any] = Map()
-			map += ("type"   -> tConVar2Json(con))
-			map += ("params" -> types2Json(params))
+			map += ("type"   -> tConVar2Json(con   ))
+			map += ("params" -> types2Json  (params))
 			
 			JSONObject(map)
 		case FunTy(types, _) => types2Json(types)
 	}
 		
 	private def json2Type(jsonType : JsonImportAstType) : ASTType = jsonType match {
-		case jsonTyVar  : JsonImportTyVar  => TyVar(json2TypeVar(jsonTyVar))
+		case jsonTyVar  : JsonImportTyVar  => TyVar(json2TypeVarName(jsonTyVar))
 		case jsonTyExpr : JsonImportTyExpr =>
 			val con    = jsonTyExpr.get("type"  ).get.asInstanceOf[JsonImportTConVar]
 			val params = jsonTyExpr.get("params").get.asInstanceOf[JsonImportAstTypeList]
@@ -145,34 +164,34 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Parbo
 
 	private def data2Json(data : DataDef) : JsonExportDataDef = {
 		var map : Map[String, Any] = Map()
-		map += ("ide"          -> tConVar2Json (data.ide         ))
-		map += ("tvars"        -> typeVars2Json(data.tvars       ))
-		map += ("constructors" -> ctors2Json   (data.constructors))
+		map += ("ide"          -> tConVarName2Json(data.ide         ))
+		map += ("tvars"        -> typeVars2Json   (data.tvars       ))
+		map += ("constructors" -> ctors2Json      (data.constructors))
 		
 		JSONObject(map)
 	}
 		
 	private def json2Data(jsonData : JsonImportDataDef) : DataDef = {
-		val jsonIde   = jsonData.get("ide"         ).get.asInstanceOf[JsonImportTConVar]
-		val jsonTvars = jsonData.get("tvars"       ).get.asInstanceOf[JsonImportTypeVarList]
+		val jsonIde   = jsonData.get("ide"         ).get.asInstanceOf[JsonImportTConVarName]
+		val jsonTvars = jsonData.get("tvars"       ).get.asInstanceOf[JsonImportTypeVarNameList]
 		val jsonCtors = jsonData.get("constructors").get.asInstanceOf[JsonImportConstructorDefList]
 		
-		DataDef(json2TConVar(jsonIde), json2TypeVars(jsonTvars), json2Ctors(jsonCtors))
+		DataDef(json2TConVarName(jsonIde), json2TypeVars(jsonTvars), json2Ctors(jsonCtors))
 	}
 
 	private def ctor2Json(ctor : ConstructorDef) : JsonExportConstructorDef = {
 		var map : Map[String, Any] = Map()
-		map += ("constructor" -> conVar2Json(ctor.constructor))
-		map += ("types"       -> types2Json (ctor.types      ))
+		map += ("constructor" -> conVarName2Json(ctor.constructor))
+		map += ("types"       -> types2Json     (ctor.types      ))
 		
 		JSONObject(map)
 	}
 	
 	private def json2Ctor(jsonCtor : JsonImportConstructorDef) : ConstructorDef = {
-		val jsonIde   = jsonCtor.get("constructor").get.asInstanceOf[JsonImportConVar]
+		val jsonIde   = jsonCtor.get("constructor").get.asInstanceOf[JsonImportConVarName]
 		val jsonTypes = jsonCtor.get("types"      ).get.asInstanceOf[JsonImportAstTypeList]
 		
-		ConstructorDef(json2ConVar(jsonIde), json2Types(jsonTypes))
+		ConstructorDef(json2ConVarName(jsonIde), json2Types(jsonTypes))
 	}
 
 }

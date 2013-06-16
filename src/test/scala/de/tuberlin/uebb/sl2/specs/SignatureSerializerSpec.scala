@@ -50,9 +50,10 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
 		def apply(delivered : AST) = {
 			var result = true
 			
+			// TODO compare import
 			expected match {
-				case Program(parsedSig, _, parsedData, _) => delivered match {
-					case Program(deserializedSig, _, deserializedData, _) =>
+				case Program(_, parsedSig, _, parsedData, _) => delivered match {
+					case Program(_, deserializedSig, _, deserializedData, _) =>
 						result &&= compareSigs(parsedSig, deserializedSig)
 						result &&= compareDatas(parsedData, deserializedData)
 					}
@@ -87,23 +88,26 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
 			true
 		}
 		
-		def compareSigs        (lhs : Map [Var, FunctionSig], rhs : Map [Var, FunctionSig]) : Boolean = compareMap (lhs, compareSig        , rhs)
-		def compareDatas       (lhs : List[DataDef]         , rhs : List[DataDef]         ) : Boolean = compareList(lhs, compareData       , rhs)
-		def compareConstructors(lhs : List[ConstructorDef]  , rhs : List[ConstructorDef]  ) : Boolean = compareList(lhs, compareConstructor, rhs)
-		def compareAstTypes    (lhs : List[ASTType]         , rhs : List[ASTType]         ) : Boolean = compareList(lhs, compareAstType    , rhs)
-		def compareTypeVars    (lhs : List[TypeVar]         , rhs : List[TypeVar]         ) : Boolean = compareList(lhs, compareTypeVar    , rhs)
+		def compareSigs        (lhs : Map [VarName, FunctionSig], rhs : Map [VarName, FunctionSig]) : Boolean = compareMap (lhs, compareSig        , rhs)
+		def compareDatas       (lhs : List[DataDef]             , rhs : List[DataDef]             ) : Boolean = compareList(lhs, compareData       , rhs)
+		def compareConstructors(lhs : List[ConstructorDef]      , rhs : List[ConstructorDef]      ) : Boolean = compareList(lhs, compareConstructor, rhs)
+		def compareAstTypes    (lhs : List[ASTType]             , rhs : List[ASTType]             ) : Boolean = compareList(lhs, compareAstType    , rhs)
+		def compareTypeVarNames(lhs : List[TypeVarName]         , rhs : List[TypeVarName]         ) : Boolean = compareList(lhs, compareTypeVarName, rhs)
 		
 		// identifiers are matched on string level
 		// note that this may be insufficient because of equivalent substittions
-		def compareTypeVar(lhs : TypeVar, rhs : TypeVar) : Boolean = lhs.equals(rhs)
-		def compareTConVar(lhs : TConVar, rhs : TConVar) : Boolean = lhs.equals(rhs)
-		def compareConVar (lhs : TConVar, rhs : TConVar) : Boolean = lhs.equals(rhs)
+		def compareConVar (lhs : TConVar, rhs : TConVar) : Boolean = lhs == rhs
+		def compareTConVar(lhs : TConVar, rhs : TConVar) : Boolean = lhs == rhs
+
+		def compareTypeVarName(lhs : TypeVarName, rhs : TypeVarName) : Boolean = lhs.equals(rhs)
+		def compareConVarName (lhs : ConVarName , rhs : ConVarName ) : Boolean = lhs.equals(rhs)
+		def compareTConVarName(lhs : TConVarName, rhs : TConVarName) : Boolean = lhs.equals(rhs)
 
 		def compareSig(lhs : FunctionSig, rhs : FunctionSig) : Boolean = compareAstType(lhs.typ, rhs.typ)
 		
 		def compareAstType(lhs : ASTType, rhs : ASTType) : Boolean = {
 			(lhs, rhs) match {
-				case (lhs : TyVar , rhs : TyVar ) => compareTypeVar(lhs.ide, rhs.ide)
+				case (lhs : TyVar , rhs : TyVar ) => compareTypeVarName(lhs.ide, rhs.ide)
 				case (lhs : FunTy , rhs : FunTy ) => compareAstTypes(lhs.types, rhs.types)
 				case (lhs : TyExpr, rhs : TyExpr) => 
 					compareTConVar(lhs.conType, rhs.conType) &&
@@ -113,12 +117,12 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
 		}
 		
 		def compareData(lhs : DataDef, rhs : DataDef) : Boolean =
-			compareTConVar(lhs.ide, rhs.ide) &&
-				compareTypeVars(lhs.tvars, rhs.tvars) &&
+			compareTConVarName(lhs.ide, rhs.ide) &&
+				compareTypeVarNames(lhs.tvars, rhs.tvars) &&
 				compareConstructors(lhs.constructors, rhs.constructors)
 		
 		def compareConstructor(lhs : ConstructorDef, rhs : ConstructorDef) : Boolean = 
-			compareConVar(lhs.constructor, rhs.constructor) &&
+			compareConVarName(lhs.constructor, rhs.constructor) &&
 				compareAstTypes(lhs.types, rhs.types)
 
 	}
