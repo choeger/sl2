@@ -37,29 +37,36 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
 
 	case class IndirectSignatureMatcher() extends Matcher[ParseSerializeDeserializeResult] {
 		def apply(delivered : ParseSerializeDeserializeResult) = {
+			// TODO this is purely for debugging purposes and should later be removed
 			println(delivered.serialized)
+//			println(serialize(delivered.deserialized))
 			
 			SignatureMatcher(delivered.parsed).apply(delivered.deserialized)
 		}
 	}
 	
-	// This signature basically only matches the strings of the signature's identifiers.
+	// This matcher basically only matches the strings of the signature's identifiers.
 	// Therefore, some equal signatures may be recognized as unequal since type variables can
-	// be substituted. A more proper implementation may normalizes both signatures before matching.
+	// be substituted.
+	// Also the order of data definitions shouldn't matter. For the sake of simplicity we
+	// assume that the definitions weren't reordered during the serialization and deserialization
+	// process.
+	// A more proper implementation may normalizes both signatures before matching.
 	case class SignatureMatcher(expected : AST) extends Matcher[AST] {
 		def apply(delivered : AST) = {
 			var result = true
 			
 			// TODO compare import
 			expected match {
-				case Program(_, parsedSig, _, parsedData, _) => delivered match {
-					case Program(_, deserializedSig, _, deserializedData, _) =>
-						result &&= compareSigs(parsedSig, deserializedSig)
-						result &&= compareDatas(parsedData, deserializedData)
+				case Program(parsedImports, parsedSig, _, parsedData, _) => delivered match {
+					case Program(deserializedImports, deserializedSig, _, deserializedData, _) =>
+						result &&= compareImports(parsedImports, deserializedImports)
+						result &&= compareSigs   (parsedSig    , deserializedSig    )
+						result &&= compareDatas  (parsedData   , deserializedData   )
 					}
 			}
 			
-			MatchResult(result, "failure", "neg failure", "ms failure", "neg ms failure")
+			MatchResult(result, "the signatures don't match", "the signatures match", "ms failure", "neg ms failure")
 		}
 		
 		def compareList[T](lhs : List[T], compare : (T, T) => Boolean, rhs : List[T]) : Boolean = {
@@ -88,6 +95,7 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
 			true
 		}
 		
+		def compareImports     (lhs : List[Import]              , rhs : List[Import]              ) : Boolean = compareList(lhs, compareImport     , rhs)
 		def compareSigs        (lhs : Map [VarName, FunctionSig], rhs : Map [VarName, FunctionSig]) : Boolean = compareMap (lhs, compareSig        , rhs)
 		def compareDatas       (lhs : List[DataDef]             , rhs : List[DataDef]             ) : Boolean = compareList(lhs, compareData       , rhs)
 		def compareConstructors(lhs : List[ConstructorDef]      , rhs : List[ConstructorDef]      ) : Boolean = compareList(lhs, compareConstructor, rhs)
@@ -96,12 +104,18 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
 		
 		// identifiers are matched on string level
 		// note that this may be insufficient because of equivalent substittions
-		def compareConVar (lhs : TConVar, rhs : TConVar) : Boolean = lhs == rhs
+		def compareModuleVar(lhs : ModuleVar, rhs : ModuleVar) : Boolean = lhs.equals(rhs)
+		def comparePath(lhs : String, rhs : String) : Boolean = lhs.equals(rhs)
 		def compareTConVar(lhs : TConVar, rhs : TConVar) : Boolean = lhs == rhs
 
 		def compareTypeVarName(lhs : TypeVarName, rhs : TypeVarName) : Boolean = lhs.equals(rhs)
 		def compareConVarName (lhs : ConVarName , rhs : ConVarName ) : Boolean = lhs.equals(rhs)
 		def compareTConVarName(lhs : TConVarName, rhs : TConVarName) : Boolean = lhs.equals(rhs)
+		
+		def compareImport(lhs : Import, rhs : Import) : Boolean = (lhs, rhs) match { case (lhs : QualifiedImport, rhs : QualifiedImport) =>
+			compareModuleVar(lhs.name, rhs.name) &&
+				comparePath(lhs.path, rhs.path)
+		}
 
 		def compareSig(lhs : FunctionSig, rhs : FunctionSig) : Boolean = compareAstType(lhs.typ, rhs.typ)
 		
@@ -128,6 +142,15 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
 	}
 	
 	describe(testedImplementationName() + " signature matcher test (yes we are testing the testers!)") {
+		it("Should fail on unequal import paths") {
+			"IMPORT \"path\" AS M".parsed should not equal("IMPORT \"elsewhere\" AS M".parsed)
+		}
+		it("Should succeed on unequal import names") {
+			"IMPORT \"path\" AS M".parsed should equal("IMPORT \"path\" AS N".parsed)
+		}
+		it("Should succeed on equal import names") {
+			"IMPORT \"path\" AS M".parsed should equal("IMPORT \"path\" AS M".parsed)
+		}
 		it("Should fail on unequal function identifiers") {
 			"FUN f : (X a) -> y".parsed should not equal("FUN g : (X a) -> y".parsed)
 		}
@@ -143,6 +166,9 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
 		it("Should fail on unequal data identifiers in functions") {
 			"FUN f : (X a) -> y".parsed should not equal("FUN f : (Y b) -> y".parsed)
 		}
+		it("Should fail on unequal module identifiers") {
+			"FUN f : m.X".parsed should not equal("FUN f : n.X".parsed)
+		}
 		it("Should fail on unequal data identifiers in DATA definitions") {
 			"DATA Type a b c = Cons1 a b | Cons2 c".parsed should not equal("DATA Epyt a b c = Cons1 a b | Cons2 c".parsed)
 		}
@@ -155,10 +181,15 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
 	}
 
 	describe(testedImplementationName() + " serialize and deserialize") {
+		it("Should serialize and deserialize one import") {
+			"IMPORT \"path\" AS M".parsedSerializedAndDeserialized should equalParsed()
+		}
 		it("Should serialize and deserialize one function signature") {
 			"FUN f : (X a) -> y".parsedSerializedAndDeserialized should equalParsed()
 		}
-		
+		it("Should serialize and deserialize imported types") {
+			"FUN f : M.X -> N.Y".parsedSerializedAndDeserialized should equalParsed()
+		}
 		it("Should serialize and deserialize one data definition") {
 			"DATA Type a b c = Cons1 a b | Cons2 c".parsedSerializedAndDeserialized should equalParsed()
 		}
