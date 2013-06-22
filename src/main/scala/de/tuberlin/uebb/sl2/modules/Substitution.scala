@@ -106,8 +106,6 @@ trait Substitution {
       * Apply a substitution to a type with respect to a given set of bound variables.
       */
     def apply(boundVars: Set[TypeVariable], ty: Type): Type = ty match {
-      case _: BaseType => ty
-
       case tv: TypeVariable => if (boundVars contains tv) ty
 			       else σ.get(tv).getOrElse(ty)
 

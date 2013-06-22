@@ -83,6 +83,8 @@ trait Lexic {
   val ofLex = "OF"
   val letLex = "LET"
   val inLex = "IN"
+  val importLex = "IMPORT"
+  val asLex = "AS"
 
   val keywords = List(defLex, dataLex, ifLex, thenLex, elseLex,
     caseLex, ofLex, letLex, inLex, funLex)

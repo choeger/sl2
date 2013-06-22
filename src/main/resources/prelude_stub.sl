@@ -30,6 +30,8 @@
 -- This is a stub for the predefined types and methods of SL, so that we
 -- can create the prelude by a combination of compilation and hand coding.
 
+EXTERN "_prelude.js" 
+
 DATA Int = ExternalInt
 DATA Real = ExternalReal
 DATA Char = ExternalChar
@@ -41,19 +43,11 @@ DATA Bool = True | False
 
 DATA List a = Nil | Cons a (List a)
 
-DEF main = ({|
-  console.log($hello);
-|})
-
-DEF hello = "Hello World" ++ "23"
-
 FUN &= : (DOM a) -> (a -> (DOM b)) -> (DOM b)
-DEF (ExternalDOM x) &= f = (ExternalDOM (f x))
-
+DEF (ExternalDOM x) &= f = ExternalDOM x
 
 FUN ++ : (String -> String -> String)
 DEF x ++ y = ExternalString
-
 
 FUN & : (DOM a) -> (DOM b) -> (DOM b)
 DEF x & y = (x &= (\ r . y))
@@ -97,9 +91,8 @@ DEF yield x = ExternalDOM x
 -- val stolLex = "stol"
 --  val ltosLex = "ltos"
 
+FUN ord : Char -> Int
+DEF ord x = ExternalInt
 
--- FUN ord : Char -> Int
--- DEF ord x = ExternalInt
-
--- FUN chr : Int -> Char
--- DEF chr x = ExternalChar
+FUN chr : Int -> Char
+DEF chr x = ExternalChar

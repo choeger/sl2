@@ -186,6 +186,12 @@ trait Type {
   }
   
   object BaseType {
-    val Integer = "Var"
+    val Integer = TypeConstructor(Syntax.TConVar("Int", LocalMod), Nil)
+    val String = TypeConstructor(Syntax.TConVar("String", LocalMod), Nil)
+    val Character = TypeConstructor(Syntax.TConVar("Char", LocalMod), Nil)
+    val Void = TypeConstructor(Syntax.TConVar("Void", LocalMod), Nil)
+    val DomVoid = TypeConstructor(Syntax.TConVar("DOM", LocalMod), List(Void))
+    val Real = TypeConstructor(Syntax.TConVar("Real", LocalMod), Nil)
+    val Bool = TypeConstructor(Syntax.TConVar("Bool", LocalMod), Nil)
   }
 }

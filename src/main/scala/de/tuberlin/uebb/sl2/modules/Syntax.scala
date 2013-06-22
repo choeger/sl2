@@ -332,6 +332,9 @@ trait Syntax {
     def showProgram(m: Program): Doc = {
       var doc = line
 
+      for (i <- m.imports)
+        doc = doc <@> showImport(i)
+
       for (d <- m.dataDefs)
         doc = doc <@> showDataDef(d)
 
@@ -345,6 +348,10 @@ trait Syntax {
         doc = doc <@> defLex <+> name <+> catList(d.patterns.map(showPattern), "") <+> funEqLex <+> showExpr(d.expr) <> line
       }
       doc
+    }
+
+    def showImport(i: Import) : Doc = i match {
+      case QualifiedImport(path, name, _) => importLex <+> dquotes(path) <+> asLex <+> name
     }
 
     def showDataDef(d: DataDef): Doc = d match {
