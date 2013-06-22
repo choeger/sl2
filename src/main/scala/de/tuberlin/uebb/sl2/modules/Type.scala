@@ -64,8 +64,6 @@ trait Type {
       }
 
       case TypeScheme(tvs, ty) => ty.freeVars(tvs)
-
-      case _: BaseType => Nil
     }
 
     /**
@@ -123,9 +121,7 @@ trait Type {
   case class TypeVariable(ide: TypeVarName) extends Type
 
   case class FunctionType(s: Type, t: Type) extends Type
-
-  case class BaseType(b: Base) extends Type
-
+  
   case class TypeConstructor(con: TConVar, types: List[Type]) extends Type
 
   case class TypeScheme(vars: List[TypeVariable], ty: Type) extends Type {
@@ -143,16 +139,6 @@ trait Type {
   def forall(vars: TypeVariable*)(ty: Type) = TypeScheme(vars.toList, ty)
 
   /**
-   * SL base types: Int, Char, String, and Void.
-   */
-  sealed abstract class Base
-  case object Integer extends Base
-  case object Real extends Base
-  case object Character extends Base
-  case object String extends Base
-  case object Void extends Base
-
-  /**
    * Generate a fresh type variable.
    */
   def freshTVar(): TypeVariable = TypeVariable(freshName())
@@ -167,11 +153,11 @@ trait Type {
    */
   def astToType(astType: ASTType): Type = astType match {
     /* Base types: Int, Char, String, Void */
-    case TyExpr(Syntax.TConVar("Int", LocalMod), Nil, _) => BaseType(Integer)
-    case TyExpr(Syntax.TConVar("Char", LocalMod), Nil, _) => BaseType(Character)
-    case TyExpr(Syntax.TConVar("String", LocalMod), Nil, _) => BaseType(String)
-    case TyExpr(Syntax.TConVar("Void", LocalMod), Nil, _) => BaseType(Void)
-    case TyExpr(Syntax.TConVar("Real", LocalMod), Nil, _) => BaseType(Real)
+//    case TyExpr(Syntax.TConVar("Int", LocalMod), Nil, _) => BaseType(Integer)
+//    case TyExpr(Syntax.TConVar("Char", LocalMod), Nil, _) => BaseType(Character)
+//    case TyExpr(Syntax.TConVar("String", LocalMod), Nil, _) => BaseType(String)
+//    case TyExpr(Syntax.TConVar("Void", LocalMod), Nil, _) => BaseType(Void)
+//    case TyExpr(Syntax.TConVar("Real", LocalMod), Nil, _) => BaseType(Real)
 
     /* Function types */
     case FunTy(types, _) => {
@@ -190,12 +176,6 @@ trait Type {
    * TODO: Use Kiama pretty printer
    */
   def pprint(ty: Type): String = ty match {
-    case BaseType(Integer) => "Int"
-    case BaseType(Real) => "Real"
-    case BaseType(Character) => "Char"
-    case BaseType(String) => "String"
-    case BaseType(Void) => "Void"
-
     case TypeVariable(ide) => ide
 
     case FunctionType(s: Type, t: Type) => "(" + pprint(s) + " -> " + pprint(t) + ")"
@@ -203,5 +183,9 @@ trait Type {
     case TypeConstructor(con, types) => con + " " + (types map pprint)
 
     case TypeScheme(vars, ty) => "forall " + (vars map pprint) + " . " + pprint(ty)
+  }
+  
+  object BaseType {
+    val Integer = "Var"
   }
 }

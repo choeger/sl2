@@ -47,47 +47,47 @@ DEF main = ({|
 
 DEF hello = "Hello World" ++ "23"
 
-FUN (&=) : (DOM a) -> (a -> (DOM b)) -> (DOM b)
+FUN &= : (DOM a) -> (a -> (DOM b)) -> (DOM b)
 DEF (ExternalDOM x) &= f = (ExternalDOM (f x))
 
 
-FUN (++) : (String -> String -> String)
+FUN ++ : (String -> String -> String)
 DEF x ++ y = ExternalString
 
 
-FUN (&) : (DOM a) -> (DOM b) -> (DOM b)
+FUN & : (DOM a) -> (DOM b) -> (DOM b)
 DEF x & y = (x &= (\ r . y))
 
 
 
-FUN (+) : Int -> Int -> Int
+FUN + : Int -> Int -> Int
 DEF x + y = ExternalInt
 
-FUN (-) : Int -> Int -> Int
+FUN - : Int -> Int -> Int
 DEF x - y = ExternalInt
 
-FUN (*) : Int -> Int -> Int
+FUN * : Int -> Int -> Int
 DEF x * y = ExternalInt
 
-FUN (/) : Int -> Int -> Int
+FUN / : Int -> Int -> Int
 DEF x / y = ExternalInt
 
-FUN (<) : Int -> Int -> Bool
+FUN < : Int -> Int -> Bool
 DEF x < y = True
 
-FUN (<=) : Int -> Int -> Bool
+FUN <= : Int -> Int -> Bool
 DEF x <= y = True
 
-FUN (==) : Int -> Int -> Bool
+FUN == : Int -> Int -> Bool
 DEF x == y = True
 
-FUN (/=) : Int -> Int -> Bool
+FUN /= : Int -> Int -> Bool
 DEF x /= y = True
 
-FUN (>=) : Int -> Int -> Bool
+FUN >= : Int -> Int -> Bool
 DEF x >= y = True
 
-FUN (>) : Int -> Int -> Bool
+FUN > : Int -> Int -> Bool
 DEF x > y = True
 
 FUN yield : a -> (DOM a)

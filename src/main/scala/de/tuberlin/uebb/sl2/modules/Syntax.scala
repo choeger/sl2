@@ -51,10 +51,17 @@ object Syntax {
   type ModuleVar = String
   val LocalMod: ModuleVar = ""
 
-  abstract class QualifiedVar(module: ModuleVar = LocalMod) {
+  abstract class QualifiedVar(val module: ModuleVar = LocalMod) {
     def isLocal() = (module == LocalMod)
     def nameToString(): String;
 
+    override def equals(that: Any) = {
+      that != null &&
+      that.isInstanceOf[QualifiedVar] &&
+      this.module == that.asInstanceOf[QualifiedVar].module &&
+      this.nameToString() == that.asInstanceOf[QualifiedVar].nameToString()
+    }
+    
     override def toString() = {
       if (module == LocalMod) {
         nameToString
@@ -64,7 +71,7 @@ object Syntax {
     }
   }
   
-  abstract class VarFirstClass(val ide: VarName, val module: ModuleVar = LocalMod) extends QualifiedVar(module) {
+  abstract class VarFirstClass(val ide: VarName, override val module: ModuleVar = LocalMod) extends QualifiedVar(module) {
     override def nameToString = ide
   }
 
@@ -75,7 +82,7 @@ object Syntax {
 //  }
   case class ConVar(override val ide: ConVarName, override val module: ModuleVar = LocalMod) extends VarFirstClass(ide, module)
   
-  case class TConVar(ide: TConVarName, module: ModuleVar = LocalMod) extends QualifiedVar(module) {
+  case class TConVar(ide: TConVarName, override val module: ModuleVar = LocalMod) extends QualifiedVar(module) {
     override def nameToString = ide
   }
 }
@@ -355,7 +362,7 @@ trait Syntax {
       case TyVar(i, a) => i
       case TyExpr(c, Nil, _) => c.toString
       case TyExpr(c, ts, a) => parens(c.toString <+> hsep(ts.map(showType)))
-      case FunTy(ps, a) => catList(ps map showType, arrowLex)
+      case FunTy(ps, a) => parens(catList(ps map showType, arrowLex))
     }
 
     def showExpr(t: Expr): Doc = t match {
