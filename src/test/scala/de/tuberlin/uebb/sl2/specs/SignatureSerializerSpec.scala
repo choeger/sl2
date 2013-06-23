@@ -58,8 +58,8 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
 			
 			// TODO compare import
 			expected match {
-				case Program(parsedImports, parsedSig, _, parsedData, _) => delivered match {
-					case Program(deserializedImports, deserializedSig, _, deserializedData, _) =>
+				case Program(parsedImports, parsedSig, _, _, parsedData, _) => delivered match {
+					case Program(deserializedImports, deserializedSig, _, _, deserializedData, _) =>
 						result &&= compareImports(parsedImports, deserializedImports)
 						result &&= compareSigs   (parsedSig    , deserializedSig    )
 						result &&= compareDatas  (parsedData   , deserializedData   )

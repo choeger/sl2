@@ -51,9 +51,7 @@ class Scala2Sl(val universe : Universe, rename : Map[String, String], val syntax
 
   val builtins = Set(stringType, charType, intType, boolType)
 
-  def currentProgram : Program = {
-    Program(List(), Map(), Map(), datadefs)
-  }
+  def currentProgram : Program = emptyProgram
   
   def fields(unapply : MethodSymbol, xargs : List[Type] = Nil) : List[Type] = {
     /* the presumed list of field types */

@@ -39,7 +39,7 @@ trait CodeGenerator {
   //TODO: the original compiler created tmp variables named _0, _1 ... At the moment we create $0, $1 ...
 
   def astToJs(ast: AST): JsStmt = ast match { //TODO
-    case Program(imports, signatures, functionDefs, dataDefs, attribute) =>
+    case Program(imports, signatures, functionDefs, functionDefsExtern, dataDefs, attribute) =>
       dataDefsToJs(dataDefs) & functionDefsToJs(functionDefs)
   }
 

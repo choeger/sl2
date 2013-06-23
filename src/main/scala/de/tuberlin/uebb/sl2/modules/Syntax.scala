@@ -155,9 +155,12 @@ trait Syntax {
       imports: List[Import],
       signatures: Map[VarName, FunctionSig],
       functionDefs: Map[VarName, List[FunctionDef]],
+      functionDefsExtern: Map[VarName, FunctionDefExtern],
       dataDefs: List[DataDef],
       attribute: Attribute = EmptyAttribute)
     extends AST
+    
+  val emptyProgram = Program(List(), Map(), Map(), Map(), List())
 
   abstract class Import(path: String)
 
@@ -166,17 +169,31 @@ trait Syntax {
       name: ModuleVar,
       attribute: Attribute = EmptyAttribute)
     extends Import(path)
+  
+  /** Special import that allows to directly include js. */ 
+  case class ExternImport(
+      path: String,
+      attribute: Attribute = EmptyAttribute)
+    extends Import(path)
 
   /**
    * Type signature for top-level function definitions.
    */
   case class FunctionSig(typ: ASTType, attribute: Attribute = EmptyAttribute)
-
+  
   /**
    *  Top-level function definitions.
    */
-  case class FunctionDef(patterns: List[Pattern], expr: Expr, attribute: Attribute = EmptyAttribute)
-
+  case class FunctionDef(
+      patterns: List[Pattern],
+      expr: Expr,
+      attribute: Attribute = EmptyAttribute)
+  
+  /**
+   *  Top-level function definitions by mapping to some extern js function.
+   */
+  case class FunctionDefExtern(externName: String, attribute: Attribute = EmptyAttribute)
+  
   /**
    * Patterns for top-level function definitions.
    */
@@ -352,6 +369,7 @@ trait Syntax {
 
     def showImport(i: Import) : Doc = i match {
       case QualifiedImport(path, name, _) => importLex <+> dquotes(path) <+> asLex <+> name
+      case ExternImport(path, _) => importLex <+> externLex <+> dquotes(path)
     }
 
     def showDataDef(d: DataDef): Doc = d match {

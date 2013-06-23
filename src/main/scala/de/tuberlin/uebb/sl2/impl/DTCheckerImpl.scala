@@ -53,7 +53,7 @@ trait DTCheckerImpl extends DTChecker with Lexic with Syntax with Context with T
    * @return The initial context containing all data constructors
    */
   def checkDataTypes(in: AST): Either[Error, Context] = in match {
-    case Program(imports, _, _, dataDefs, _) => checkDataTypes(dataDefs)
+    case Program(imports, _, _, _, dataDefs, _) => checkDataTypes(dataDefs)
   }
 
   /**

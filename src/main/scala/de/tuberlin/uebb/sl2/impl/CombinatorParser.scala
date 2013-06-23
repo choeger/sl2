@@ -107,7 +107,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   override protected val whiteSpace = """(\s|--.*|(?m)\{-(\*(?!/)|[^*])*-\})+""".r
 
   private def parseTopLevel: Parser[AST] = rep(makeImport | makeDataDef | makeFunctionDef | makeFunctionSig) ^^
-    { _.foldLeft(Program(List(), Map(), Map(), Nil): AST)((z, f) => f(z)) }
+    { _.foldLeft(emptyProgram: AST)((z, f) => f(z)) }
 
   private def makeImport: Parser[AST => AST] = importDef ^^ { i =>
     (a: AST) =>

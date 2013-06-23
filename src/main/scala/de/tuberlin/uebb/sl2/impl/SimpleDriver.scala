@@ -83,10 +83,11 @@ trait SimpleDriver extends Driver {
     {
       for (
         sigs <- mergeMap(a.signatures, b.signatures).right;
-        funs <- mergeMap(a.functionDefs, b.functionDefs).right
+        funs <- mergeMap(a.functionDefs, b.functionDefs).right;
+        funsEx <- mergeMap(a.functionDefsExtern, b.functionDefsExtern).right
       ) yield {
         val defs = a.dataDefs ++ b.dataDefs
-        Program(List(), sigs, funs, defs)
+        Program(List(), sigs, funs, funsEx, defs)
       }
 
     }
