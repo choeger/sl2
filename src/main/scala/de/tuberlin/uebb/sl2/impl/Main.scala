@@ -55,28 +55,38 @@ object Main
     with FDCheckerImpl
     with TypeCheckerImpl
     with ProgramCheckerImpl
-    with SimpleDriver {
+    with SimpleDriver
+    with SignatureJsonSerializer {
 
-  val usage = """Usage:B <sl> file(s)"""
+  val usage = """Usage:B <sl> [-d destination directory] source file(s)"""
 
   def main(args: Array[String]) {
     if (args.isEmpty)
       println(usage)
     else {
-      val input = args.map { f =>
-        val source = scala.io.Source.fromFile(f)
-        val code = source.mkString
-        source.close()
-        code
-      }
+      val config = parseArguments(args.toList)
+      val input = config("src").asInstanceOf[List[String]]
       //val prelude = Source.fromURL(getClass.getResource("/prelude.sl")).getLines.mkString("\n")
       val preludeJs = Source.fromURL(getClass.getResource("/prelude.js")).getLines.mkString("\n")
-      val res = run(input.toList)     
+      val res = run(input.toList, config)     
       if (res.isLeft)
         res.left.map(x => println("Error: " + x))
       else
-        res.right.map(x => println(preludeJs+"\n"+x))
+        res.right.map(x => println(x))
     }
   }
+  
+  def parseArguments(args: List[String]): Map[String, Any] = args match {
+  	case "-d" :: dir ::  rt => parseArguments(rt) + (("destination", dir))
+  	case src ::  rt => {
+  		val res = parseArguments(rt)
+  		res + (("src", src :: res("src").asInstanceOf[List[String]]))
+  	}
+    case Nil => defaultConfig
+  }
+  
+  val defaultConfig: Map[String, Any] = Map(
+      ("destination", ""),
+      ("src", List())) 
 }
 

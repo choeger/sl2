@@ -30,26 +30,54 @@ package de.tuberlin.uebb.sl2.impl
 
 import scala.collection.mutable.ListBuffer
 import de.tuberlin.uebb.sl2.modules._
+import java.io.File
+import java.io.PrintWriter
 
-trait SimpleDriver extends Driver{
-  self: Parser with CodeGenerator with Syntax with ProgramChecker with JsSyntax with Errors =>
+trait SimpleDriver extends Driver {
+  self: Parser with CodeGenerator with Syntax with ProgramChecker with JsSyntax
+  	with Errors with SignatureSerializer =>
 
-  override def run(input: List[String]): Either[Error, String] =
-    {
-      val ast: ListBuffer[Program] = new ListBuffer
-      for (f <- input) {
-        parseAst(f) match {
-          case Right(a) => {println(a.toString); ast += a.asInstanceOf[Program]}
-          case Left(a) => return Left(a)
-        }
-      }
-      val m = ast.foldLeft[Either[Error, Program]](Right(Program(List(), Map(), Map(), Nil)))((z, x) =>
-        z.right.flatMap(y => mergeAst(y, x)))
-      for (
-        mo <- m.right;
-        _ <- checkProgram(mo).right
-      ) yield JsPrettyPrinter.pretty(astToJs(mo) & JsFunctionCall("$main"))
-    }
+  override def run(input: List[String], config: Map[String, Any]): Either[Error, String] = {
+	val destinationDir = new File(config("destination").asInstanceOf[String])
+    //TODO: implement for multiple files! at the moment only the first 
+	// will be handled.
+	
+	// load input file
+	val file = new File(input.head)
+	val name = file.getName()
+	val source = scala.io.Source.fromFile(file)
+	val code = source.mkString
+	source.close()
+	
+	// parse the syntax 
+	val ast = parseAst(code)
+	
+    // type check the program
+	for (
+      mo <- ast.right;
+      _ <- checkProgram(mo).right;
+      res <- compile(mo, name, destinationDir).right
+    ) yield res
+  }
+  
+  def compile(program: AST, name: String, destination: File): Either[Error, String] = {
+    //TODO: is there a more functional way to do file io in scala?
+    val tarJs = new File(destination, name + ".js")
+    val tarSig = new File(destination, name + ".signature")
+    
+    val compiled = astToJs(program)
+    println("compiling "+name+" to "+tarJs)
+    val writerProg = new PrintWriter(tarJs)
+    writerProg.write(JsPrettyPrinter.pretty(compiled))
+    writerProg.close()
+    
+    println("writing signature of "+name+" to "+tarSig)
+    val writerSig = new PrintWriter(tarSig)
+    writerSig.write(serialize(program))
+    writerSig.close()
+    
+    return Right("compilation successful")
+  }
 
   def mergeAst(a: Program, b: Program): Either[Error, Program] =
     {
