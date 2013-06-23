@@ -100,7 +100,7 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
     }
 
     it("Should type check JavaScript quote without type ascription") {
-      EJavaScript("", None) should haveType(BaseType.VoidDom)
+      EJavaScript("", None) should haveType(BaseType.DomVoid)
     }
 
     it("Should type check JavaScript quote with type ascription") {
@@ -153,7 +153,7 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
     }
 
     it("Should type check application of monadic bind '(yield 5) & {| |}'") {
-      ((eVar("&") :@ (eVar("yield") :@ EInt(5))) :@ EJavaScript("", None)) should haveType(BaseType.VoidDom)
+      ((eVar("&") :@ (eVar("yield") :@ EInt(5))) :@ EJavaScript("", None)) should haveType(BaseType.DomVoid)
     }
   }
 
