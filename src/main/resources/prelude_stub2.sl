@@ -30,6 +30,8 @@
 -- This is a stub for the predefined types and methods of SL, so that we
 -- can create the prelude by a combination of compilation and hand coding.
 
+IMPORT EXTERN "_prelude.js" 
+
 DATA Int = ExternalInt
 DATA Real = ExternalReal
 DATA Char = ExternalChar
@@ -41,49 +43,54 @@ DATA Bool = True | False
 
 DATA List a = Nil | Cons a (List a)
 
-
 FUN &= : (DOM a) -> (a -> (DOM b)) -> (DOM b)
-DEF (ExternalDOM x) &= f = ExternalDOM x
-
+DEF &= EXTERN "_bind"
 
 FUN ++ : (String -> String -> String)
-DEF x ++ y = "Concat"
-
+DEF ++ EXTERN "_adds"
 
 FUN & : (DOM a) -> (DOM b) -> (DOM b)
 DEF x & y = (x &= (\ r . y))
 
-
-
 FUN + : Int -> Int -> Int
-DEF x + y = 1
+EXTDEF x + y = "_"
 
 FUN - : Int -> Int -> Int
-DEF x - y = 2
+DEF x - y = ExternalInt
 
 FUN * : Int -> Int -> Int
-DEF x * y = 3
+DEF x * y = ExternalInt
 
 FUN / : Int -> Int -> Int
-DEF x / y = 4
+DEF x / y = ExternalInt
 
 FUN < : Int -> Int -> Bool
 DEF x < y = True
 
 FUN <= : Int -> Int -> Bool
-DEF x <= y = False
+DEF x <= y = True
 
 FUN == : Int -> Int -> Bool
 DEF x == y = True
 
 FUN /= : Int -> Int -> Bool
-DEF x /= y = False
+DEF x /= y = True
 
 FUN >= : Int -> Int -> Bool
 DEF x >= y = True
 
 FUN > : Int -> Int -> Bool
-DEF x > y = False
+DEF x > y = True
 
 FUN yield : a -> (DOM a)
 DEF yield x = ExternalDOM x
+
+
+-- val stolLex = "stol"
+--  val ltosLex = "ltos"
+
+FUN ord : Char -> Int
+DEF ord x = ExternalInt
+
+FUN chr : Int -> Char
+DEF chr x = ExternalChar
