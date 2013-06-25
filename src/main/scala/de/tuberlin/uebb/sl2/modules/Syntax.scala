@@ -162,19 +162,19 @@ trait Syntax {
     
   val emptyProgram = Program(List(), Map(), Map(), Map(), List())
 
-  abstract class Import(path: String)
+  abstract class Import(val path: String, val attribute: Attribute = EmptyAttribute)
 
   case class QualifiedImport(
-      path: String,
-      name: ModuleVar,
-      attribute: Attribute = EmptyAttribute)
-    extends Import(path)
+      override val path: String,
+      val name: ModuleVar,
+      override val attribute: Attribute = EmptyAttribute)
+    extends Import(path, attribute)
   
   /** Special import that allows to directly include js. */ 
   case class ExternImport(
-      path: String,
-      attribute: Attribute = EmptyAttribute)
-    extends Import(path)
+      override val path: String,
+      override val attribute: Attribute = EmptyAttribute)
+    extends Import(path, attribute)
 
   /**
    * Type signature for top-level function definitions.
@@ -192,7 +192,7 @@ trait Syntax {
   /**
    *  Top-level function definitions by mapping to some extern js function.
    */
-  case class FunctionDefExtern(externName: String, attribute: Attribute = EmptyAttribute)
+  case class FunctionDefExtern(val externName: String, attribute: Attribute = EmptyAttribute)
   
   /**
    * Patterns for top-level function definitions.

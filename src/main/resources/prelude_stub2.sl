@@ -30,11 +30,7 @@
 -- This is a stub for the predefined types and methods of SL, so that we
 -- can create the prelude by a combination of compilation and hand coding.
 
-IMPORT EXTERN "_prelude.js" 
-
-IMPORT "blubb" AS Bla
-
-IMPORT "blubb2" AS Bla2
+IMPORT EXTERN "_prelude" 
 
 DATA Int = ExternalInt
 DATA Real = ExternalReal

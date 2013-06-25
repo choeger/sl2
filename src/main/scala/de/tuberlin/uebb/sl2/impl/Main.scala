@@ -33,6 +33,7 @@ import de.tuberlin.uebb.sl2.modules._
 import de.tuberlin.uebb.sl2.impl._
 import de.tuberlin.uebb.sl2.modules.Syntax.{VarFirstClass}
 import scala.io.Source
+import java.io.File
 
 object Main
     extends ParboiledParser 
@@ -40,6 +41,7 @@ object Main
     with Syntax
     with SyntaxTraversal
     with Errors
+    with Configs
     with JsSyntax
     with PreProcessing
     with Lexic
@@ -57,7 +59,8 @@ object Main
     with ProgramCheckerImpl
     with SimpleDriver
     with DebugOutput
-    with SignatureJsonSerializer {
+    with SignatureJsonSerializer
+    with ModuleResolverImpl {
 
   val usage = """Usage:B <sl> [-d destination directory] source file(s)"""
 
@@ -66,10 +69,9 @@ object Main
       println(usage)
     else {
       val config = parseArguments(args.toList)
-      val input = config("src").asInstanceOf[List[String]]
       //val prelude = Source.fromURL(getClass.getResource("/prelude.sl")).getLines.mkString("\n")
       //val preludeJs = Source.fromURL(getClass.getResource("/prelude.js")).getLines.mkString("\n")
-      val res = run(input.toList, config)
+      val res = run(config)
       if (res.isLeft)
         res.left.map(x => println("Error: " + x))
       else
@@ -77,17 +79,14 @@ object Main
     }
   }
   
-  def parseArguments(args: List[String]): Map[String, Any] = args match {
-  	case "-d" :: dir ::  rt => parseArguments(rt) + (("destination", dir))
+  def parseArguments(args: List[String]): Config = args match {
+  	case "-d" :: dir ::  rt => parseArguments(rt).copy(destination = new File(dir))
   	case src ::  rt => {
   		val res = parseArguments(rt)
-  		res + (("src", src :: res("src").asInstanceOf[List[String]]))
+  		res.copy(sources = src :: res.sources)
   	}
     case Nil => defaultConfig
   }
   
-  val defaultConfig: Map[String, Any] = Map(
-      ("destination", ""),
-      ("src", List())) 
+  val defaultConfig: Config = Config(List(), new File(""), new File(""), new File(""))
 }
-

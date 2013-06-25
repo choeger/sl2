@@ -40,26 +40,21 @@ trait CodeGenerator {
 
   def astToJs(ast: AST): JsStmt = ast match { //TODO
     case Program(imports, signatures, functionDefs, functionDefsExtern, dataDefs, attribute) =>
-      dataDefsToJs(dataDefs) & functionDefsToJs(functionDefs)
+      dataDefsToJs(dataDefs) &
+      functionDefsExternToJs(functionDefsExtern) &
+      functionDefsToJs(functionDefs)
   }
 
   def dataDefsToJs(ds: List[DataDef]): JsStmt = (ds map dataDefToJs).foldLeft(Noop:JsStmt)(_ & _)
 
-  object BooleanDef {
-    def unapply(d : DataDef) = {
-      d.ide == "Bool" //should suffice, since builtin types cannot be overriden...
-    }
-  }
-
-  def dataDefToJs(d : DataDef) : JsStmt = d match {
-    case BooleanDef() => {
+  def dataDefToJs(d : DataDef) : JsStmt = {
+    if (d.ide == "Bool") {
       /*
        * This is kind of a hack to allow reusage of js-booleans
        */
       JsDef($("True"), JsBool(true)) &
-      JsDef($("False"), JsBool(false))      
-    }
-    case _ => {
+      JsDef($("False"), JsBool(false))
+    } else {
       val stmts = for ((c,idx) <- d.constructors.zipWithIndex) yield {
         if (c.types.isEmpty) {
           JsDef($(c.constructor), JsNum(idx))
@@ -81,6 +76,11 @@ trait CodeGenerator {
       }
       stmts.foldLeft(Noop:JsStmt)(_ & _)
     }
+  }
+  
+  def functionDefsExternToJs(exDefs: Map[VarName, FunctionDefExtern]) = {
+    val defStmts = exDefs.toList.map{case (name, exDef) => JsDef($(name), JsRaw(exDef.externName))}
+    JsStmtConcat(defStmts)
   }
 
   def dep(x : Var, defs : Set[Var], rhs : List[FunctionDef]) : List[(Var, Var)] = {

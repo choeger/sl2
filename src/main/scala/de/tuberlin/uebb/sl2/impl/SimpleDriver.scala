@@ -32,19 +32,22 @@ import scala.collection.mutable.ListBuffer
 import de.tuberlin.uebb.sl2.modules._
 import java.io.File
 import java.io.PrintWriter
+import scala.io.Source
 
 trait SimpleDriver extends Driver {
   self: Parser with CodeGenerator with Syntax with ProgramChecker with JsSyntax
-  	with Errors with SignatureSerializer with DebugOutput =>
+  	with Errors with SignatureSerializer with DebugOutput with Configs
+  	with ModuleResolver =>
 
-  override def run(input: List[String], config: Map[String, Any]): Either[Error, String] = {
-	val destinationDir = new File(config("destination").asInstanceOf[String])
+  override def run(inpCfg: Config): Either[Error, String] = {
+    val input = inpCfg.sources
     //TODO: implement for multiple files! at the moment only the first 
 	// will be handled.
 	
 	// load input file
 	val file = new File(input.head)
 	val name = file.getName()
+	val config = inpCfg.copy(classpath = file.getParentFile(), mainUnit = file)
 	val source = scala.io.Source.fromFile(file)
 	val code = source.mkString
 	source.close()
@@ -53,27 +56,38 @@ trait SimpleDriver extends Driver {
 	val ast = parseAst(code)
 	debugPrint(ast.toString());
 	
-	// check and load dependencies
-	
-	
-    // type check the program
 	for (
       mo <- ast.right;
+      // check and load dependencies
+      imports <- inferDependencies(mo, config).right;
+      // type check the program
       _ <- checkProgram(mo).right;
       
       // and synthesize
-      res <- compile(mo, name, destinationDir).right
+      res <- compile(mo, name, imports, config).right
     ) yield res
   }
   
-  def compile(program: AST, name: String, destination: File): Either[Error, String] = {
+  def compile(program: AST, name: String, imports: List[ResolvedImport], config: Config): Either[Error, String] = {
     //TODO: is there a more functional way to do file io in scala?
-    val tarJs = new File(destination, name + ".js")
-    val tarSig = new File(destination, name + ".signature")
+    val tarJs = new File(config.destination, name + ".js")
+    val tarSig = new File(config.destination, name + ".signature")
     
     val compiled = astToJs(program)
     println("compiling "+name+" to "+tarJs)
     val writerProg = new PrintWriter(tarJs)
+    for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
+      val imp = i.asInstanceOf[ResolvedExternImport]
+      val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
+      writerProg.println("/***********************************/")
+      writerProg.println("// included from: "+imp.file.getCanonicalPath())
+      writerProg.println("/***********************************/")
+      writerProg.println(includedCode)
+      writerProg.println("/***********************************/")
+    }
+    writerProg.println("/***********************************/")
+    writerProg.println("// generated from: "+name)
+    writerProg.println("/***********************************/") 
     writerProg.write(JsPrettyPrinter.pretty(compiled))
     writerProg.close()
     

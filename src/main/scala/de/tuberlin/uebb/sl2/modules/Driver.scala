@@ -29,6 +29,6 @@
 package de.tuberlin.uebb.sl2.modules
 
 trait Driver {
-  self: Parser with CodeGenerator with Syntax with ProgramChecker with JsSyntax with Errors =>
-  def run(input: List[String], config: Map[String, Any]): Either[Error, String]
+  self: Parser with CodeGenerator with Syntax with ProgramChecker with JsSyntax with Errors with Configs =>
+  def run(config: Config): Either[Error, String]
 }

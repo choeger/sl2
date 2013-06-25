@@ -34,7 +34,16 @@ import scala.collection.immutable.List.{ fill }
 /**
  * Check data type definitions for correctness.
  */
-trait DTCheckerImpl extends DTChecker with Lexic with Syntax with Context with Type with NameSupply with EnrichedLambdaCalculus with Substitution with Unification with Errors {
+trait DTCheckerImpl extends DTChecker
+	with Lexic
+	with Syntax
+	with Context
+	with Type
+	with NameSupply
+	with EnrichedLambdaCalculus
+	with Substitution
+	with Unification
+	with Errors {
 
   /**
    * Check all data type definitions in a program.
