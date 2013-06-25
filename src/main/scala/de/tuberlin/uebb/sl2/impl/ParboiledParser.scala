@@ -285,13 +285,13 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def import_def : Rule1[Import] = rule {
-    (kw("IMPORT") ~ kw("EXTERN") ~ string_token ~~> (mkExternImport _)) |
+    (kw("IMPORT") ~ spacing ~ kw("EXTERN") ~ spacing ~ string_token ~ spacing ~~> (mkExternImport _)) |
     (kw("IMPORT") ~ string_token ~ spacing  ~ kw("AS") ~ constructor ~~> (mkQualImport _))
   }
 
   def fun_extern_def : Rule1[(String, FunctionDefExtern)] = rule {
     kw("DEF") ~ kw("EXTERN") ~ (variable|custom_op_token) ~
-    		"= " ~ string_token ~~> (mkExternFun)
+    		"= " ~ js_token ~ spacing ~~> (mkExternFun)
   }
   
   def fun_def : Rule1[(String, FunctionDef)] = rule {

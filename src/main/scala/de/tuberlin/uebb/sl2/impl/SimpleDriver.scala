@@ -35,7 +35,7 @@ import java.io.PrintWriter
 
 trait SimpleDriver extends Driver {
   self: Parser with CodeGenerator with Syntax with ProgramChecker with JsSyntax
-  	with Errors with SignatureSerializer =>
+  	with Errors with SignatureSerializer with DebugOutput =>
 
   override def run(input: List[String], config: Map[String, Any]): Either[Error, String] = {
 	val destinationDir = new File(config("destination").asInstanceOf[String])
@@ -51,11 +51,17 @@ trait SimpleDriver extends Driver {
 	
 	// parse the syntax 
 	val ast = parseAst(code)
+	debugPrint(ast.toString());
+	
+	// check and load dependencies
+	
 	
     // type check the program
 	for (
       mo <- ast.right;
       _ <- checkProgram(mo).right;
+      
+      // and synthesize
       res <- compile(mo, name, destinationDir).right
     ) yield res
   }

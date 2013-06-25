@@ -359,10 +359,18 @@ trait Syntax {
         doc = doc <@> funLex <+> name <+> typeLex <+> showType(s.typ) <> line
 
       for (
+        (name, d) <- m.functionDefsExtern
+      ) {
+        doc = doc <@> defLex <+> externLex <+> name <+> 
+        	    funEqLex <+> dquotes(value(d.externName)) <> line
+      }
+        
+      for (
         (name, ds) <- m.functionDefs;
         d <- ds
       ) {
-        doc = doc <@> defLex <+> name <+> catList(d.patterns.map(showPattern), "") <+> funEqLex <+> showExpr(d.expr) <> line
+        doc = doc <@> defLex <+> name <+> 
+        	catList(d.patterns.map(showPattern), "") <+> funEqLex <+> showExpr(d.expr) <> line
       }
       doc
     }

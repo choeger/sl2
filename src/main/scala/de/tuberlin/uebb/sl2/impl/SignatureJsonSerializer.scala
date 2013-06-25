@@ -147,12 +147,15 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Parbo
 		Program(json2Imports(jsonImports), json2Sigs(jsonSigs), Map(), Map(), json2Datas(jsonDatas))
 	}
 	
-	private def import2Json(_import : Import) : JsonExportImport = _import match { case QualifiedImport(path, name, _) =>
-		var map : Map[String, Any] = Map()
-		map += ("name" -> moduleVar2Json(name))
-		map += ("path" ->      path2Json(path))
-		
-		JSONObject(map)
+	private def import2Json(_import : Import) : JsonExportImport = _import match {
+	  case QualifiedImport(path, name, _) =>
+		JSONObject(Map[String, Any](
+				("name" -> moduleVar2Json(name)),
+				("path" ->      path2Json(path))))
+	  case ExternImport(path, _) =>
+	    JSONObject(Map[String, Any](
+				("name" -> moduleVar2Json("_EXTERN_")),
+				("path" ->      path2Json(path))))
 	}
 	
 	private def json2Import(jsonImport : JsonImportImport) : Import = {

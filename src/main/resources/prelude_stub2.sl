@@ -32,6 +32,10 @@
 
 IMPORT EXTERN "_prelude.js" 
 
+IMPORT "blubb" AS Bla
+
+IMPORT "blubb2" AS Bla2
+
 DATA Int = ExternalInt
 DATA Real = ExternalReal
 DATA Char = ExternalChar
@@ -41,56 +45,50 @@ DATA DOM a = ExternalDOM a
 
 DATA Bool = True | False
 
+FUN not : Bool -> Bool
+DEF not True = False
+DEF not False = True
+
 DATA List a = Nil | Cons a (List a)
 
-FUN &= : (DOM a) -> (a -> (DOM b)) -> (DOM b)
-DEF &= EXTERN "_bind"
-
 FUN ++ : (String -> String -> String)
-DEF ++ EXTERN "_adds"
+DEF EXTERN ++ = {| _adds |}
 
-FUN & : (DOM a) -> (DOM b) -> (DOM b)
-DEF x & y = (x &= (\ r . y))
-
-FUN + : Int -> Int -> Int
-EXTDEF x + y = "_"
-
-FUN - : Int -> Int -> Int
-DEF x - y = ExternalInt
-
-FUN * : Int -> Int -> Int
-DEF x * y = ExternalInt
-
-FUN / : Int -> Int -> Int
-DEF x / y = ExternalInt
-
-FUN < : Int -> Int -> Bool
-DEF x < y = True
-
-FUN <= : Int -> Int -> Bool
-DEF x <= y = True
-
-FUN == : Int -> Int -> Bool
-DEF x == y = True
-
-FUN /= : Int -> Int -> Bool
-DEF x /= y = True
-
-FUN >= : Int -> Int -> Bool
-DEF x >= y = True
-
-FUN > : Int -> Int -> Bool
-DEF x > y = True
+FUN &= : (DOM a) -> (a -> (DOM b)) -> (DOM b)
+DEF EXTERN &= = {| _bind |}
 
 FUN yield : a -> (DOM a)
-DEF yield x = ExternalDOM x
+DEF EXTERN yield =  {| _yield |}
 
+-- FUN & : (DOM a) -> (DOM b) -> (DOM b)
+-- DEF x & y = (x &= (\ r . y))
 
--- val stolLex = "stol"
---  val ltosLex = "ltos"
+FUN + : Int -> Int -> Int
+DEF EXTERN + = {| _add |}
 
-FUN ord : Char -> Int
-DEF ord x = ExternalInt
+FUN - : Int -> Int -> Int
+DEF EXTERN - = {| _sub |}
 
-FUN chr : Int -> Char
-DEF chr x = ExternalChar
+FUN * : Int -> Int -> Int
+DEF EXTERN - = {| _mul |}
+
+FUN / : Int -> Int -> Int
+DEF EXTERN - = {| _div |}
+
+FUN < : Int -> Int -> Bool
+DEF EXTERN - = {| _lesser |}
+
+FUN <= : Int -> Int -> Bool
+DEF EXTERN - = {| _leq |}
+
+FUN == : Int -> Int -> Bool
+DEF EXTERN - = {| _eq |}
+
+-- FUN /= : Int -> Int -> Bool
+-- DEF x /= y = not (x == y)
+
+FUN >= : Int -> Int -> Bool
+DEF EXTERN - = {| _geq |}
+
+FUN > : Int -> Int -> Bool
+DEF EXTERN - = {| _greater |}

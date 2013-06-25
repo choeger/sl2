@@ -56,6 +56,7 @@ object Main
     with TypeCheckerImpl
     with ProgramCheckerImpl
     with SimpleDriver
+    with DebugOutput
     with SignatureJsonSerializer {
 
   val usage = """Usage:B <sl> [-d destination directory] source file(s)"""
@@ -67,8 +68,8 @@ object Main
       val config = parseArguments(args.toList)
       val input = config("src").asInstanceOf[List[String]]
       //val prelude = Source.fromURL(getClass.getResource("/prelude.sl")).getLines.mkString("\n")
-      val preludeJs = Source.fromURL(getClass.getResource("/prelude.js")).getLines.mkString("\n")
-      val res = run(input.toList, config)     
+      //val preludeJs = Source.fromURL(getClass.getResource("/prelude.js")).getLines.mkString("\n")
+      val res = run(input.toList, config)
       if (res.isLeft)
         res.left.map(x => println("Error: " + x))
       else
