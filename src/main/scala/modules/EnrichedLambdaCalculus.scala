@@ -31,7 +31,7 @@ package de.tuberlin.uebb.sl2.modules
 import scala.language.postfixOps
 
 /**
-  * Enriched Lambda Calculus of SL
+  * Enriched Lambda Calculus.
   */
 trait EnrichedLambdaCalculus {
 
@@ -100,7 +100,37 @@ trait EnrichedLambdaCalculus {
   /**
     * Translate all top-level function definitions into the enriched lambda calculus.
     *
-    * TODO: Describe basic idea of the translation.
+    * The transformation yields a representation of the program which is more suitable
+    * for the type checker, where
+    * $ - Pattern matching in top-level definitions is translated into a CHOICE expression,
+    * $ - Conditionals are transformed  into a CASE expression,
+    * $ - Lambda abstractions over multiple patterns are translated into nested unary
+    *     lambda abstractions, and
+    * $ - All top-level function definitions form the definitions of a recursive
+    *     let-binding with the main-functions as its body.
+    * 
+    * For example, the following program
+    * {{{
+    * DEF isZero n = IF n == 0 THEN True ELSE False
+    *
+    * DEF add x y = x + y
+    *
+    * DEF empty Nil         = True
+    * DEF empty (Cons x xs) = False
+    *
+    * DEF main = isZero 23
+    * }}}
+    * will be translated into the ELC-expression
+    * {{{
+    * LETREC isZero = \ n. CASE n == 0
+    *                        OF True  -> True
+    *                        OF False -> False
+    *        add    = \ x. \ y. x + y
+    *        empty  = CHOICE
+    *                   \ Nil. True
+    *                   \ (Cons x xs). False
+    * IN isZero 23
+    * }}}
     *
     * @param sigs Signatures of top-level function definitions
     * @param funDefs Top-level function definitions

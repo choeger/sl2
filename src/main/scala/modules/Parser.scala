@@ -24,20 +24,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * */
+ */
 
 package de.tuberlin.uebb.sl2.modules
 
 /**
- * Parser trait. Creates an AST or an error representation in case of syntax errors.
- */
+  * The Parser trait.
+  */
 trait Parser {
+
   this : Syntax with Errors => 
 
   var fileName : String  
-    
+
+  /**
+    * Parse an SL program.
+    */
   def parseAst(in : String) : Either[Error, AST]
 
+  /**
+    * Parse an SL expression.
+    */
   def parseExpr(in : String) : Either[Error, Expr]
   
 }

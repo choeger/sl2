@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * */
+ */
 
 package de.tuberlin.uebb.sl2.impl
 
@@ -39,9 +39,9 @@ import org.parboiled.errors.ErrorUtils._
 import org.parboiled.buffers.DefaultInputBuffer
 
 /**
- * Parser implementation module based on the PEG parser library parboiled
- * (see [[http://www.parboiled.org]]
- */
+  * Parser implementation module based on the PEG parser library parboiled
+  * (see [[http://www.parboiled.org]]
+  */
 trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with Errors {
 
   private def pbErr2Error(pe : PBParseError) : ParseError = {

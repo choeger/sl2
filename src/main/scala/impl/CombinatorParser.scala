@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * */
+ */
 
 package de.tuberlin.uebb.sl2.impl
 
@@ -44,8 +44,8 @@ import scala.collection.mutable.ListBuffer
 import scala.language.postfixOps
 
 /**
- * Parser implementation module based on scala's combinators
- */
+  * Parser implementation module based on Scala's parser combinators.
+  */
 trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax with Errors with Lexic {
 
   //TODO definition of operators

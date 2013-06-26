@@ -24,11 +24,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * */
+ */
 
 package de.tuberlin.uebb.sl2.modules
 
-
+/**
+  * The pattern matching trait.
+  */
 trait PatternMatching {
 
   this : Syntax  =>
@@ -41,10 +43,10 @@ trait PatternMatching {
                                        k : Int)
 
   /**
-   * Transform an arbitrary set of pattern equations into a simple CASE expression:
-   * CASE Expr OF Con u1 ... u_n THEN Expr
-   * (the resulting case expression may not contain nested patterns)
-   */
+    * Transform an arbitrary set of pattern equations into a simple CASE expression:
+    * CASE Expr OF Con u1 ... u_n THEN Expr
+    * (the resulting case expression may not contain nested patterns)
+    */
   def createSimpleCaseMatch(ctxt : PatternMatchingCtxt, 
                             in : List[Equation], variables : List[Var]) : Expr
 

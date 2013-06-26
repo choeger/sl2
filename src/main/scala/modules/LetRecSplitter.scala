@@ -33,8 +33,9 @@ import scala.collection.immutable.List.{fill}
 import scala.util.Either.{cond}
 
 /**
- *
- */
+  * Split recursive let-bindings into minimal let- and letrec-expressions.
+  * Performing this transformation is a crucial prerequisite for the type checker.
+  */
 trait LetRecSplitter {
 
   self: Syntax with EnrichedLambdaCalculus with Graph[Var] with Errors =>

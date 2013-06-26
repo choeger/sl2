@@ -24,10 +24,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * */
+ */
 
 package de.tuberlin.uebb.sl2.impl
 
+/**
+  * Custom String implementation to be used in the parser.
+  */
 class ParserString(contents: String, offset: Int, length: Int) extends CharSequence {
   def this(contents: String) = this(contents, 0, contents.length())
 

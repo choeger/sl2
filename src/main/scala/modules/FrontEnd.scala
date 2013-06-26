@@ -24,19 +24,21 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * */
+ */
 
 package de.tuberlin.uebb.sl2.modules
 
 /**
- * The FrontEnd module basically groups all "functional" sub modules and provides the
- * whole frontend chain in some convenience functions.
- */
+  * The FrontEnd module basically groups all "functional" sub modules and provides the
+  * whole frontend chain in some convenience functions.
+  */
 trait FrontEnd {
+
   this : Syntax with Parser with FDChecker with DTChecker with ProgramChecker with TypeChecker with Errors => 
 
   sealed case class FrontEndResult(ast : AST, signature : Context, dependencies : List[String])
 
+  // TODO: dead code? Where is this used?
   def fromString(in : String) : Either[Error, FrontEndResult] = {    
     Left(NotYetImplemented)
   }
