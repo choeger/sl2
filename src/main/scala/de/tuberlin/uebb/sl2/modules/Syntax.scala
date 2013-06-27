@@ -51,10 +51,17 @@ object Syntax {
   type ModuleVar = String
   val LocalMod: ModuleVar = ""
 
-  abstract class QualifiedVar(module: ModuleVar = LocalMod) {
+  abstract class QualifiedVar(val module: ModuleVar = LocalMod) {
     def isLocal() = (module == LocalMod)
     def nameToString(): String;
 
+    override def equals(that: Any) = {
+      that != null &&
+      that.isInstanceOf[QualifiedVar] &&
+      this.module == that.asInstanceOf[QualifiedVar].module &&
+      this.nameToString() == that.asInstanceOf[QualifiedVar].nameToString()
+    }
+    
     override def toString() = {
       if (module == LocalMod) {
         nameToString
@@ -64,7 +71,7 @@ object Syntax {
     }
   }
   
-  abstract class VarFirstClass(val ide: VarName, val module: ModuleVar = LocalMod) extends QualifiedVar(module) {
+  abstract class VarFirstClass(val ide: VarName, override val module: ModuleVar = LocalMod) extends QualifiedVar(module) {
     override def nameToString = ide
   }
 
@@ -75,7 +82,7 @@ object Syntax {
 //  }
   case class ConVar(override val ide: ConVarName, override val module: ModuleVar = LocalMod) extends VarFirstClass(ide, module)
   
-  case class TConVar(ide: TConVarName, module: ModuleVar = LocalMod) extends QualifiedVar(module) {
+  case class TConVar(ide: TConVarName, override val module: ModuleVar = LocalMod) extends QualifiedVar(module) {
     override def nameToString = ide
   }
 }
@@ -148,28 +155,45 @@ trait Syntax {
       imports: List[Import],
       signatures: Map[VarName, FunctionSig],
       functionDefs: Map[VarName, List[FunctionDef]],
+      functionDefsExtern: Map[VarName, FunctionDefExtern],
       dataDefs: List[DataDef],
       attribute: Attribute = EmptyAttribute)
     extends AST
+    
+  val emptyProgram = Program(List(), Map(), Map(), Map(), List())
 
-  abstract class Import(path: String)
+  abstract class Import(val path: String, val attribute: Attribute = EmptyAttribute)
 
   case class QualifiedImport(
-      path: String,
-      name: ModuleVar,
-      attribute: Attribute = EmptyAttribute)
-    extends Import(path)
+      override val path: String,
+      val name: ModuleVar,
+      override val attribute: Attribute = EmptyAttribute)
+    extends Import(path, attribute)
+  
+  /** Special import that allows to directly include js. */ 
+  case class ExternImport(
+      override val path: String,
+      override val attribute: Attribute = EmptyAttribute)
+    extends Import(path, attribute)
 
   /**
    * Type signature for top-level function definitions.
    */
   case class FunctionSig(typ: ASTType, attribute: Attribute = EmptyAttribute)
-
+  
   /**
    *  Top-level function definitions.
    */
-  case class FunctionDef(patterns: List[Pattern], expr: Expr, attribute: Attribute = EmptyAttribute)
-
+  case class FunctionDef(
+      patterns: List[Pattern],
+      expr: Expr,
+      attribute: Attribute = EmptyAttribute)
+  
+  /**
+   *  Top-level function definitions by mapping to some extern js function.
+   */
+  case class FunctionDefExtern(val externName: String, attribute: Attribute = EmptyAttribute)
+  
   /**
    * Patterns for top-level function definitions.
    */
@@ -335,16 +359,25 @@ trait Syntax {
         doc = doc <@> funLex <+> name <+> typeLex <+> showType(s.typ) <> line
 
       for (
+        (name, d) <- m.functionDefsExtern
+      ) {
+        doc = doc <@> defLex <+> externLex <+> name <+> 
+        	    funEqLex <+> dquotes(value(d.externName)) <> line
+      }
+        
+      for (
         (name, ds) <- m.functionDefs;
         d <- ds
       ) {
-        doc = doc <@> defLex <+> name <+> catList(d.patterns.map(showPattern), "") <+> funEqLex <+> showExpr(d.expr) <> line
+        doc = doc <@> defLex <+> name <+> 
+        	catList(d.patterns.map(showPattern), "") <+> funEqLex <+> showExpr(d.expr) <> line
       }
       doc
     }
 
     def showImport(i: Import) : Doc = i match {
       case QualifiedImport(path, name, _) => importLex <+> dquotes(path) <+> asLex <+> name
+      case ExternImport(path, _) => importLex <+> externLex <+> dquotes(path)
     }
 
     def showDataDef(d: DataDef): Doc = d match {
@@ -362,7 +395,7 @@ trait Syntax {
       case TyVar(i, a) => i
       case TyExpr(c, Nil, _) => c.toString
       case TyExpr(c, ts, a) => parens(c.toString <+> hsep(ts.map(showType)))
-      case FunTy(ps, a) => catList(ps map showType, arrowLex)
+      case FunTy(ps, a) => parens(catList(ps map showType, arrowLex))
     }
 
     def showExpr(t: Expr): Doc = t match {

@@ -30,35 +30,84 @@ package de.tuberlin.uebb.sl2.impl
 
 import scala.collection.mutable.ListBuffer
 import de.tuberlin.uebb.sl2.modules._
+import java.io.File
+import java.io.PrintWriter
+import scala.io.Source
 
-trait SimpleDriver extends Driver{
-  self: Parser with CodeGenerator with Syntax with ProgramChecker with JsSyntax with Errors =>
+trait SimpleDriver extends Driver {
+  self: Parser with CodeGenerator with Syntax with ProgramChecker with JsSyntax
+  	with Errors with SignatureSerializer with DebugOutput with Configs
+  	with ModuleResolver =>
 
-  override def run(input: List[String]): Either[Error, String] =
-    {
-      val ast: ListBuffer[Program] = new ListBuffer
-      for (f <- input) {
-        parseAst(f) match {
-          case Right(a) => ast += a.asInstanceOf[Program]
-          case Left(a) => return Left(a)
-        }
-      }
-      val m = ast.foldLeft[Either[Error, Program]](Right(Program(List(), Map(), Map(), Nil)))((z, x) =>
-        z.right.flatMap(y => mergeAst(y, x)))
-      for (
-        mo <- m.right;
-        _ <- checkProgram(mo).right
-      ) yield JsPrettyPrinter.pretty(astToJs(mo) & JsFunctionCall("$main"))
+  override def run(inpCfg: Config): Either[Error, String] = {
+    val input = inpCfg.sources
+    //TODO: implement for multiple files! at the moment only the first 
+	// will be handled.
+	
+	// load input file
+	val file = new File(input.head)
+	val name = file.getName()
+	val config = inpCfg.copy(classpath = file.getParentFile(), mainUnit = file)
+	val source = scala.io.Source.fromFile(file)
+	val code = source.mkString
+	source.close()
+	
+	// parse the syntax 
+	val ast = parseAst(code)
+	debugPrint(ast.toString());
+	
+	for (
+      mo <- ast.right;
+      // check and load dependencies
+      imports <- inferDependencies(mo, config).right;
+      // type check the program
+      _ <- checkProgram(mo).right;
+      
+      // and synthesize
+      res <- compile(mo, name, imports, config).right
+    ) yield res
+  }
+  
+  def compile(program: AST, name: String, imports: List[ResolvedImport], config: Config): Either[Error, String] = {
+    //TODO: is there a more functional way to do file io in scala?
+    val tarJs = new File(config.destination, name + ".js")
+    val tarSig = new File(config.destination, name + ".signature")
+    
+    val compiled = astToJs(program)
+    println("compiling "+name+" to "+tarJs)
+    val writerProg = new PrintWriter(tarJs)
+    for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
+      val imp = i.asInstanceOf[ResolvedExternImport]
+      val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
+      writerProg.println("/***********************************/")
+      writerProg.println("// included from: "+imp.file.getCanonicalPath())
+      writerProg.println("/***********************************/")
+      writerProg.println(includedCode)
+      writerProg.println("/***********************************/")
     }
+    writerProg.println("/***********************************/")
+    writerProg.println("// generated from: "+name)
+    writerProg.println("/***********************************/") 
+    writerProg.write(JsPrettyPrinter.pretty(compiled))
+    writerProg.close()
+    
+    println("writing signature of "+name+" to "+tarSig)
+    val writerSig = new PrintWriter(tarSig)
+    writerSig.write(serialize(program))
+    writerSig.close()
+    
+    return Right("compilation successful")
+  }
 
   def mergeAst(a: Program, b: Program): Either[Error, Program] =
     {
       for (
         sigs <- mergeMap(a.signatures, b.signatures).right;
-        funs <- mergeMap(a.functionDefs, b.functionDefs).right
+        funs <- mergeMap(a.functionDefs, b.functionDefs).right;
+        funsEx <- mergeMap(a.functionDefsExtern, b.functionDefsExtern).right
       ) yield {
         val defs = a.dataDefs ++ b.dataDefs
-        Program(List(), sigs, funs, defs)
+        Program(List(), sigs, funs, funsEx, defs)
       }
 
     }

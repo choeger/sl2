@@ -64,14 +64,14 @@ trait TypeCheckerImpl extends TypeChecker with Lexic with Syntax with EnrichedLa
   def inferType(ctx: Context, e: ELC): Either[Error, (Substitution, Type)] = e match {
 
     /* Built-in values (Int, Char, String) */
-    case EInt(_, _) => Right(empty, BaseType(Integer))
-    case EChar(_, _) => Right(empty, BaseType(Character))
-    case EStr(_, _) => Right(empty, BaseType(String))
-    case EReal(_, _) => Right(empty, BaseType(Real))
+    case EInt(_, _) => Right(empty, BaseType.Integer)
+    case EChar(_, _) => Right(empty, BaseType.Character)
+    case EStr(_, _) => Right(empty, BaseType.String)
+    case EReal(_, _) => Right(empty, BaseType.Real)
 
     /* JavaScript quote */
     case EJavaScript(_, sig, _) =>
-      Right(empty, sig.getOrElse(TypeConstructor(Syntax.TConVar("DOM"), List(BaseType(Void)))))
+      Right(empty, sig.getOrElse(BaseType.DomVoid))
 
     /* Variables and constructors */
     case EVar(ide, attr) => ctx.lookupFresh(ide) match {

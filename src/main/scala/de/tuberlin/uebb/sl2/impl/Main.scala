@@ -33,6 +33,7 @@ import de.tuberlin.uebb.sl2.modules._
 import de.tuberlin.uebb.sl2.impl._
 import de.tuberlin.uebb.sl2.modules.Syntax.{VarFirstClass}
 import scala.io.Source
+import java.io.File
 
 object Main
     extends ParboiledParser 
@@ -40,6 +41,7 @@ object Main
     with Syntax
     with SyntaxTraversal
     with Errors
+    with Configs
     with JsSyntax
     with PreProcessing
     with Lexic
@@ -55,28 +57,36 @@ object Main
     with FDCheckerImpl
     with TypeCheckerImpl
     with ProgramCheckerImpl
-    with SimpleDriver {
+    with SimpleDriver
+    with DebugOutput
+    with SignatureJsonSerializer
+    with ModuleResolverImpl {
 
-  val usage = """Usage:B <sl> file(s)"""
+  val usage = """Usage:B <sl> [-d destination directory] source file(s)"""
 
   def main(args: Array[String]) {
     if (args.isEmpty)
       println(usage)
     else {
-      val input = args.map { f =>
-        val source = scala.io.Source.fromFile(f)
-        val code = source.mkString
-        source.close()
-        code
-      }
-      val prelude = Source.fromURL(getClass.getResource("/prelude.sl")).getLines.mkString("\n")
-      val preludeJs = Source.fromURL(getClass.getResource("/prelude.js")).getLines.mkString("\n")
-      val res = run(prelude +: input.toList)     
+      val config = parseArguments(args.toList)
+      //val prelude = Source.fromURL(getClass.getResource("/prelude.sl")).getLines.mkString("\n")
+      //val preludeJs = Source.fromURL(getClass.getResource("/prelude.js")).getLines.mkString("\n")
+      val res = run(config)
       if (res.isLeft)
         res.left.map(x => println("Error: " + x))
       else
-        res.right.map(x => println(preludeJs+"\n"+x))
+        res.right.map(x => println(x))
     }
   }
+  
+  def parseArguments(args: List[String]): Config = args match {
+  	case "-d" :: dir ::  rt => parseArguments(rt).copy(destination = new File(dir))
+  	case src ::  rt => {
+  		val res = parseArguments(rt)
+  		res.copy(sources = src :: res.sources)
+  	}
+    case Nil => defaultConfig
+  }
+  
+  val defaultConfig: Config = Config(List(), new File(""), new File(""), new File(""))
 }
-

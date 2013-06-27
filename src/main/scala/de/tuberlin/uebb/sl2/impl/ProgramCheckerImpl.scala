@@ -30,56 +30,57 @@ package de.tuberlin.uebb.sl2.impl
 
 import de.tuberlin.uebb.sl2.modules._
 
-
 /**
-  * Program checker.
-  *
-  * Perform context analysis on the program's definitions.
-  */
+ * Program checker.
+ *
+ * Perform context analysis on the program's definitions.
+ */
 trait ProgramCheckerImpl extends ProgramChecker {
 
   this: Lexic with Syntax with Context with Type with EnrichedLambdaCalculus with DTChecker with FDChecker with LetRecSplitter with TypeChecker with Errors =>
 
   /**
-    * Context analysis, performing the following checks on a program:
-    * $ - Data type checking,
-    * $ - Type checking of function definitions,
-    * $ - Checking the type of a program's main function.
-    */
+   * Context analysis, performing the following checks on a program:
+   * $ - Data type checking,
+   * $ - Type checking of function definitions,
+   * $ - Checking the type of a program's main function.
+   */
   def checkProgram(in: AST): Either[Error, Unit] = {
-    for ( initialContext <- checkDataTypes(in).right ;
-	  (funSigs, funDefs) <- checkFunctions(in).right ;
-	  elc <- splitLetRecs(predefinedFuns.toSet, programToELC(funSigs, funDefs)).right ;
-	  mainType <- {
-	    checkTypes(initialContext <++> predefsContext, elc).right
-	  } ;
-	  _ <- checkMain(funSigs, mainType).right )
-    yield ()
+    for (
+      initialContext <- checkDataTypes(in).right;
+      (funSigs, funDefs) <- checkFunctions(in).right;
+      elc <- splitLetRecs(Set(), programToELC(funSigs, funDefs)).right;
+      mainType <- {
+        checkTypes(initialContext, elc).right
+      };
+      _ <- checkMain(funSigs, mainType).right
+    ) yield ()
   }
 
-  
   /**
-    * Check if the `main' function's type is `DOM Void'.
-    */
+   * Check if the `main' function's type is `DOM Void'.
+   */
   def checkMain(signatures: Map[Var, FunctionSig], inferredType: Type): Either[Error, Unit] = {
-    
-    val checkInferredType = inferredType match {
-      case TypeConstructor(Syntax.TConVar("DOM", _), List(BaseType(Void))) => Right()
-      case _ => Left(GenericError("Function `main' must be of type `DOM Void', but found: " + quote(inferredType.toString)))
+
+    val checkInferredType = if (inferredType == BaseType.DomVoid) {
+      Right()
+    } else {
+      Left(GenericError("Function `main' must be of type `DOM Void', but found: " + quote(inferredType.toString)))
     }
 
     val checkMainSignature = signatures.get(Syntax.Var("main")) match {
       case None => Right()
       case Some(FunctionSig(signature, attr)) => {
-	val mainSignature = astToType(signature)
-	if (mainSignature == inferredType) Right()
-	else Left(AttributedError("Could not match declared type " + quote(mainSignature.toString) + " against inferred type " + quote(inferredType.toString) + " in `main'", attr))
+        val mainSignature = astToType(signature)
+        if (mainSignature == inferredType) Right()
+        else Left(AttributedError("Could not match declared type " + quote(mainSignature.toString) + " against inferred type " + quote(inferredType.toString) + " in `main'", attr))
       }
     }
 
-    for ( _ <- checkInferredType.right ;
-	  _ <- checkMainSignature.right )
-    yield ()
+    for (
+      _ <- checkInferredType.right;
+      _ <- checkMainSignature.right
+    ) yield ()
   }
 }
 

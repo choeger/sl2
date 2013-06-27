@@ -1,6 +1,9 @@
 *.class
 *.log
 
+# MacOS specific
+.DS_Store
+
 # sbt specific
 dist/*
 target/
