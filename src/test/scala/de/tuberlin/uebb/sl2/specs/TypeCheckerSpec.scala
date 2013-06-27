@@ -41,10 +41,10 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
   /*
    * Prelude and built-in functions
    */
-  val int = BaseType(Integer)
-  val real = BaseType(Real)
-  val char = BaseType(Character)
-  val bool = TypeConstructor(Syntax.TConVar("Bool"), Nil)
+  val int = BaseType.Integer
+  val real = BaseType.Real
+  val char = BaseType.Character
+  val bool = BaseType.Bool
   val α = TypeVariable("alpha")
   val β = TypeVariable("beta")
   val list = (t: Type) => TypeConstructor(Syntax.TConVar("List"), List(t))
@@ -64,7 +64,7 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
   case class TypeCheckMatcher(expected: Type) extends Matcher[ELC] {
 
     def apply(expr: ELC) = {
-      val result = checkTypes(initialContext <++> predefsContext, expr)
+      val result = checkTypes(initialContext, expr)
 
       val failureMessageSuffix = (for (resType <- result.right) yield "'" + expr + "' resulted in " + resType + " which did not equal " + expected).fold("failed: %s".format(_), _.toString)
 
@@ -96,11 +96,11 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
     }
 
     it("Should type check String values") {
-      EStr("Test") should haveType(BaseType(String))
+      EStr("Test") should haveType(BaseType.String)
     }
 
     it("Should type check JavaScript quote without type ascription") {
-      EJavaScript("", None) should haveType(dom(BaseType(Void)))
+      EJavaScript("", None) should haveType(BaseType.DomVoid)
     }
 
     it("Should type check JavaScript quote with type ascription") {
@@ -153,7 +153,7 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
     }
 
     it("Should type check application of monadic bind '(yield 5) & {| |}'") {
-      ((eVar("&") :@ (eVar("yield") :@ EInt(5))) :@ EJavaScript("", None)) should haveType(dom(BaseType(Void)))
+      ((eVar("&") :@ (eVar("yield") :@ EInt(5))) :@ EJavaScript("", None)) should haveType(BaseType.DomVoid)
     }
   }
 

@@ -129,7 +129,7 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Parbo
 
 	// actual (de)serialization implementation starts here
 	
-	private def ast2Json(ast : AST) : JsonExportAst = ast match { case Program(imports, sigs, _, datas, _) =>
+	private def ast2Json(ast : AST) : JsonExportAst = ast match { case Program(imports, sigs, _, _, datas, _) =>
 		var root : Map[String, Any] = Map()
 		root += ("imports"    -> imports2Json(imports))
 		root += ("signatures" ->    sigs2Json(sigs   ))
@@ -143,15 +143,18 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Parbo
 		val jsonSigs    = jsonAst.get("signatures").get.asInstanceOf[JsonImportFunctionSigMap]
 		val jsonDatas   = jsonAst.get("dataDefs"  ).get.asInstanceOf[JsonImportDataDefList   ]
 		
-		Program(json2Imports(jsonImports), json2Sigs(jsonSigs), Map(), json2Datas(jsonDatas))
+		Program(json2Imports(jsonImports), json2Sigs(jsonSigs), Map(), Map(), json2Datas(jsonDatas))
 	}
 	
-	private def import2Json(_import : Import) : JsonExportImport = _import match { case QualifiedImport(path, name, _) =>
-		var map : Map[String, Any] = Map()
-		map += ("name" -> moduleVar2Json(name))
-		map += ("path" ->      path2Json(path))
-		
-		JSONObject(map)
+	private def import2Json(_import : Import) : JsonExportImport = _import match {
+	  case QualifiedImport(path, name, _) =>
+		JSONObject(Map[String, Any](
+				("name" -> moduleVar2Json(name)),
+				("path" ->      path2Json(path))))
+	  case ExternImport(path, _) =>
+	    JSONObject(Map[String, Any](
+				("name" -> moduleVar2Json("_EXTERN_")),
+				("path" ->      path2Json(path))))
 	}
 	
 	private def json2Import(jsonImport : JsonImportImport) : Import = {

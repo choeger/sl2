@@ -35,26 +35,26 @@ trait PreProcessing {
 
   this: Syntax with SyntaxTraversal with Errors =>
     
-  val replaceCustomMap = Map ( "\\!" -> "\\$q"
-                             , "\\§" -> "\\$w"
+  val replaceCustomMap = Map ( "\\!" -> "\\$b"
+                             , "\\§" -> "\\$h"
                              , "\\%" -> "\\$r"
-                             , "\\&" -> "\\$t"
-                             , "\\/" -> "\\$z"
-                             , "\\=" -> "\\$u"
-                             , "\\?" -> "\\$i"
-                             , "\\+" -> "\\$o"
-                             , "\\*" -> "\\$p"
-                             , "\\#" -> "\\$a"
-                             , "\\-" -> "\\$s"
-                             , "\\:" -> "\\$f"
-                             , "\\<" -> "\\$g"
-                             , "\\>" -> "\\$h"
-                             , "\\|" -> "\\$j"
+                             , "\\&" -> "\\$a"
+                             , "\\/" -> "\\$d"
+                             , "\\=" -> "\\$e"
+                             , "\\?" -> "\\$q"
+                             , "\\+" -> "\\$p"
+                             , "\\*" -> "\\$t"
+                             , "\\#" -> "\\$s"
+                             , "\\-" -> "\\$m"
+                             , "\\:" -> "\\$c"
+                             , "\\<" -> "\\$l"
+                             , "\\>" -> "\\$g"
+                             , "\\|" -> "\\$i"
                              , "\\." -> "__"
                              )    
   
   
-  val replaceBuiltinMap = Map ( "+"  -> "_add"
+  /*val replaceBuiltinMap = Map ( "+"  -> "_add"
                               , "++" -> "_adds"
                               , "+r" -> "_addr"
                               , "*r" -> "_mulr"
@@ -74,7 +74,7 @@ trait PreProcessing {
                               , "stol" -> "_stol"
                               , "ltos" -> "_ltos"
 			      )
-  
+ */ 
 
   def renameIdentifier(a: AST): AST = {
     val f : PartialFunction[String, String] = {case s: String => escapeJsIde(s)}
@@ -85,9 +85,7 @@ trait PreProcessing {
 
   def escapeJsIde(x: String): String = {
     var a = x
-
-    if (replaceBuiltinMap.contains(x)) a = replaceBuiltinMap(x)
-    
+ 
     replaceCustomMap.foreach {
       case (k, v) => a = a.replaceAll(k, v)
     }

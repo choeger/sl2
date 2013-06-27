@@ -84,10 +84,11 @@ trait Lexic {
   val letLex = "LET"
   val inLex = "IN"
   val importLex = "IMPORT"
+  val externLex = "EXTERN"
   val asLex = "AS"
 
   val keywords = List(defLex, dataLex, ifLex, thenLex, elseLex,
-    caseLex, ofLex, letLex, inLex, funLex)
+    caseLex, ofLex, letLex, inLex, funLex, importLex, externLex, asLex)
 
   val dotLex = "."
   val funEqLex = "="

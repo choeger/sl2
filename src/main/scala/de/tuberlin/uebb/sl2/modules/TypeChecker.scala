@@ -39,43 +39,4 @@ trait TypeChecker {
    * Type inference on the enriched lambda calculus.
    */
   def checkTypes(ctx: Context, e: ELC): Either[Error, Type]
-
-  /**
-   * Context containing the types for all predefined SL functions and operators.
-   */
-  def predefsContext: Context = {
-    val int = BaseType(Integer)
-    val real = BaseType(Real)
-    val str = BaseType(String)
-    val char = BaseType(Character)
-    val bool = TypeConstructor(Syntax.TConVar("Bool"), Nil)
-    val α = TypeVariable("a")
-    val β = TypeVariable("b")
-    val dom = (t: Type) => TypeConstructor(Syntax.TConVar("DOM"), List(t))
-
-    Map(
-      Syntax.Var(addLex) -> (int --> (int --> int)),
-      Syntax.Var(subLex) -> (int --> (int --> int)),
-      Syntax.Var(mulLex) -> (int --> (int --> int)),
-      Syntax.Var(divLex) -> (int --> (int --> int)),
-
-      Syntax.Var(realDiv) -> (real --> (real --> real)),
-      Syntax.Var(realSub) -> (real --> (real --> real)),
-      Syntax.Var(realMul) -> (real --> (real --> real)),
-      Syntax.Var(realAdd) -> (real --> (real --> real)),
-
-      Syntax.Var(ltLex) -> (int --> (int --> bool)),
-      Syntax.Var(leLex) -> (int --> (int --> bool)),
-      Syntax.Var(eqLex) -> (int --> (int --> bool)),
-      Syntax.Var(neLex) -> (int --> (int --> bool)),
-      Syntax.Var(geLex) -> (int --> (int --> bool)),
-      Syntax.Var(gtLex) -> (int --> (int --> bool)),
-      Syntax.Var(strAdd) -> (str --> (str --> str)),
-      Syntax.Var(yieldLex) -> forall(α)(α --> dom(α)),
-      Syntax.Var(bindLex) -> forall(α, β)(dom(α) --> ((α --> dom(β)) --> dom(β))),
-      Syntax.Var(bindNRLex) -> forall(α, β)(dom(α) --> (dom(β) --> dom(β))),
-      Syntax.Var(ordLex) -> (char --> int),
-      Syntax.Var(chrLex) -> (int --> char) // TODO: String to char list functions. Prelude? Do we need them here?
-      )
-  }
 }

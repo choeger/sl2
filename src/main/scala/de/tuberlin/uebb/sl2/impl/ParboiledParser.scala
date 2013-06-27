@@ -105,11 +105,13 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
   
   def char: Rule0 = rule { "'" ~ !("'") ~ ANY ~ "'" }
-  
+
   /**
    * avoid parsing keywords as ide-prefixes
    */
-  def keyword : Rule0 = rule { ("DEF" | "IF" | "THEN" | "ELSE" | "LET" | "IN" | "CASE" | "OF" | "DATA" | "IMPORT" | "AS") ~ !(digit | non_digit) }
+  def keyword : Rule0 = rule { ("FUN" | "DEF" | "IF" | "THEN" |
+      "ELSE" | "LET" | "IN" | "CASE" | "OF" | "DATA" | "IMPORT" | "AS" | "EXTERN") ~
+      !(digit | non_digit) }
 
   def kw(string : String) : Rule0 = {
     string ~ !(digit | non_digit) ~ spacing
@@ -141,6 +143,8 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
 
   def mkQualImport(path : String, mod : String) = QualifiedImport(path, mod)
 
+  def mkExternImport(path : String) = ExternImport(path)
+  
   def mkQualVar(mod : String, name : String) = ExVar(Syntax.Var(name, mod))
 
   def mkQualConVar(mod : String, name : String) = ExCon(Syntax.ConVar(name, mod))
@@ -173,20 +177,25 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
 
   /* Program constructors */
 
+  def mkExternFun(s : String, jsName: String) = (s -> FunctionDefExtern(jsName))
+  
   def mkFun(s : String, pattern : List[Pattern], e : Expr) = (s -> FunctionDef(pattern, e))
 
   def mkCustomOp(l : Pattern, s : String, r : Pattern, e : Expr) = (s -> FunctionDef(l::r::Nil, e))
 
-  def mkProgram() = {
-    Program(List(), Map(), Map(), Nil)
-  }
+  def mkProgram() = emptyProgram
 
-  private def updateMap[T](s : String, t : T, m : Map[String, List[T]]) = m + (s -> (t::m.get(s).getOrElse(Nil)))
+  private def updateMap[T](s : String, t : T, m : Map[String, List[T]]) =
+    m + (s -> (t::m.get(s).getOrElse(Nil)))
 
   def mkProgramImport(a : AST, x : Import) = a match {
     case m:Program => m.copy(imports = x::m.imports)
   }
 
+  def mkProgramExternDef(a : AST, x : (String, FunctionDefExtern)) = a match {
+    case m:Program => m.copy(functionDefsExtern = m.functionDefsExtern + ((x._1, x._2)))
+  }
+  
   def mkProgramDef(a : AST, x : (String, FunctionDef)) = a match {
     case m:Program => m.copy(functionDefs = updateMap(x._1, x._2, m.functionDefs))
   }
@@ -226,11 +235,11 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
     custom_op_token ~~> (s => ExVar(Syntax.Var(s))) |
     qualification ~ custom_op_token ~~> (mkQualVar _)
   }
-
+  
   def custom_op_token : Rule1[String] = rule {    
     // TODO: if we change binding we might need to check for builtin ops first
     //(!builtin_op) ~ oneOrMore(anyOf("!§%&/=?+*#-:<>|")) ~> (s => ExVar(s)) ~ spacing
-    oneOrMore(anyOf("!§%&/=?+*#-:<>|")) ~> (s => s) ~ spacing
+    oneOrMore(anyOf("!§%&/=?+*#-<>|")) ~> (s => s) ~ spacing
   }
 
   def relation_op : Rule1[Expr] = rule {
@@ -269,19 +278,26 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
 
   def continueProgram : ReductionRule1[AST, AST] = rule {
     import_def ~~> (mkProgramImport _) |
+    fun_extern_def ~~> (mkProgramExternDef _) | 
     fun_def ~~> (mkProgramDef _) |
     data_def ~~> (mkProgramData _) |
     fun_sig ~~> (mkProgramSig _) 
   }
 
   def import_def : Rule1[Import] = rule {
-    kw("IMPORT") ~ string_token ~ spacing  ~ kw("AS") ~ constructor ~~> (mkQualImport _)
+    (kw("IMPORT") ~ spacing ~ kw("EXTERN") ~ spacing ~ string_token ~ spacing ~~> (mkExternImport _)) |
+    (kw("IMPORT") ~ string_token ~ spacing  ~ kw("AS") ~ constructor ~~> (mkQualImport _))
   }
 
+  def fun_extern_def : Rule1[(String, FunctionDefExtern)] = rule {
+    kw("DEF") ~ kw("EXTERN") ~ (variable|custom_op_token) ~
+    		"= " ~ js_token ~ spacing ~~> (mkExternFun)
+  }
+  
   def fun_def : Rule1[(String, FunctionDef)] = rule {
     kw("DEF") ~ (
       variable ~ zeroOrMore(def_pattern) ~ "= " ~ expr ~~> (mkFun _) |
-      def_pattern ~ custom_op_token ~ def_pattern ~ "= " ~ expr ~~> (mkCustomOp _)
+      def_pattern ~ custom_op_token ~ def_pattern ~ "= " ~ expr ~~> (mkCustomOp _) 
     )
   }
   
@@ -301,7 +317,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def fun_sig : Rule2[String, FunctionSig] = rule {
-    kw("FUN") ~ variable ~ ": " ~ type_expr ~~> (mkFunSig _)
+    kw("FUN") ~ (variable | custom_op_token) ~ ": " ~ type_expr ~~> (mkFunSig _)
   }
   
   def type_expr : Rule1[ASTType] = rule { type_expr_base ~ optional(fun_rhs) }

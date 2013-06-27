@@ -149,32 +149,32 @@ trait SLExpressions {
   /*
    * Programs
    */
-  val prg01 = Program(List(), Map(), Map(incFD, decFD, evenFD, oddFD, mapFD, lengthFD),
+  val prg01 = Program(List(), Map(), Map(incFD, decFD, evenFD, oddFD, mapFD, lengthFD),  Map(),
 		      List(boolDT, pairDT, listDT, treeDT, bintreeDT))
 
-  val prg02 = Program(List(), Map(), Map(), allDatatypes)
+  val prg02 = Program(List(), Map(), Map(), Map(), allDatatypes)
 
-  val prg03 = Program(List(), Map(), Map(invalidEager), allDatatypes)
+  val prg03 = Program(List(), Map(), Map(invalidEager), Map(), allDatatypes)
 
-  val prg04 = Program(List(), Map(), Map(invalidFunName), Nil)
+  val prg04 = Program(List(), Map(), Map(invalidFunName), Map(), Nil)
 
-  val prg05 = Program(List(), Map(), Map(dupPatternVar), List(listDT))
+  val prg05 = Program(List(), Map(), Map(dupPatternVar), Map(), List(listDT))
 
-  val prg06 = Program(List(), Map(wrongIdSig), Map(idFD), allDatatypes)
+  val prg06 = Program(List(), Map(wrongIdSig), Map(idFD), Map(), allDatatypes)
 
-  val prg07 = Program(List(), Map(idSig), Map(idFD), allDatatypes)
+  val prg07 = Program(List(), Map(idSig), Map(idFD), Map(), allDatatypes)
 
-  val prg08 = Program(List(), Map(), Map(), List(dupDataConsDT))
+  val prg08 = Program(List(), Map(), Map(), Map(), List(dupDataConsDT))
 
-  val prg09 = Program(List(), Map(), Map(), List(boolDT, boolDT))
+  val prg09 = Program(List(), Map(), Map(), Map(), List(boolDT, boolDT))
 
-  val prg10 = Program(List(), Map(), Map(), List(dupTypeParamDT))
+  val prg10 = Program(List(), Map(), Map(), Map(), List(dupTypeParamDT))
 
-  val prg11 = Program(List(), Map(), Map(), List(undefConDT))
+  val prg11 = Program(List(), Map(), Map(), Map(), List(undefConDT))
 
-  val prg12 = Program(List(), Map(), Map(), List(unusedTypeParamsDT))
+  val prg12 = Program(List(), Map(), Map(), Map(), List(unusedTypeParamsDT))
 
-  val prg13 = Program(List(), Map(), Map(), List(bintreeDT, undefTypeParamsDT))
+  val prg13 = Program(List(), Map(), Map(), Map(), List(bintreeDT, undefTypeParamsDT))
 
-  val prg14 = Program(List(), Map(), Map(), List(boolDT, wrongConsAppDT))
+  val prg14 = Program(List(), Map(), Map(), Map(), List(boolDT, wrongConsAppDT))
 }
