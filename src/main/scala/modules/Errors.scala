@@ -47,44 +47,63 @@ trait Errors {
     def <+>(that: Error): ErrorList = ErrorList(List(this, that))
   }
 
-  object LocatedError {
-    def unapply(e : Error) : Option[(String, Location)] = e match {
-      case UndefinedError(_, _, AttributeImpl(l)) => Some((message(e), l))
-      case _ => None
-    }
-  }
-
-  def message(e : Error) : String = e match {
-    case UndefinedError(what, name, _) => "Undefined %s '%s'".format(what, name)
-    case _ => e.toString //TODO
-  }
-
   /* Generic error with a static error message */
-  case class GenericError(what: String) extends Error
+  case class GenericError(what: String) extends Error {
+    override def message = what
+  }
 
   /* If a phase depends on another phase that produced an error, forward that error. */
-  case class CouldNotRun(what : String, why : Error) extends Error
+  case class CouldNotRun(what : String, why : Error) extends Error {
+    override def message = "Could not run %s: %s".format(what, why.message)
+  }
 
   /* Groups of errors */
-  case class ErrorList(errors : List[Error]) extends Error
+  case class ErrorList(errors : List[Error]) extends Error {
+    override def message = errors.map(_.message).mkString("\n")
+  }
   
   /* Useful during implementation */
-  case object NotYetImplemented extends Error
+  case object NotYetImplemented extends Error {
+    override def message = "This feature is not yet implemented."
+  }
 
   /* Parser: parse error */
-  case class ParseError(msg : String, startIndex : Int, endIndex : Int) extends Error
+  case class ParseError(msg : String, startIndex : Int, endIndex : Int) extends Error {
+    override def message = "Parse error in [%d,%d]: %s".format(startIndex, endIndex, msg)
+  }
 
   /* Type checker: undefined element error */
-  case class UndefinedError(what: String, name: String, where: Attribute) extends Error
+  case class UndefinedError(what: String, name: String, where: Attribute) extends Error {
+    override def message = "Undefined %s '%s'".format(what, name)
+  }
 
   /* Type checker: type error */
-  case class TypeError(what: String, where: Attribute, cause: Error) extends Error
+  case class TypeError(what: String, where: Attribute, cause: Error) extends Error {
+    override def message = "Type error in %s: %s".format(what, cause.message)
+  }
 
   /* Context analysis: duplicate error */
-  case class DuplicateError(what: String, name: String, where: List[Attribute]) extends Error
+  case class DuplicateError(what: String, name: String, where: List[Attribute]) extends Error {
+    override def message = "Duplicate %s '%s'".format(what, name)
+  }
 
   /* Context analysis: generic error with location hint */
-  case class AttributedError(what: String, where: Attribute) extends Error
+  case class AttributedError(what: String, where: Attribute) extends Error {
+    override def message = what
+  }
+
+
+  /**
+    * Wrapper for convenient access to an error message and its location in pattern matching. 
+    */
+  object LocatedError {
+    def unapply(e : Error) : Option[(String, Location)] = e match {
+      case UndefinedError(_, _, AttributeImpl(l)) => Some(e.message, l)
+      case TypeError(_, AttributeImpl(l), _)      => Some(e.message, l)
+      case AttributedError(_, AttributeImpl(l))   => Some(e.message, l)
+      case _                                      => None
+    }
+  }
 
 
   /**
