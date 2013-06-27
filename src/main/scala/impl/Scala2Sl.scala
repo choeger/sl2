@@ -48,11 +48,12 @@ class Scala2Sl(val universe : Universe, rename : Map[String, String], val syntax
   var scala2Sl : Map[String, ConVar] = Map("List" -> "List")
 
   val stringType = typeOf[String].typeSymbol.asClass.typeSignature
+  val doubleType = typeOf[Double].typeSymbol.asClass.typeSignature
   val charType = typeOf[Char].typeSymbol.asClass.typeSignature
   val intType = typeOf[Int].typeSymbol.asClass.typeSignature
   val boolType = typeOf[Boolean].typeSymbol.asClass.typeSignature
 
-  val builtins = Set(stringType, charType, intType, boolType)
+  val builtins = Set(stringType, doubleType, charType, intType, boolType)
 
   def currentProgram : Program = {
     Program(Map(), Map(), datadefs)

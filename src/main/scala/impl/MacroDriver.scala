@@ -85,6 +85,10 @@ object MacroDriver extends CombinatorParser with CodeGenerator with Syntax
           val file = Source.fromURL(url).mkString
           val result = run(prelude::file::Nil)
           result match {
+            case Left(LocatedError(msg, FileLocation(f, from, to))) => {
+              val fileMsg = "%s: %d:%d\n%s".format(f,from.line,from.col,msg)
+              c.abort(c.enclosingPosition, fileMsg)
+            }
             case Left(e) => c.abort(c.enclosingPosition, e.toString)
             case Right(js) => c.Expr(Literal(Constant(preludeJs + "\n" + js)))
           }
@@ -102,13 +106,17 @@ object MacroDriver extends CombinatorParser with CodeGenerator with Syntax
       case Expr(Literal(Constant(sl))) => {
         val res = MacroDriver.getClass.getResource(sl.toString)
         (for (url <- Option(res)) yield {
-          val conv = new Scala2Sl(c.universe, Map(), this)
+          val conv = new Scala2Sl(c.universe, Map("Double" -> "Real"), this)
           conv.scala2SlType(Map())(weakTypeOf[T].asInstanceOf[conv.universe.Type])
           val model = conv.currentProgram.toString
 
           val file = Source.fromURL(url).mkString
           val result = run(prelude::model::file::Nil)
           result match {
+            case Left(LocatedError(msg, FileLocation(f, from, to))) => {
+              val fileMsg = "%s: %d:%d\n%s".format(f,from.line,from.col,msg)
+              c.abort(c.enclosingPosition, fileMsg)
+            }
             case Left(e) => c.abort(c.enclosingPosition, e.toString)
             case Right(js) => c.Expr[String](Literal(Constant(preludeJs + "\n" + js)))
           }
