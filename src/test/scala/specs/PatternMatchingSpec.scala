@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * */
+ */
 
 package de.tuberlin.uebb.sl2.tests.specs
 
@@ -34,6 +34,7 @@ import org.scalatest.{ FunSpec, Inside }
 import de.tuberlin.uebb.sl2.modules._
 
 trait PatternMatchingSpec extends FunSpec with Inside with ShouldMatchers {
+
   this : Syntax with PatternMatching => 
 
   private def cons(hd : String, tl : String) = { PatternExpr("Cons", PatternVar(hd)::PatternVar(tl)::Nil) }

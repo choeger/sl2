@@ -209,16 +209,17 @@ trait Syntax {
     */
   def attribute(expr: Expr): Attribute = expr match {
     case Conditional(_, _, _, attr) => attr
-    case Lambda(_, _, attr) => attr
-    case Case(_, _, attr) => attr
-    case Let(_, _, attr) => attr
-    case App(_, _, attr) => attr
-    case ExVar(_, attr) => attr
-    case ExCon(_, attr) => attr
-    case ConstInt(_, attr) => attr
-    case ConstChar(_, attr) => attr
-    case ConstString(_, attr) => attr
-    case JavaScript(_, _, attr) => attr
+    case Lambda(_, _, attr)         => attr
+    case Case(_, _, attr)           => attr
+    case Let(_, _, attr)            => attr
+    case App(_, _, attr)            => attr
+    case ExVar(_, attr)             => attr
+    case ExCon(_, attr)             => attr
+    case ConstInt(_, attr)          => attr
+    case ConstReal(_, attr)         => attr
+    case ConstChar(_, attr)         => attr
+    case ConstString(_, attr)       => attr
+    case JavaScript(_, _, attr)     => attr
   }
 
   //TODO: test!

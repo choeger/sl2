@@ -160,11 +160,11 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     }
 
     it("Should parse simple function definition") {
-      "DEF f x = x".as.ast should parse(functionDef2Modul("f", List(FunctionDef(List(patX), varX))))
+      "DEF f x = x".as.ast should parse(functionDef2Modul("f", List(FunctionDef(List(PatternVar("x")), ExVar("x")))))
     }
 
     it("Should parse binary opertor definition") {
-      "DEF x ++ y = x".as.ast should parse(functionDef2Modul("++", List(FunctionDef(List(patX,patY), varX))))
+      "DEF x ++ y = x".as.ast should parse(functionDef2Modul("++", List(FunctionDef(List(PatternVar("x"),PatternVar("y")), ExVar("x")))))
     }
     
     it("Should parse inline JavaScript") {
@@ -273,7 +273,7 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
   describe(testedImplementationName() + " Test case 4: IF / THEN / ELSE") {
 
     it("Should parse a simple IF-THEN-ELSE") {
-      "IF x THEN 1 ELSE 10".as.expr should parse(Conditional(varX, ConstInt(1), ConstInt(10)))
+      "IF x THEN 1 ELSE 10".as.expr should parse(Conditional(ExVar("x"), ConstInt(1), ConstInt(10)))
     }
 
     it("Should parse a nested IF-THEN-ELSE") {
@@ -285,18 +285,18 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     it("Should parse patter matching in function definition") {
       ("DEF map g Nil = Nil\n" + "DEF map g (Cons x y) = Cons (g x) (map g y)").as.ast should parse(functionDefs2Modul(
         Map(
-          strMap -> List(
+          "map" -> List(
             FunctionDef(
-              List(patG, PatternExpr(consLex, List(patX, patY))),
-              App(App(ExCon(consLex), App(varG, varX)), App(App(varMap, varG), varY))),
-            FunctionDef(List(patG, PatternExpr(nilLex, Nil)), ExCon(nilLex))))))
+              List(PatternVar("g"), PatternExpr(consLex, List(PatternVar("x"), PatternVar("y")))),
+              App(App(ExCon(consLex), App(ExVar("g"), ExVar("x"))), App(App(ExVar("map"), ExVar("g")), ExVar("y")))),
+            FunctionDef(List(PatternVar("g"), PatternExpr(nilLex, Nil)), ExCon(nilLex))))))
     }
     
    it("Should parse patter matching in function definition with variable") {
       ("DEF map Nil g = Nil\n").as.ast should parse(functionDefs2Modul(
         Map(
-          strMap -> List(
-            FunctionDef(List(PatternExpr(nilLex, Nil), patG), ExCon(nilLex))))))
+          "map" -> List(
+            FunctionDef(List(PatternExpr(nilLex, Nil), PatternVar("g")), ExCon(nilLex))))))
     }
     
   }
@@ -362,18 +362,18 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
 
   describe(testedImplementationName() + " Test case 9: Data type definitions") {
     it("Should parse simple data type definition") {
-      "DATA Product x y = Product x y".as.ast should parse(dataDef2Modul(DataDef(strProduct,
-        List(strX, strY),
-        List(ConstructorDef(strProduct, List(TyVar(strX), TyVar(strY)))))))
+      "DATA Product x y = Product x y".as.ast should parse(dataDef2Modul(DataDef("Product",
+        List("x", "y"),
+        List(ConstructorDef("Product", List(TyVar("x"), TyVar("y")))))))
     }
 
     it("Should parse algebraic data type definition") {
-      "DATA List x = Cons x (List x) | Nil".as.ast should parse(dataDef2Modul(DataDef(strList, List(strX),
+      "DATA List x = Cons x (List x) | Nil".as.ast should parse(dataDef2Modul(DataDef("List", List("x"),
         List(
           ConstructorDef(consLex, List(
-            TyVar(strX),
-            TyExpr(strList, List(
-              TyVar(strX))))),
+            TyVar("x"),
+            TyExpr("List", List(
+              TyVar("x"))))),
           ConstructorDef(nilLex, Nil)))))
     }
     
@@ -405,60 +405,31 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     it("Should parse simple function signature") {
       "FUN x : (Int) -> (Int)".as.ast should
         parse(Program(
-          Map(strX -> FunctionSig(FunTy(List(TyExpr("Int", Nil), TyExpr("Int", Nil))))),
+          Map("x" -> FunctionSig(FunTy(List(TyExpr("Int", Nil), TyExpr("Int", Nil))))),
           Map.empty, Nil))
     }
             
     it("Should parse simple constant signature") {
       "FUN x : Int".as.ast should
         parse(Program(
-          Map(strX -> FunctionSig(TyExpr("Int", Nil))),
+          Map("x" -> FunctionSig(TyExpr("Int", Nil))),
           Map.empty, Nil))
     }
     
     it("Should function signatures without parentheses") {
       "FUN f : x -> y".as.ast should parse(
         Program(
-          Map("f" -> FunctionSig(FunTy(List(TyVar(strX), TyVar(strY))))),
+          Map("f" -> FunctionSig(FunTy(List(TyVar("x"), TyVar("y"))))),
           Map(), Nil))
     }
     
     it("Should parse higher order function signature") {
       ("FUN map : (x -> y) -> (List x) -> (List y)").as.ast should
         parse(Program(
-          Map(strMap -> FunctionSig(FunTy(List(FunTy(List(TyVar(strX), TyVar(strY))),
-            TyExpr(strList, List(TyVar(strX))),
-            TyExpr(strList, List(TyVar(strY))))))),
+          Map("map" -> FunctionSig(FunTy(List(FunTy(List(TyVar("x"), TyVar("y"))),
+            TyExpr("List", List(TyVar("x"))),
+            TyExpr("List", List(TyVar("y"))))))),
           Map.empty, Nil))
     }
   }
-
-  //expr01 := (g x)
-
-  val strF = "f"
-  val strG = "g"
-  val strX = "x"
-  val strY = "y"
-  val strZ = "z"
-  val strXs = "xs"
-  val strMap = "map"
-  val strProduct = "Product"
-  val strList = "List"
-
-  val varF = new ExVar(strF)
-  val varG = new ExVar(strG)
-  val varX = new ExVar(strX)
-  val varY = new ExVar(strY)
-  val varZ = new ExVar(strZ)
-  val varXs = new ExVar(strXs)
-  val varMap = new ExVar(strMap)
-  val varAdd = new ExVar(addLex)
-  val varMul = new ExVar(mulLex)
-  val patF = new PatternVar(strF)
-  val patG = new PatternVar(strG)
-  val patX = new PatternVar(strX)
-  val patY = new PatternVar(strY)
-  val patZ = new PatternVar(strZ)
-  val patXs = new PatternVar(strXs)
 }
-

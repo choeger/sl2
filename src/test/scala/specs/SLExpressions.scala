@@ -31,8 +31,8 @@ package de.tuberlin.uebb.sl2.tests.specs
 import de.tuberlin.uebb.sl2.modules._
 
 /**
- * SL expressions, definitions and patterns for testing purposes.
- */
+  * SL expressions, definitions and patterns for testing purposes.
+  */
 trait SLExpressions {
 
   this: Syntax =>
