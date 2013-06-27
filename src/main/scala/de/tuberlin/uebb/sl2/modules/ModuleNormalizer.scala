@@ -1,8 +1,8 @@
 package de.tuberlin.uebb.sl2.modules
 
 trait ModuleNormalizer {
-	this : Syntax =>
+	this : Syntax with ModuleResolver =>
 	
-	def normalizeModules(imports : List[(Import, AST)]) : AST
+	def normalizeModules(imports : List[ResolvedImport]) : List[ResolvedImport]
 
 }

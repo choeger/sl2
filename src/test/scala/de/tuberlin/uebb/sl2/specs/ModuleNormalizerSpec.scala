@@ -6,7 +6,7 @@ import de.tuberlin.uebb.sl2.modules._
 
 trait ModuleNormalizerSpec extends FunSpec with ShouldMatchers {
 	// TODO: remove SignatureSerializer
-	this : ModuleNormalizer with Syntax with Parser with Errors with SignatureSerializer =>
+	this : ModuleNormalizer with Syntax with Parser with Errors with SignatureSerializer with ModuleResolver =>
 	
 	def testedImplementationName(): String
 			

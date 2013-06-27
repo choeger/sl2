@@ -4,7 +4,7 @@ import de.tuberlin.uebb.sl2.modules._
 import java.io.File
 
 trait ModuleResolverImpl extends ModuleResolver {
-  this: Syntax with Context with Errors with Configs with SignatureSerializer =>
+  this: Syntax with Errors with Configs with SignatureSerializer =>
 
   case class ImportError(what: String, where: Attribute) extends Error
 
@@ -20,7 +20,7 @@ trait ModuleResolverImpl extends ModuleResolver {
       for (
         file <- findImport(config, imp.path + ".signature", attr).right;
         signature <- importSignature(file).right
-      ) yield ResolvedQualifiedImport(name, file, signature, qi)
+      ) yield ResolvedQualifiedImport(name, path, file, signature, qi)
     case ei @ ExternImport(path, attr) =>
       for (
         file <- findImport(config, imp.path + ".js", attr).right
