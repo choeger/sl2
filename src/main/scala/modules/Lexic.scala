@@ -103,10 +103,11 @@ trait Lexic {
   val intLex = "Int"
   val charLex = "Char"
   val strLex = "String"
+  val realLex = "Real"
   val domLex = "DOM"
   val voidLex = "Void"
 
-  val predefinedTypes = List(intLex, charLex, strLex, domLex, voidLex)
+  val predefinedTypes = List(intLex, realLex, charLex, strLex, domLex, voidLex)
 
   /* Predefined constructors (list and bool) */
   val listLex = "List"
