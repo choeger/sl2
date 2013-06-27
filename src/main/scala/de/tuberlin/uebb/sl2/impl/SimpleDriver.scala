@@ -32,6 +32,10 @@ import scala.collection.mutable.ListBuffer
 import de.tuberlin.uebb.sl2.modules._
 import java.io.File
 import java.io.PrintWriter
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import scala.io.Source
 
 trait SimpleDriver extends Driver {
@@ -73,6 +77,11 @@ trait SimpleDriver extends Driver {
     val tarJs = new File(config.destination, name + ".js")
     val tarSig = new File(config.destination, name + ".signature")
     
+    // TODO: include prelude implicitly from signature, copy _prelude.js to modules
+    // TODO: include files
+    
+    // create main.js
+    // TODO: name the file main.js (i.e. remove .sl, too)
     val compiled = astToJs(program)
     println("compiling "+name+" to "+tarJs)
     val writerProg = new PrintWriter(tarJs)
@@ -88,8 +97,17 @@ trait SimpleDriver extends Driver {
     writerProg.println("/***********************************/")
     writerProg.println("// generated from: "+name)
     writerProg.println("/***********************************/") 
-    writerProg.write(JsPrettyPrinter.pretty(compiled))
+    val template = Source.fromURL(getClass.getResource("/js/template.js")).getLines.mkString("\n")
+    writerProg.write(template.replace("%%MODULES_LIST%%", "") // TODO
+    	.replace("%%MODULE_NAMES_LIST%%", "") // TODO
+    		.replace("%%MAIN%%", JsPrettyPrinter.pretty(compiled)+";$main();"))
     writerProg.close()
+    
+    // copy index.html, require.js to config.destination
+    copy(getClass().getResource("/js/index.html"), "index.html", config)
+    copy(getClass().getResource("/js/require.js"), "require.js", config)
+    
+    // TODO: create modules directory
     
     println("writing signature of "+name+" to "+tarSig)
     val writerSig = new PrintWriter(tarSig)
@@ -97,6 +115,14 @@ trait SimpleDriver extends Driver {
     writerSig.close()
     
     return Right("compilation successful")
+  }
+  
+  def copy(url: URL, fileName: String, config: Config) = {
+    val target = Files.copy(Paths.get(url.toURI()),
+        Paths.get(config.destination.getAbsolutePath(), fileName),
+        StandardCopyOption.REPLACE_EXISTING)
+    println("copied "+fileName+" to "+target);
+    target
   }
 
   def mergeAst(a: Program, b: Program): Either[Error, Program] =

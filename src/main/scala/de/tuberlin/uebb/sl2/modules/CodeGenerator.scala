@@ -29,9 +29,11 @@
 package de.tuberlin.uebb.sl2.modules
 
 import de.tuberlin.uebb.sl2.impl.CombinatorParser
-import scala.language.implicitConversions
-import scala.collection.mutable.ListBuffer
 import de.tuberlin.uebb.sl2.modules.Syntax.{VarFirstClass}
+import scala.collection.mutable.ListBuffer
+import java.io.File
+import scala.io.Source
+import scala.language.implicitConversions
 
 trait CodeGenerator {
   self: Syntax with JsSyntax with Errors with PreProcessing with NameSupply with Graph[VarFirstClass] =>
@@ -215,6 +217,6 @@ trait CodeGenerator {
       (JsPattern(test, Nil) /: subPatterns)(_ & _)
     }
   }
-
+  
 }
 
