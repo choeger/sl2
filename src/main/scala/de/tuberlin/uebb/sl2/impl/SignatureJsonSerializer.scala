@@ -1,4 +1,3 @@
-
 package de.tuberlin.uebb.sl2.impl
 
 import scala.util.parsing.json._
