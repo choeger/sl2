@@ -48,8 +48,6 @@ import scala.language.postfixOps
  */
 trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax with Errors with Lexic {
 
-  //TODO definition of operators
-
   def parseAst(in: String): Either[Error, AST] = {
     lines = buildLineIndex(in)
     try {
@@ -58,19 +56,18 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
         case failure: NoSuccess => Left(scala.sys.error(failure.msg))
       }
     } catch {
-      case e: Throwable => Left(ParseError(e.getMessage(), -1, -1))
+      case e: Throwable => Left(ParseError(e.getMessage(), AttributeImpl(NoLocation))) // TODO Use Attribute
     }
   }
 
   def parseExpr(in: String): Either[Error, Expr] = {
-    lines = buildLineIndex(in)
     try {
       parseAll(expr, new ParserString(in)) match {
         case Success(result, _) => Right(result)
         case failure: NoSuccess => Left(scala.sys.error(failure.msg))
       }
     } catch {
-      case e: Throwable => Left(ParseError(e.getMessage(), -1, -1))
+      case e: Throwable => Left(ParseError(e.getMessage(), AttributeImpl(NoLocation))) // TODO: Fix this
     }
   }
 

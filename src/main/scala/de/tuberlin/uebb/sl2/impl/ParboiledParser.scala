@@ -29,6 +29,7 @@
 package de.tuberlin.uebb.sl2.impl
 
 import scala.language.implicitConversions
+import scala.collection.mutable.ArrayBuffer
 
 import de.tuberlin.uebb.sl2.modules._
 
@@ -44,8 +45,36 @@ import org.parboiled.buffers.DefaultInputBuffer
  */
 trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with Errors {
 
+  //(Next 3 defs copied from CombinatorParser.scala
+  //contains the offsets where a line starts
+  //in the input, which is currently parsed
+  private var lines: Array[Int] = Array()
+  private def buildLineIndex(s: CharSequence): Array[Int] = {
+    val lines = new ArrayBuffer[Int]
+    lines += 0
+    for (i <- 0 until s.length)
+      if (s.charAt(i) == '\n') lines += (i + 1)
+    lines += s.length
+    lines.toArray
+  }
+
+  private def offsetToPosition(off: Int): Position =
+    {
+      if (lines.length < 1) return Position(-1, -1)
+      var min = 0
+      var max = lines.length - 1
+      while (min + 1 < max) {
+        val mid = (max + min) / 2
+        if (off < lines(mid))
+          max = mid
+        else
+          min = mid
+      }
+      Position(min + 1, off - lines(min) + 1)
+    }
+
   private def pbErr2Error(pe : PBParseError) : ParseError = {
-    ParseError(pe.getErrorMessage, pe.getStartIndex, pe.getEndIndex)
+    ParseError(pe.getErrorMessage, AttributeImpl(FileLocation(fileName, offsetToPosition(pe.getStartIndex), offsetToPosition(pe.getEndIndex))))
   }
 
   private def doParse[T](s : String, r : Rule1[T]) : Either[Error, T] = {
@@ -55,6 +84,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def parseAst(in : String) : Either[Error, AST] = {
+    lines = buildLineIndex(in)
     doParse(in, program)
   }
 
@@ -264,7 +294,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
    * parse the program parts
    */
   def program : Rule1[AST] = rule {
-    push(mkProgram()) ~ spacing ~ zeroOrMore(continueProgram)
+    push(mkProgram()) ~ spacing ~ zeroOrMore(continueProgram) ~ EOI
   }
 
   def continueProgram : ReductionRule1[AST, AST] = rule {
