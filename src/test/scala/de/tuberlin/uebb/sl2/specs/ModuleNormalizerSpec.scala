@@ -4,9 +4,9 @@ import org.scalatest.matchers._
 import org.scalatest.FunSpec
 import de.tuberlin.uebb.sl2.modules._
 
-trait ModuleImporterSpec extends FunSpec with ShouldMatchers {
+trait ModuleNormalizerSpec extends FunSpec with ShouldMatchers {
 	// TODO: remove SignatureSerializer
-	this : ModuleImporter with Syntax with Parser with Errors with SignatureSerializer =>
+	this : ModuleNormalizer with Syntax with Parser with Errors with SignatureSerializer =>
 	
 	def testedImplementationName(): String
 			
