@@ -47,6 +47,18 @@ trait Errors {
     def <+>(that: Error): ErrorList = ErrorList(List(this, that))
   }
 
+  object LocatedError {
+    def unapply(e : Error) : Option[(String, Location)] = e match {
+      case UndefinedError(_, _, AttributeImpl(l)) => Some((message(e), l))
+      case _ => None
+    }
+  }
+
+  def message(e : Error) : String = e match {
+    case UndefinedError(what, name, _) => "Undefined %s '%s'".format(what, name)
+    case _ => e.toString //TODO
+  }
+
   /* Generic error with a static error message */
   case class GenericError(what: String) extends Error
 

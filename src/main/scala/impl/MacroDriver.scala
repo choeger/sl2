@@ -57,6 +57,12 @@ object MacroDriver extends CombinatorParser with CodeGenerator with Syntax
       case Expr(Literal(Constant(sl))) => {
         val result = run(prelude::sl.toString::Nil)
         result match {
+          case Left(LocatedError(msg, 
+                                 FileLocation(_, from, to))) => {
+            val point = c.enclosingPosition.startOrPoint + 
+                                   from.col + 1
+            c.abort(c.enclosingPosition.withPoint(point), msg)
+          }
           case Left(e) => c.abort(c.enclosingPosition, e.toString)
           case Right(js) => c.Expr(Literal(Constant(preludeJs + "\n" + js)))
         }
@@ -67,7 +73,7 @@ object MacroDriver extends CombinatorParser with CodeGenerator with Syntax
     }
   }
 
-  def compileSl(s : String) = macro macroImpl
+  def slci(s : String) = macro macroImpl
 
   def slcImpl(c : MacroCtxt)(s : c.Expr[String]) : c.Expr[String] = {
     import c.universe._
