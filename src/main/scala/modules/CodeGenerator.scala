@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * */
+ */
 
 package de.tuberlin.uebb.sl2.modules
 
@@ -180,6 +180,7 @@ trait CodeGenerator {
     case ExVar(ide, _) => JsDef(v, JsName(escapeJsIde(ide)))
     case ExCon(con, _) => JsDef(v, JsName(escapeJsIde(con)))
     case ConstInt(value, _) => JsDef(v, JsNum(value))
+    case ConstReal(value, _) => JsDef(v, JsNum(value))
     case ConstChar(value, _) => JsDef(v, JsStr(value.toString))
     case ConstString(value, _) => JsDef(v, JsStr(value))
     case JavaScript(jsCode, _, _) => JsDef(v, JsAnonymousFunction(Nil, JsReturn(Some(JsRaw(jsCode)))))

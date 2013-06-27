@@ -24,52 +24,53 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * */
+ */
 
 package de.tuberlin.uebb.sl2.impl
 
 import scala.collection.mutable.ListBuffer
 import de.tuberlin.uebb.sl2.modules._
 
+/**
+  * Simple compiler driver.
+  */
 trait SimpleDriver extends Driver{
+
   self: Parser with CodeGenerator with Syntax with ProgramChecker with JsSyntax with Errors =>
 
-  override def run(input: List[String]): Either[Error, String] =
-    {
-      val ast: ListBuffer[Program] = new ListBuffer
-      for (f <- input) {
-        parseAst(f) match {
-          case Right(a) => ast += a.asInstanceOf[Program]
-          case Left(a) => return Left(a)
-        }
+  override def run(input: List[String]): Either[Error, String] = {
+    val ast: ListBuffer[Program] = new ListBuffer
+
+    for (f <- input) {
+      parseAst(f) match {
+        case Right(a) => ast += a.asInstanceOf[Program]
+        case Left(a) => return Left(a)
       }
-      val m = ast.foldLeft[Either[Error, Program]](Right(Program(Map(), Map(), Nil)))((z, x) =>
-        z.right.flatMap(y => mergeAst(y, x)))
-      for (
-        mo <- m.right;
-        _ <- checkProgram(mo).right
-      ) yield JsPrettyPrinter.pretty(astToJs(mo) & JsFunctionCall("$main"))
     }
 
-  def mergeAst(a: Program, b: Program): Either[Error, Program] =
-    {
-      for (
-        sigs <- mergeMap(a.signatures, b.signatures).right;
-        funs <- mergeMap(a.functionDefs, b.functionDefs).right
-      ) yield {
-        val defs = a.dataDefs ++ b.dataDefs
-        Program(sigs, funs, defs)
-      }
+    val m = ast.foldLeft[Either[Error, Program]](Right(Program(Map(), Map(), Nil)))((z, x) =>
+      z.right.flatMap(y => mergeAst(y, x)))
 
-    }
+    for ( mo <- m.right;
+	  _ <- checkProgram(mo).right )
+    yield JsPrettyPrinter.pretty(astToJs(mo) & JsFunctionCall("$main"))
+  }
 
-  def mergeMap[A, B](a: Map[A, B], b: Map[A, B]): Either[Error, Map[A, B]] =
-    {
-      val intersect = a.keySet & a.keySet
-      if (intersect.isEmpty)
-        Right(a ++ b)
-      else
-        Left(DuplicateError("Duplicated definition: " + intersect.mkString(", "), "", Nil))
+  def mergeAst(a: Program, b: Program): Either[Error, Program] = {
+    for ( sigs <- mergeMap(a.signatures, b.signatures).right;
+	  funs <- mergeMap(a.functionDefs, b.functionDefs).right )
+    yield {
+      val defs = a.dataDefs ++ b.dataDefs
+      Program(sigs, funs, defs)
     }
+  }
+
+  def mergeMap[A, B](a: Map[A, B], b: Map[A, B]): Either[Error, Map[A, B]] = {
+    val intersect = a.keySet & a.keySet
+    if (intersect.isEmpty)
+      Right(a ++ b)
+    else
+      Left(DuplicateError("Duplicated definition: " + intersect.mkString(", "), "", Nil))
+  }
 }
 

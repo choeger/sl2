@@ -24,13 +24,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * */
+ */
 
 package de.tuberlin.uebb.sl2.modules
 
 /**
- * The module defining the structured error representation
- */
+  * The module defining the structured error representation.
+  */
 trait Errors {
 
   self: Syntax =>
@@ -71,7 +71,7 @@ trait Errors {
   /* Useful during implementation */
   case object NotYetImplemented extends Error
 
-  /* Perser: parse error */
+  /* Parser: parse error */
   case class ParseError(msg : String, startIndex : Int, endIndex : Int) extends Error
 
   /* Type checker: undefined element error */

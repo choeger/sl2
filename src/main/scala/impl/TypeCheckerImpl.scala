@@ -32,14 +32,14 @@ import de.tuberlin.uebb.sl2.modules._
 import scala.util.Either.{cond}
 
 /**
- * The SL type checker.
- *
- * This implementation basically performs Hindley-Milner type inference
- * for the enriched lambda calculus, providing additional means to check
- * the types given in a signature of a top level definition against the
- * inferred ones. It follows closely the presentation in Simon Peyton Jones'
- * "The Implementation of Functional Programming Languages" (1987).
- */
+  * The SL type checker.
+  *
+  * This implementation basically performs Hindley-Milner type inference
+  * for the enriched lambda calculus, providing additional means to check
+  * the types given in a signature of a top level definition against the
+  * inferred ones. It follows closely the presentation in Simon Peyton Jones'
+  * "The Implementation of Functional Programming Languages" (1987).
+  */
 trait TypeCheckerImpl extends TypeChecker with Lexic with Syntax with EnrichedLambdaCalculus with Context with Type with NameSupply with Substitution with Unification with Errors {
   
   /**
@@ -68,6 +68,7 @@ trait TypeCheckerImpl extends TypeChecker with Lexic with Syntax with EnrichedLa
     case EInt(_,_)  => Right(empty, BaseType(Integer))
     case EChar(_,_) => Right(empty, BaseType(Character))
     case EStr(_,_)  => Right(empty, BaseType(String))
+    case EReal(_,_) => Right(empty, BaseType(Real))
 
     /* JavaScript quote */
     case EJavaScript(_, sig, _) => Right(empty, sig.getOrElse(TypeConstructor("DOM", List(BaseType(Void)))))

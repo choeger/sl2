@@ -148,10 +148,10 @@ trait Type {
    */
   sealed abstract class Base
   case object Integer extends Base
+  case object Real extends Base
   case object Character extends Base
   case object String extends Base
   case object Void extends Base
-
 
   /**
     * Generate a fresh type variable.
@@ -174,6 +174,7 @@ trait Type {
     case TyExpr("Char", Nil, _)   => BaseType(Character)
     case TyExpr("String", Nil, _) => BaseType(String)
     case TyExpr("Void", Nil, _)   => BaseType(Void)
+    case TyExpr("Real", Nil, _)   => BaseType(Real)
 
     /* Function types */
     case FunTy(types, _) => {
@@ -193,6 +194,7 @@ trait Type {
     */
   def pprint(ty: Type): String = ty match {
     case BaseType(Integer)   => "Int"
+    case BaseType(Real)      => "Real"
     case BaseType(Character) => "Char"
     case BaseType(String)    => "String"
     case BaseType(Void)      => "Void"

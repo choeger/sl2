@@ -33,7 +33,7 @@ import scala.language.implicitConversions
 import scala.reflect.runtime.universe._
 
 /**
-  * 
+  * Generic traversal of an abstract syntax tree.
   */
 trait SyntaxTraversal {
 

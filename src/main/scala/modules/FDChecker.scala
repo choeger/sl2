@@ -29,7 +29,7 @@
 package de.tuberlin.uebb.sl2.modules
 
 /**
-  * Check function definitions for correctness.
+  * Check function definitions for well-formedness and correctness.
   */
 trait FDChecker {
 

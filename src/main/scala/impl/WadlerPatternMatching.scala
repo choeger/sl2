@@ -24,15 +24,15 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * */
+ */
 
 package de.tuberlin.uebb.sl2.impl
 
 import de.tuberlin.uebb.sl2.modules._
 
 /**
- * Port of P.Wadler, Efficient Compilation of Pattern Matching
- */
+  * Port of P. Wadler, Efficient Compilation of Pattern Matching
+  */
 trait WadlerPatternMatching extends PatternMatching with Syntax with AlphaConversion {
 
   def createSimpleCaseMatch(ctxt : PatternMatchingCtxt, equations : List[Equation], variables : List[Var]) = {

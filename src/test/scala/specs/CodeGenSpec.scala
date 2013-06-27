@@ -103,10 +103,14 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
     }
 
     def compileProgramAndExpr(expr: String) = {
+//            println(str+"\n"+parseAst(preludeSl + str))
       val ast = parseAst(preludeSl + str).right.get
+
       val astJs = astToJs(ast)
       val exp = parseExpr(expr).right.get
       val js = expToJs(exp, "tmp") & JsName("tmp")
+//      println("/*import code*/\n%s\n/*program code*/\n%s\n/*test code*/\n%s".format(
+//        preludeJs, JsPrettyPrinter.pretty(astJs), JsPrettyPrinter.pretty(js)))
       "/*import code*/\n%s\n/*program code*/\n%s\n/*test code*/\n%s".format(
         preludeJs, JsPrettyPrinter.pretty(astJs), JsPrettyPrinter.pretty(js))
     }
@@ -151,8 +155,20 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
       ("40 / 2".compiled.evaluated) should equal("20".evaluated)
     }
 
+    it("Should round integer division") {
+      ("5 / 2".compiled.evaluated) should equal("2".evaluated)
+    }
+
     it("Should compile subtraction correctly") {
       ("44 - 2".compiled.evaluated) should equal("42".evaluated)
+    }
+
+    it("Should compile real division (on integer literals) correctly") {
+      ("5 /r 2".compiled.evaluated) should equal("2.5".evaluated)
+    }
+
+    it("Should compile real division (on real literals) correctly") {
+      ("5.0 /r 2.0".compiled.evaluated) should equal("2.5".evaluated)
     }
 
     it("Should compile if-then-else correctly") {
@@ -197,11 +213,6 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
                       OF Node x y THEN sum x + sum y""".compileProgramAndExpr("sum (Node (Leaf 13) (Node (Leaf 2)(Leaf 3)))").evaluated) should equal("18".evaluated)
     }
 
-    /* This seems to be plain wrong
-    it("Should compile raw js") {
-      ("""DEF hello x = {| "Hello " + $x|}""".compileProgramAndExpr("""hello "World"""").evaluated) should equal(""""Hello World"""".evaluated)
-    }
-    */
 
     it("Should compile mutually recursive even and odd function") {
       ("""DEF even n = IF n == 0 THEN True ELSE odd (n-1)  
@@ -212,6 +223,10 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
       ("""LET even = \ n . IF n == 0 THEN True ELSE odd (n-1)  
               odd = \ n . IF n == 1 THEN True ELSE even (n-1)  
               IN even 22 """.compiled.evaluated) should equal("true".evaluated)
+    }
+
+    it("Should evaluate LETs in dependency-order") {
+      """LET x=y y=5 IN x""".compiled.evaluated should equal("5".evaluated)
     }
 
     it("Should compile nested lets") {
@@ -251,10 +266,6 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
   describe("Compiling functions using pattern matching") {
     it("Should compile late matches") {
       lateMatch.compileProgramAndExpr("f (Cons 1 Nil) 3 Nil").evaluated should equal("3".evaluated)
-    }
-
-    it("Should compile late, nested matches") {
-      nestedMatch.compileProgramAndExpr("g True (Cons 1 (Cons 2 Nil)) Nil").evaluated should equal("0".evaluated)
     }
 
     it("Should compile nested matches") {
@@ -420,4 +431,5 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
       shadowedVars.compileProgramAndExpr("f").evaluated should equal("-590".evaluated)
     }
   }
+
 }

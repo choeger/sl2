@@ -29,7 +29,7 @@
 package de.tuberlin.uebb.sl2.modules
 
 /**
-  * Check data type definitions for correctness.
+  * Check data type definitions for well-formedness and correctness.
   */
 trait DTChecker {
 

@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * */
+ */
 
 package de.tuberlin.uebb.sl2.modules
 
@@ -160,7 +160,7 @@ trait JsSyntax {
       case JsStr(s) => "\"" :: s :: "\""
       case JsRaw(s) =>  s
       case JsNew(n,args)  => "new " :: n :: parens(sepred(args.map(show), ", "))
-      case JsFunctionCall(n,args @ _*)=> n :: parens(sepred(args.map(show), ", "))
+      case JsFunctionCall(n,args @ _*) => n :: parens(sepred(args.map(show), ", "))
       case JsMemberAccess(o,p) => o::brackets(p)
       case JsObject(f) => braces (nested (sepred(f.map(x =>x._1 :: " : " :: x._2), ", ")) :: break)
       case JsAnonymousFunction(params,b) => "function " :: parens(sepred(params map show, ", ")) :/: showJsStmtAsBlock(b)

@@ -34,7 +34,16 @@ import de.tuberlin.uebb.sl2.impl._
 import de.tuberlin.uebb.sl2.modules.Syntax.{Var}
 import scala.io.Source
 
-object Main extends CombinatorParser with CodeGenerator with Syntax with SyntaxTraversal with Errors with JsSyntax with PreProcessing with Lexic with EnrichedLambdaCalculus with Type with NameSupply with Context with Substitution  with Unification with GraphImpl[Var] with LetRecSplitter  with DTCheckerImpl with FDCheckerImpl with TypeCheckerImpl with ProgramCheckerImpl with SimpleDriver {
+/**
+  * The user interface to the SL compiler.
+  */
+object Main extends CombinatorParser with CodeGenerator with Syntax
+	    with SyntaxTraversal with Errors with JsSyntax
+	    with PreProcessing with Lexic with EnrichedLambdaCalculus
+	    with Type with NameSupply with Context with Substitution
+	    with Unification with GraphImpl[Var] with LetRecSplitter
+	    with DTCheckerImpl with FDCheckerImpl with TypeCheckerImpl
+	    with ProgramCheckerImpl with SimpleDriver {
 
   val usage = """Usage: <sl> file(s)"""
 

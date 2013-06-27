@@ -50,7 +50,7 @@ trait SLPrograms {
   val concat = """
   |DEF xs        ++ Nil = xs
   |DEF Nil       ++ xs  = xs
-  |DEF Cons x xs ++ ys  = Cons x (xs ++ ys)
+  |DEF (Cons x xs) ++ ys  = Cons x (xs ++ ys)
     """.stripMargin
 
 
@@ -67,17 +67,17 @@ trait SLPrograms {
 
   val reverse = """
   |DEF reverse Nil = Nil
-  |DEF reverse xs  = _reverse Nil xs
+  |DEF reverse xs  = reverseHelper Nil xs
   |
-  |DEF _reverse r Nil       = r
-  |DEF _reverse r Cons x xs = _reverse (Cons x r) xs
+  |DEF reverseHelper r Nil       = r
+  |DEF reverseHelper r (Cons x xs) = reverseHelper (Cons x r) xs
   """.stripMargin
 
 
   val sort = range + concat + filter + reverse + """
   |DEF quicksort Nil        = Nil
-  |DEF quicksort Cons x Nil = Cons x Nil
-  |DEF quicksort Cons x xs = LET lessThanX = \ y . y < x
+  |DEF quicksort (Cons x Nil) = Cons x Nil
+  |DEF quicksort (Cons x xs) = LET lessThanX = \ y . y < x
   |                          IN (filter xs lessThanX) ++ (Cons x (filterNot xs lessThanX))
   """.stripMargin
 
@@ -180,14 +180,6 @@ trait SLPrograms {
   | DEF f z          x (Cons f g) = 2
   | DEF f y          x Nil        = 3
   """.stripMargin
-
-
-  val nestedMatch = """
-  | DEF g x     y                      (Cons 2 (Cons ft Nil)) = 10
-  | DEF g x     (Cons ft (Cons 2 Nil)) z                      = 0
-  | DEF g False y                      z                      = 20
-  """.stripMargin
-
 
   val mixedPatterns = """
   | DATA Color = Red | Blue | Green

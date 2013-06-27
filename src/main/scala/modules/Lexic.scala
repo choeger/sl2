@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * */
+ */
 
 package de.tuberlin.uebb.sl2.modules
 
@@ -34,8 +34,7 @@ package de.tuberlin.uebb.sl2.modules
 trait Lexic {
   val mainLex = "main"
 
-  // The predefined functions.
-
+  /* The predefined functions */
   val addLex = "+"
   val subLex = "-"
   val mulLex = "*"
@@ -54,6 +53,12 @@ trait Lexic {
 
   val strAdd = "+s"
 
+  val realDiv = "/r"
+  val realMul = "*r"
+  val realAdd = "+r"
+  val realSub = "-r"
+
+
   val arithOps = List(addLex, subLex, mulLex, divLex)
   val cmpOps = List(ltLex, leLex, eqLex, neLex, geLex, gtLex)
   val monadicOps = List(yieldLex, bindLex, bindNRLex)
@@ -65,8 +70,7 @@ trait Lexic {
 
   val predefinedFuns = predefinedOps ++ List(ordLex, chrLex)
 
-  // Keywords and symbols.
-
+  /* Keywords and symbols */
   val defLex = "DEF"
   val funLex = "FUN"
   val dataLex = "DATA"
@@ -90,14 +94,12 @@ trait Lexic {
   val jsOpenLex = "{|"
   val jsCloseLex = "|}"
 
-  // Symbols for comments.
-
+  /* Symbols for comments */
   val commentStart = "{-"
   val commentEnd = "-}"
   val commentLine = "--"
 
-  // Predefined types.
-
+  /* Predefined types */
   val intLex = "Int"
   val charLex = "Char"
   val strLex = "String"
@@ -106,8 +108,7 @@ trait Lexic {
 
   val predefinedTypes = List(intLex, charLex, strLex, domLex, voidLex)
 
-  // Predefined list and bool constructors.
-
+  /* Predefined constructors (list and bool) */
   val listLex = "List"
   val consLex = "Cons"
   val nilLex = "Nil"

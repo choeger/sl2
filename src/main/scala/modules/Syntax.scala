@@ -191,6 +191,7 @@ trait Syntax {
   case class ConstInt(value: Int, attribute: Attribute = EmptyAttribute) extends Expr
   case class ConstChar(value: Char, attribute: Attribute = EmptyAttribute) extends Expr
   case class ConstString(value: String, attribute: Attribute = EmptyAttribute) extends Expr
+  case class ConstReal(value : Double, attribute: Attribute = EmptyAttribute) extends Expr
   case class JavaScript(jsCode: String, signature: Option[ASTType], attribute: Attribute = EmptyAttribute) extends Expr
 
   /**
@@ -208,16 +209,17 @@ trait Syntax {
     */
   def attribute(expr: Expr): Attribute = expr match {
     case Conditional(_, _, _, attr) => attr
-    case Lambda(_, _, attr) => attr
-    case Case(_, _, attr) => attr
-    case Let(_, _, attr) => attr
-    case App(_, _, attr) => attr
-    case ExVar(_, attr) => attr
-    case ExCon(_, attr) => attr
-    case ConstInt(_, attr) => attr
-    case ConstChar(_, attr) => attr
-    case ConstString(_, attr) => attr
-    case JavaScript(_, _, attr) => attr
+    case Lambda(_, _, attr)         => attr
+    case Case(_, _, attr)           => attr
+    case Let(_, _, attr)            => attr
+    case App(_, _, attr)            => attr
+    case ExVar(_, attr)             => attr
+    case ExCon(_, attr)             => attr
+    case ConstInt(_, attr)          => attr
+    case ConstReal(_, attr)         => attr
+    case ConstChar(_, attr)         => attr
+    case ConstString(_, attr)       => attr
+    case JavaScript(_, _, attr)     => attr
   }
 
   //TODO: test!
@@ -230,6 +232,7 @@ trait Syntax {
     case ConstInt(_, _) => Set()
     case ConstChar(_, _) => Set()
     case ConstString(_, _) => Set()
+    case ConstReal(_, _) => Set()
     case JavaScript(_, _, _) => Set()
     case ExVar(x, _) => Set(x)
     case App(l, r, _) => fv(l) ++ fv(r)
@@ -296,6 +299,7 @@ trait Syntax {
       case ConstInt(v, a) => value(v)
       case ConstChar(c, a) => dquotes(value(c))
       case ConstString(s, a) => dquotes(value(s))
+      case ConstReal(x, _) => x.toString
       case JavaScript(j, s, a) => {
 	val sigDoc = s match {
 	  case None      => empty

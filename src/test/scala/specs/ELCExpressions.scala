@@ -162,10 +162,4 @@ trait ELCExpressions {
 		        EAlternative(pApp("True"), EVar("True")),
 		        EAlternative(pApp("False"), EVar("even") :@ ((EVar("-") :@ EVar("n")) :@ EInt(1))))
   }
-
-
-
-  /*
-   * Expressions
-   */
 }

@@ -42,11 +42,15 @@ function _add(arg1) {
 
 var _adds = _add;
 
+var _addr = _add;
+
 function _sub(arg1) {
     return function(arg2) {
 	return arg1 - arg2;
     };
 };
+
+var _subr = _sub;
 
 function _mul(arg1) {
     return function(arg2) {
@@ -54,13 +58,19 @@ function _mul(arg1) {
     };
 };
 
+var _mulr = _mul;
+
 function _div(arg1) {
+    return function(arg2) {
+	return Math.floor(arg1 / arg2);
+    };
+};
+
+function _divr(arg1) {
     return function(arg2) {
 	return arg1 / arg2;
     };
 };
-
-
 
 
 function _eq(l){

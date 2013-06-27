@@ -49,11 +49,11 @@ trait Context {
     def <++>(that: Context): Context = that ++ ctx
 
     /**
-    * Look up the type of an identifier in the given type environment.
-    *
-    * If the type associated with the given identifier is a type scheme,
-    * it will be instantiated accordingly.
-    */
+      * Look up the type of an identifier in the given type environment.
+      *
+      * If the type associated with the given identifier is a type scheme,
+      * it will be instantiated accordingly.
+      */
     def lookupFresh(ide: Var): Option[Type] = {
 
       def instantiate(t: Type) = t match {

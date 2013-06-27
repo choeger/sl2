@@ -31,7 +31,7 @@ package de.tuberlin.uebb.sl2.modules
 import scala.language.postfixOps
 
 /**
-  * Enriched Lambda Calculus of SL
+  * Enriched Lambda Calculus.
   */
 trait EnrichedLambdaCalculus {
 
@@ -46,6 +46,7 @@ trait EnrichedLambdaCalculus {
   sealed abstract class ELC {
     override def toString() : String = ELCPrettyPrinter.pretty(this)
   }
+  case class EReal(value : Double, attribute: Attribute = EmptyAttribute) extends ELC
   case class EInt(value: Int, attribute: Attribute = EmptyAttribute) extends ELC
   case class EChar(value: Char, attribute: Attribute = EmptyAttribute) extends ELC
   case class EStr(value: String, attribute: Attribute = EmptyAttribute) extends ELC
@@ -81,6 +82,7 @@ trait EnrichedLambdaCalculus {
     */
   def attribute(e: ELC): Attribute = e match {
     case EInt(_, attr) => attr
+    case EReal(_, attr) => attr
     case EChar(_, attr) => attr
     case EStr(_, attr) => attr
     case ECon(_, attr) => attr
@@ -98,7 +100,37 @@ trait EnrichedLambdaCalculus {
   /**
     * Translate all top-level function definitions into the enriched lambda calculus.
     *
-    * TODO: Describe basic idea of the translation.
+    * The transformation yields a representation of the program which is more suitable
+    * for the type checker, where
+    * $ - Pattern matching in top-level definitions is translated into a CHOICE expression,
+    * $ - Conditionals are transformed  into a CASE expression,
+    * $ - Lambda abstractions over multiple patterns are translated into nested unary
+    *     lambda abstractions, and
+    * $ - All top-level function definitions form the definitions of a recursive
+    *     let-binding with the main-functions as its body.
+    * 
+    * For example, the following program
+    * {{{
+    * DEF isZero n = IF n == 0 THEN True ELSE False
+    *
+    * DEF add x y = x + y
+    *
+    * DEF empty Nil         = True
+    * DEF empty (Cons x xs) = False
+    *
+    * DEF main = isZero 23
+    * }}}
+    * will be translated into the ELC-expression
+    * {{{
+    * LETREC isZero = \ n. CASE n == 0
+    *                        OF True  -> True
+    *                        OF False -> False
+    *        add    = \ x. \ y. x + y
+    *        empty  = CHOICE
+    *                   \ Nil. True
+    *                   \ (Cons x xs). False
+    * IN isZero 23
+    * }}}
     *
     * @param sigs Signatures of top-level function definitions
     * @param funDefs Top-level function definitions
@@ -175,6 +207,7 @@ trait EnrichedLambdaCalculus {
     case ExVar(ide, attr) => EVar(ide, attr)
     case ExCon(con, attr) => ECon(con, attr)
     case ConstInt(value, attr) => EInt(value, attr)
+    case ConstReal(value, attr) => EReal(value, attr)
     case ConstChar(value, attr) => EChar(value, attr)
     case ConstString(value, attr) => EStr(value, attr)
     case JavaScript(jsCode, sig, attr) => EJavaScript(jsCode, sig.map(astToType), attr)
@@ -277,6 +310,7 @@ trait EnrichedLambdaCalculus {
       case EVar(i, a) => i
       case ECon(c, a) => c
       case EInt(v, a) => value(v)
+      case EReal(v, a) => value(v)
       case EChar(c, a) => dquotes(value(c))
       case EStr(s, a) => dquotes(value(s))
       case EJavaScript(j, s, a) => {

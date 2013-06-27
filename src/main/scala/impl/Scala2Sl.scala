@@ -34,6 +34,9 @@ import scala.reflect.api.{Universe}
 
 import de.tuberlin.uebb.sl2.modules.{Syntax}
 
+/**
+  * TODO: Document Me!
+  */
 class Scala2Sl(val universe : Universe, rename : Map[String, String], val syntax : Syntax) {
 
   import universe._

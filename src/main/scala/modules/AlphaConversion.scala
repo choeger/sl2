@@ -94,6 +94,7 @@ trait AlphaConversion {
     case ExVar(x, attr) => ExVar(subst.get(x).getOrElse(x), attr)
     case c@ExCon(_, _) => c
     case c@ConstInt(_, _) => c
+    case c@ConstReal(_, _) => c
     case c@ConstChar(_, _) => c
     case c@ConstString(_, _) => c
     case c@JavaScript(_, _, _) => c

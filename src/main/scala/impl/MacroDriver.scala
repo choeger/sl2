@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * */
+ */
 
 package de.tuberlin.uebb.sl2.impl
 
@@ -33,11 +33,12 @@ import de.tuberlin.uebb.sl2.modules._
 import de.tuberlin.uebb.sl2.modules.Syntax.{Var}
 
 import language.experimental.macros
-
-import scala.io.Source
- 
 import reflect.macros.{Context => MacroCtxt}
+import scala.io.Source
 
+/**
+  * Driver for the `slc' macro.
+  */
 object MacroDriver extends CombinatorParser with CodeGenerator with Syntax 
   with SyntaxTraversal with Errors with JsSyntax 
   with PreProcessing with Lexic with EnrichedLambdaCalculus 
