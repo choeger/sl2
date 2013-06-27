@@ -82,14 +82,14 @@ trait CodeGenerator {
     }
   }
 
-  def dep(x : Var, defs : Set[Var], rhs : List[FunctionDef]) : List[(Var, Var)] = {
-    for(d <- rhs ; v <- fv(d); if (defs.contains(v)) ) yield (x -> v)
+  def dep(x : Var, defs : Set[Var], rhs : List[Expr]) : List[(Var, Var)] = {
+    for(e <- rhs ; v <- fv(e); if (defs.contains(v)) ) yield (x -> v)
   }
 
   def functionDefsToJs(functionDefs: Map[Var, List[FunctionDef]]): JsStmt = {
     val defs = functionDefs.keys.toSet
-    val dependencies = (for(v <- defs; deps <- dep(v, defs, functionDefs(v))) yield deps).toList
-    val depGraph = directedGraph(functionDefs.keys.toSet, dependencies)
+    val dependencies = (for(v <- defs; deps <- dep(v, defs, functionDefs(v).map(_.expr))) yield deps).toList
+    val depGraph = directedGraph(defs, dependencies)
     val sorted = topologicalSort(stronglyConnectedComponents(depGraph), depGraph)
 
     val l = sorted.map {vs =>
@@ -160,11 +160,15 @@ trait CodeGenerator {
       lhs & alternativesToJs(v, tmp, alternatives)
     }
 
-    case Let(definitions, body, _) => {
-      //TODO: dependency analysis
-      val letdefs = definitions.map(x => {
-        expToJs(x.rhs, $(x.lhs))
-      })
+    case Let(definitions, body, _) => {      
+      val defs = Map() ++ definitions.map(d => (d.lhs -> d.rhs))
+      val boundVars = defs.keys.toSet
+      val dependencies = (for(v <- boundVars; deps <- dep(v, boundVars, defs(v)::Nil)) yield deps).toList
+      val depGraph = directedGraph(boundVars, dependencies)
+      val sorted = topologicalSort(stronglyConnectedComponents(depGraph), depGraph)
+
+      val letdefs = for (scc <- sorted ; x <- scc) yield expToJs(defs(x), $(x))
+
       val b = JsAnonymousFunction(Nil, letdefs & expToJs(body, v) & JsReturn(Some(v)))
       JsDef(v, JsFunctionCall(b))
     }
