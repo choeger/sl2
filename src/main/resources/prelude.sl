@@ -32,3 +32,5 @@
 DATA Bool = True | False
 
 DATA List a = Nil | Cons a (List a)
+
+FUN int2Str : Int -> String

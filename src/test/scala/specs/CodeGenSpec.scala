@@ -104,7 +104,7 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
 
     def compileProgramAndExpr(expr: String) = {
 //            println(str+"\n"+parseAst(preludeSl + str))
-      val ast = parseAst(preludeSl + str).right.get
+      val ast = parseAst(preludeSl + " " + str).right.get
 
       val astJs = astToJs(ast)
       val exp = parseExpr(expr).right.get
@@ -145,6 +145,10 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
 
     it("Should compile string concatenation correctly") {
       (""""a" +s "b"""".compiled.evaluated) should equal(""" "ab" """.evaluated)
+    }
+    
+    it("Should compile integer to string conversion correctly") {
+      ("""int2Str 42""".compiled.evaluated) should equal(""" "42" """.evaluated)
     }
 
     it("Should compile multiplication correctly") {
