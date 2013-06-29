@@ -159,6 +159,10 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
       ("""real2Str 4.2""".compiled.evaluated) should equal(""" "4.2" """.evaluated)
     }
 
+    it("Should compile char to string conversion correctly") {
+      ("""char2Str 'a'""".compiled.evaluated) should equal(""" "a" """.evaluated)
+    }
+
     it("Should compile multiplication correctly") {
       ("40 * 2".compiled.evaluated) should equal("80".evaluated)
     }

@@ -123,6 +123,10 @@ function $real2Str(arg) {
     return arg.toString()
 }
 
+function $char2Str(arg) {
+    return arg
+}
+
 function _yield(r) {
   return function() { return r; };
 }
