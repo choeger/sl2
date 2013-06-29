@@ -107,7 +107,7 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   /**
    * avoid parsing keywords as ide-prefixes
    */
-  def keyword : Rule0 = rule { ("DEF" | "IF" | "THEN" | "ELSE" | "LET" | "IN" | "CASE" | "OF" | "DATA") ~ !(digit | non_digit) }
+  def keyword : Rule0 = rule { ("DEF" | "FUN" | "IF" | "THEN" | "ELSE" | "LET" | "IN" | "CASE" | "OF" | "DATA") ~ !(digit | non_digit) }
 
   def kw(string : String) : Rule0 = {
     string ~ !(digit | non_digit) ~ spacing

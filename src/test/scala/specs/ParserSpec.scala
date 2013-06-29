@@ -414,6 +414,29 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
           Map("x" -> FunctionSig(FunTy(List(TyExpr("Int", Nil), TyExpr("Int", Nil))))),
           Map.empty, Nil))
     }
+
+    it("Should parse function signatures followed by DEFs") {
+      val expectedDefs = FunctionDef(List(PatternVar("x")), ExVar("x"))::Nil
+      "FUN int2Str : Int -> String DEF id x = x".as.ast should
+        parse(Program(
+          Map("int2Str" -> FunctionSig(FunTy(List(TyExpr("Int", Nil), TyExpr("String", Nil))))),
+          Map("id" -> expectedDefs),Nil))
+    }
+
+    it("Should parse function signatures after DATA defs") {
+
+      """DATA List x = Cons x (List x) | Nil FUN int2Str : Int -> String""".as.ast should 
+      parse( Program(Map("int2Str" -> FunctionSig(FunTy(List(TyExpr("Int", Nil), TyExpr("String", Nil))))),
+                    Map(), 
+                    DataDef("List", List("x"),
+                            List(
+                              ConstructorDef(consLex, List(
+                                TyVar("x"),
+                                TyExpr("List", List(
+                                  TyVar("x"))))),
+                              ConstructorDef(nilLex, Nil)))::Nil)
+            )
+    }
             
     it("Should parse simple constant signature") {
       "FUN x : Int".as.ast should
