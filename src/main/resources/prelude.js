@@ -115,6 +115,10 @@ function $not(arg) {
     return !arg;
 }
 
+function $int2Str(arg) {
+    return arg.toString()
+}
+
 function _yield(r) {
   return function() { return r; };
 }
