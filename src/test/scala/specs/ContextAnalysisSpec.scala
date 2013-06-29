@@ -70,6 +70,10 @@ trait ContextAnalysisSpec extends FunSpec with ShouldMatchers {
     it("Should fail on a program where a function and its signature do not have the same arity") {
       checking(prg06) should fail(AttributedError("Signature and definitions of `id' have different arities.", EmptyAttribute))
     }
+
+    it("Should fail on a program with a function definition which cannot be evaluated in an eager fashion") {
+      checking(prg15) should fail(AttributedError("Right-hand side of this recursive local definition is not a lambda expression.", EmptyAttribute))
+    }
   }
 
   describe("Context analysis: erroneous data type definitions") {

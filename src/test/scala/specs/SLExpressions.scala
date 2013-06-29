@@ -175,4 +175,6 @@ trait SLExpressions {
   val prg13 = Program(Map(), Map(), List(bintreeDT, undefTypeParamsDT))
 
   val prg14 = Program(Map(), Map(), List(boolDT, wrongConsAppDT))
+
+  val prg15 = Program(Map(), Map(invalidEager), allDatatypes)
 }
