@@ -119,6 +119,10 @@ function $int2Str(arg) {
     return arg.toString()
 }
 
+function $real2Str(arg) {
+    return arg.toString()
+}
+
 function _yield(r) {
   return function() { return r; };
 }

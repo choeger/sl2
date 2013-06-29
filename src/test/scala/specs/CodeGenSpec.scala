@@ -151,6 +151,14 @@ trait CodeGenSpec extends FunSpec with Inside with ShouldMatchers with SLProgram
       ("""int2Str 42""".compiled.evaluated) should equal(""" "42" """.evaluated)
     }
 
+    it("Should compile real to string conversion correctly on integers") {
+      ("""real2Str 42.0""".compiled.evaluated) should equal(""" "42" """.evaluated)
+    }
+
+    it("Should compile real to string conversion correctly on fractionals") {
+      ("""real2Str 4.2""".compiled.evaluated) should equal(""" "4.2" """.evaluated)
+    }
+
     it("Should compile multiplication correctly") {
       ("40 * 2".compiled.evaluated) should equal("80".evaluated)
     }
