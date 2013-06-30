@@ -58,6 +58,9 @@ trait Lexic {
   val realAdd = "+r"
   val realSub = "-r"
 
+  val intStrLex = "int2Str"
+  val charStrLex = "char2Str"
+  val realStrLex = "real2Str"
 
   val arithOps = List(addLex, subLex, mulLex, divLex)
   val cmpOps = List(ltLex, leLex, eqLex, neLex, geLex, gtLex)

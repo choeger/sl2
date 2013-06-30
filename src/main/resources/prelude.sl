@@ -32,9 +32,3 @@
 DATA Bool = True | False
 
 DATA List a = Nil | Cons a (List a)
-
-FUN int2Str : Int -> String
-
-FUN real2Str : Real -> String
-
-FUN char2Str : Char -> String

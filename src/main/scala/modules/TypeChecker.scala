@@ -75,7 +75,11 @@ trait TypeChecker {
 	 bindLex   -> forall(α, β)(dom(α) --> ((α --> dom(β)) --> dom(β))),
 	 bindNRLex -> forall(α, β)(dom(α) --> (dom(β) --> dom(β))),
 	 ordLex    -> (char --> int),
-	 chrLex    -> (int --> char)
+	 chrLex    -> (int --> char),
+         intStrLex -> (int --> str),
+         charStrLex -> (char --> str),
+         realStrLex -> (real --> str)
+        
 	 // TODO: String to char list functions. Prelude? Do we need them here?
        )
   }
