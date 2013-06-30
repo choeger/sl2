@@ -178,11 +178,18 @@ var $ExternalChar = 0;
 var $ExternalReal = 0;
 ;
 var $ExternalInt = 0;
+var $t =  _mul ;
+var $l$e =  _leq ;
+var $l =  _lesser ;
+var $g$e =  _geq ;
 var $yield =  _yield ;
-var $m =  _greater ;
+var $m =  _sub ;
 var $a$e =  _bind ;
 var $p$p =  _adds ;
+var $e$e =  _eq ;
 var $p =  _add ;
+var $d =  _div ;
+var $g =  _greater ;
 function $not(_arg0)
 {
   if((_arg0 === $True))
