@@ -16,14 +16,14 @@ trait ModuleResolverImpl extends ModuleResolver {
   }
 
   def resolveImport(config: Config)(imp: Import): Either[Error, ResolvedImport] = imp match {
-    case qi @ QualifiedImport(name, path, attr) =>
+    case qi @ QualifiedImport(path, name, attr) =>
       for (
-        file <- findImport(config, imp.path + ".signature", attr).right;
+        file <- findImport(config, path + ".signature", attr).right;
         signature <- importSignature(file).right
-      ) yield ResolvedQualifiedImport(name, file, signature, qi)
+      ) yield ResolvedQualifiedImport(path, name, file, signature, qi)
     case ei @ ExternImport(path, attr) =>
       for (
-        file <- findImport(config, imp.path + ".js", attr).right
+        file <- findImport(config, path + ".js", attr).right
       ) yield ResolvedExternImport(file, ei)
   }
 
@@ -35,7 +35,10 @@ trait ModuleResolverImpl extends ModuleResolver {
   }
 
   def importSignature(file: File): Either[Error, Program] = {
-    val signature = deserialize(file.getCanonicalPath())
+    val source = scala.io.Source.fromFile(file.getCanonicalPath())
+    val json = source.mkString
+    source.close()
+    val signature = deserialize(json)
     if (null == signature) {
       Left(ImportError("Failed to load signature " + file, EmptyAttribute))
     } else {

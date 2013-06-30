@@ -12,6 +12,7 @@ trait ModuleResolver {
   sealed abstract class ResolvedImport
   
   case class ResolvedQualifiedImport(
+      path: String,
       name: String,
       file: File,
       signature: Program,

@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * */
+ */
 
 package de.tuberlin.uebb.sl2.modules
 
@@ -59,7 +59,9 @@ trait CodeGenerator {
     } else {
       val stmts = for ((c,idx) <- d.constructors.zipWithIndex) yield {
         if (c.types.isEmpty) {
-          JsDef($(c.constructor), JsNum(idx))
+          //JsDef($(c.constructor), JsNum(idx))
+          JsAssignment(JsQualifiedName(JsName("exports"), JsName($(c.constructor))), JsNum(idx)
+              ) & JsDef($(c.constructor), JsQualifiedName(JsName("exports"), JsName($(c.constructor))))
         } else {
           val k = c.types.size - 1
           //properties
@@ -73,7 +75,10 @@ trait CodeGenerator {
           val anchor:JsStmt = new JsReturn(obj)
           val body = (anchor /: args)((body, arg) => JsFunction("f", arg::Nil, body)) & JsReturn(Some("f"))
           
-          JsDef("_" + c.constructor, JsNum(idx)) & JsFunction($(c.constructor), List("_arg0"), body)
+          //JsDef("_" + c.constructor, JsNum(idx)) & JsFunction($(c.constructor), List("_arg0"), body)
+          JsAssignment(JsQualifiedName(JsName("exports"), JsName("_" + c.constructor)),JsNum(idx)
+              ) & JsDef("_" + c.constructor, JsQualifiedName(JsName("exports"), JsName("_" + c.constructor))
+              ) & JsFunction($(c.constructor), List("_arg0"), body)
         }
       }
       stmts.foldLeft(Noop:JsStmt)(_ & _)
@@ -81,7 +86,10 @@ trait CodeGenerator {
   }
   
   def functionDefsExternToJs(exDefs: Map[VarName, FunctionDefExtern]) = {
-    val defStmts = exDefs.toList.map{case (name, exDef) => JsDef($(name), JsRaw(exDef.externName))}
+    //val defStmts = exDefs.toList.map{case (name, exDef) => JsDef($(name), JsRaw(exDef.externName))}
+	val defStmts = exDefs.toList.map{ case (name, exDef) =>
+	  JsAssignment(JsQualifiedName(JsName("exports"), JsName($(name))), JsRaw(exDef.externName)
+	  ) & JsDef($(name), JsQualifiedName(JsName("exports"), JsName($(name)))) }
     JsStmtConcat(defStmts)
   }
 
@@ -100,9 +108,15 @@ trait CodeGenerator {
         val funs = functionDefs(v.ide)
         val args = (for (i <- 0 to (funs(0).patterns.length - 1)) yield (JsName("_arg" + i))).toList
         if (args.length != 0) {
-          new JsFunction($(v.ide), args(0)::Nil, functionBodyToJs(args.tail, args, v.asInstanceOf[Var], funs))
+          //new JsFunction($(v.ide), args(0)::Nil, functionBodyToJs(args.tail, args, v.asInstanceOf[Var], funs))
+          JsAssignment(JsQualifiedName(JsName("exports"), JsName($(v.ide))),
+              JsAnonymousFunction(args(0)::Nil, functionBodyToJs(args.tail, args, v.asInstanceOf[Var], funs)))
+          // TODO: Test with function with arguments, maybe need to create local function, too
         } else {
-          JsDef($(v.ide), JsFunctionCall(JsAnonymousFunction(Nil, expToJs(funs(0).expr, $(v.ide)) & JsReturn(Some($(v.ide))))))
+          //JsDef($(v.ide), JsFunctionCall(JsAnonymousFunction(Nil, expToJs(funs(0).expr, $(v.ide)) & JsReturn(Some($(v.ide))))))
+          JsAssignment(JsQualifiedName(JsName("exports"), JsName($(v.ide))),
+              JsFunctionCall(JsAnonymousFunction(Nil, expToJs(funs(0).expr, $(v.ide)) & JsReturn(Some($(v.ide)))))
+          ) & JsDef($(v.ide), JsQualifiedName(JsName("exports"), JsName($(v.ide))))
         }
       })
     }
@@ -180,7 +194,12 @@ trait CodeGenerator {
       f & arg & JsDef(v, JsFunctionCall(tmpF, JsName(tmpArg)))
     }
 
-    case ExVar(Syntax.Var(ide,_), _) => JsDef(v, JsName(escapeJsIde(ide)))
+    case ExVar(Syntax.Var(ide, module), _) =>
+	    if(module == LocalMod) {
+	      JsDef(v, JsName(escapeJsIde(ide)))
+	    } else {
+	      JsDef(v, JsQualifiedName(JsName(module), JsName(escapeJsIde(ide))))
+	    }
     case ExCon(Syntax.ConVar(con,_) , _) => JsDef(v, JsName(escapeJsIde(con)))
     case ConstInt(value, _) => JsDef(v, JsNum(value))
     case ConstReal(value, _) => JsDef(v, JsNum(value))

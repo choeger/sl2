@@ -29,11 +29,14 @@
 package de.tuberlin.uebb.sl2.impl
 
 import scala.collection.mutable.ListBuffer
+import scala.text.Document
+import scala.text.DocText
 import de.tuberlin.uebb.sl2.modules._
 import java.io.File
 import java.io.PrintWriter
-import java.net.URL;
+import java.net.URI;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import scala.io.Source
@@ -51,7 +54,7 @@ trait SimpleDriver extends Driver {
 	// load input file
 	val file = new File(input.head)
 	val name = file.getName()
-	val config = inpCfg.copy(classpath = file.getParentFile(), mainUnit = file)
+	val config = inpCfg.copy(mainUnit = file)
 	val source = scala.io.Source.fromFile(file)
 	val code = source.mkString
 	source.close()
@@ -60,68 +63,113 @@ trait SimpleDriver extends Driver {
 	val ast = parseAst(code)
 	debugPrint(ast.toString());
 	
+    println("Type checking disabled right now")
 	for (
       mo <- ast.right;
       // check and load dependencies
       imports <- inferDependencies(mo, config).right;
       // type check the program
-      _ <- checkProgram(mo).right;
+      //_ <- checkProgram(mo).right;
       
       // and synthesize
-      res <- compile(mo, name, imports, config).right
+      res <- compile(mo.asInstanceOf[Program], name, imports, config).right
     ) yield res
   }
   
-  def compile(program: AST, name: String, imports: List[ResolvedImport], config: Config): Either[Error, String] = {
-    //TODO: is there a more functional way to do file io in scala?
-    val tarJs = new File(config.destination, name + ".js")
-    val tarSig = new File(config.destination, name + ".signature")
-    
-    // TODO: include prelude implicitly from signature, copy _prelude.js to modules
-    // TODO: include files
-    
-    // create main.js
-    // TODO: name the file main.js (i.e. remove .sl, too)
+  def compile(program: Program, name: String, imports: List[ResolvedImport], config: Config): Either[Error, String] = {    
     val compiled = astToJs(program)
+    
+    // TODO: include prelude_stub2.sl implicitly from signature and unqualified
+    
+    // Create modules directory, if necessary
+    val modulesDir = new File(config.destination, "modules")
+    if(!modulesDir.exists()) {
+      if(modulesDir.mkdirs()) {
+        println("Created directory "+modulesDir)
+      } else {
+        println("Could not create directory"+modulesDir)
+      }
+    } else if(!modulesDir.isDirectory()) {
+      println(modulesDir+" is not a directory")
+    }
+    
+    // copy .js and .signature of imported modules from classpath to modules/ directory
+    for(i <- imports.filter(_.isInstanceOf[ResolvedQualifiedImport])) {
+      val imp = i.asInstanceOf[ResolvedQualifiedImport]
+      println("imported "+imp.path+" as "+imp.name)
+      copy(Paths.get(new File(config.classpath, imp.path+".signature").toURI()),
+          Paths.get(modulesDir.getAbsolutePath(), imp.path+".signature"))
+      copy(Paths.get(new File(config.classpath, imp.path+".js").toURI()),
+          Paths.get(modulesDir.getAbsolutePath(), imp.path+".js"))
+    }
+    
+    val tarJs = new File(modulesDir, name.substring(0,name.length()-3) + ".js")
     println("compiling "+name+" to "+tarJs)
-    val writerProg = new PrintWriter(tarJs)
+    // TODO: maybe CombinatorParser does not yet parse qualified imports correctly, like ParboiledParser did before?
+    val moduleTemplate = Source.fromURL(getClass().getResource("/js/module_template.js")).getLines.mkString("\n")
+    val moduleWriter = new PrintWriter(new File(modulesDir, name.substring(0, name.length()-3) + ".js"))
     for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
       val imp = i.asInstanceOf[ResolvedExternImport]
       val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
-      writerProg.println("/***********************************/")
-      writerProg.println("// included from: "+imp.file.getCanonicalPath())
-      writerProg.println("/***********************************/")
-      writerProg.println(includedCode)
-      writerProg.println("/***********************************/")
+      moduleWriter.println("/***********************************/")
+      moduleWriter.println("// included from: "+imp.file.getCanonicalPath())
+      moduleWriter.println("/***********************************/")
+      moduleWriter.println(includedCode)
+      moduleWriter.println("/***********************************/")
     }
-    writerProg.println("/***********************************/")
-    writerProg.println("// generated from: "+name)
-    writerProg.println("/***********************************/") 
-    val template = Source.fromURL(getClass.getResource("/js/template.js")).getLines.mkString("\n")
-    writerProg.write(template.replace("%%MODULES_LIST%%", "") // TODO
-    	.replace("%%MODULE_NAMES_LIST%%", "") // TODO
-    		.replace("%%MAIN%%", JsPrettyPrinter.pretty(compiled)+";$main();"))
-    writerProg.close()
+    moduleWriter.println("/***********************************/")
+    moduleWriter.println("// generated from: "+name)
+    moduleWriter.println("/***********************************/") 
+    val requires = imports.filter(_.isInstanceOf[ResolvedQualifiedImport]).map(
+        x => JsDef(x.asInstanceOf[ResolvedQualifiedImport].name,
+            JsFunctionCall(JsName("require"),JsStr("modules/"+x.asInstanceOf[ResolvedQualifiedImport].path))
+        	))
+    moduleWriter.write(moduleTemplate.replace("%%MODULE_BODY%%", JsPrettyPrinter.pretty(requires)+"\n\n"
+        +JsPrettyPrinter.pretty(dataDefsToJs(program.dataDefs)
+            & functionDefsExternToJs(program.functionDefsExtern)
+            & functionDefsToJs(program.functionDefs))));
+    moduleWriter.close();
     
-    // copy index.html, require.js to config.destination
-    copy(getClass().getResource("/js/index.html"), "index.html", config)
-    copy(getClass().getResource("/js/require.js"), "require.js", config)
-    
-    // TODO: create modules directory
-    
-    println("writing signature of "+name+" to "+tarSig)
-    val writerSig = new PrintWriter(tarSig)
+    val signatureFile = new File(modulesDir, name.substring(0,name.length()-3) + ".signature")
+    println("writing signature of "+name+" to "+signatureFile)
+    val writerSig = new PrintWriter(signatureFile)
     writerSig.write(serialize(program))
     writerSig.close()
+    
+    // create main.js only if a main function is declared
+    if(program.isInstanceOf[Program] && program.asInstanceOf[Program].functionDefs.contains("main")) {
+	    val mainWriter = new PrintWriter(new File(config.destination, "main.js"))
+	    for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
+	      val imp = i.asInstanceOf[ResolvedExternImport]
+	      val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
+	      mainWriter.println("/***********************************/")
+	      mainWriter.println("// included from: "+imp.file.getCanonicalPath())
+	      mainWriter.println("/***********************************/")
+	      mainWriter.println(includedCode)
+	      mainWriter.println("/***********************************/")
+	    }
+	    mainWriter.println("/***********************************/")
+	    mainWriter.println("// generated from: "+name)
+	    mainWriter.println("/***********************************/") 
+	    val mainTemplate = Source.fromURL(getClass.getResource("/js/main_template.js")).getLines.mkString("\n")
+	    mainWriter.write(mainTemplate.replace("%%MODULE_PATHS_LIST%%", "\"modules/"+name.substring(0, name.length()-3)+"\""/*modulePathsList.txt*/)
+	    	.replace("%%MODULE_NAMES_LIST%%", "$$$"+name.substring(0, name.length()-3)/*moduleNamesList.txt*/)
+	    		.replace("%%MAIN%%", JsPrettyPrinter.pretty(/*compiled &*/ JsFunctionCall("$$$"+name.substring(0, name.length()-3)+".$main"))/*main*/))
+	    mainWriter.close()
+	    
+	    // copy index.html, require.js to config.destination
+	    copy(Paths.get(getClass().getResource("/js/index.html").toURI()),
+	        Paths.get(config.destination.getAbsolutePath(), "index.html"))
+	    copy(Paths.get(getClass().getResource("/js/require.js").toURI()),
+	        Paths.get(config.destination.getAbsolutePath(), "require.js"))
+    }
     
     return Right("compilation successful")
   }
   
-  def copy(url: URL, fileName: String, config: Config) = {
-    val target = Files.copy(Paths.get(url.toURI()),
-        Paths.get(config.destination.getAbsolutePath(), fileName),
-        StandardCopyOption.REPLACE_EXISTING)
-    println("copied "+fileName+" to "+target);
+  def copy(from: Path, to: Path) = {
+    val target = Files.copy(from, to, StandardCopyOption.REPLACE_EXISTING)
+    println("copied "+from+" to "+to);
     target
   }
 

@@ -9,12 +9,12 @@ if (typeof window === 'undefined') {
         nodeRequire: require
     });
     
-    requirejs([%%MODULES_LIST%%], function(%%MODULE_NAMES_LIST%%) {
+    requirejs([%%MODULE_PATHS_LIST%%], function(%%MODULE_NAMES_LIST%%) {
         %%MAIN%%
     });
 } else {
     /* in browsers*/ 
-    require([%%MODULES_LIST%%], function(%%MODULE_NAMES_LIST%%) {
+    require([%%MODULE_PATHS_LIST%%], function(%%MODULE_NAMES_LIST%%) {
         %%MAIN%%
     });
 }
