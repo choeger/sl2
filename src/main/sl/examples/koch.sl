@@ -56,4 +56,4 @@ DEF main = context &= ( \c.    	       	   -- bind the context element
            (snowflake c 3 425 115 125) &
            (snowflake c 4 565 115 125) &   -- A level-4 snowflake looks like a snowflake!
            (stroke c) &	      	       	   -- Stroke this very complicated path
-	   {| console.log("done.") |} )	                  
+	   {| console.log("done.") |} )

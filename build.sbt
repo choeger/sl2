@@ -19,3 +19,7 @@ libraryDependencies ++= Seq(
 	"com.googlecode.kiama" %% "kiama" % "1.4.0",
 	"net.sf.jgrapht" % "jgrapht" % "0.8.3"
 )
+
+// Skip tests during assembly
+
+test in assembly := {}
