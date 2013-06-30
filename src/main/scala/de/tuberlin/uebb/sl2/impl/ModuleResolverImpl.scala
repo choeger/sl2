@@ -17,7 +17,7 @@ trait ModuleResolverImpl extends ModuleResolver {
   }
 
   def resolveImport(config: Config)(imp: Import): Either[Error, ResolvedImport] = imp match {
-    case qi @ QualifiedImport(name, path, attr) =>
+    case qi @ QualifiedImport(path, name, attr) =>
       for (
         file <- findImport(config, imp.path + ".sl.signature", attr).right;
         signature <- importSignature(file).right

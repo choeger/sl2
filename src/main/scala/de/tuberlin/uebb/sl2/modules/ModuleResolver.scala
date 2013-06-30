@@ -13,7 +13,7 @@ trait ModuleResolver {
   
   case class ResolvedQualifiedImport(
       name: ModuleVar,
-    path: String,
+      path: String,
       file: File,
       signature: Program,
       ast: QualifiedImport)

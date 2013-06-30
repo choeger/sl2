@@ -7,7 +7,7 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
 
   /**
    * Normalizes the signature of imported modules.
-   * It will substitude the module name of ConVar and TConVar identifiers.
+   * It will substitute the module name of ConVar and TConVar identifiers.
    */
   def normalizeModules(imports : List[ResolvedImport]) : List[ResolvedImport] = {
     // initial path module map with known modules
