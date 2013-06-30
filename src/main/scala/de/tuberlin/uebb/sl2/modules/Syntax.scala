@@ -62,6 +62,10 @@ object Syntax {
       this.nameToString() == that.asInstanceOf[QualifiedVar].nameToString()
     }
     
+    override def hashCode() = {
+      this.module.hashCode() + this.nameToString().hashCode()
+    }
+    
     override def toString() = {
       if (module == LocalMod) {
         nameToString

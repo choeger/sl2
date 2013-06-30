@@ -2,9 +2,10 @@ package de.tuberlin.uebb.sl2.impl
 
 import de.tuberlin.uebb.sl2.modules._
 import java.io.File
+import scala.io.Source
 
 trait ModuleResolverImpl extends ModuleResolver {
-  this: Syntax with Context with Errors with Configs with SignatureSerializer =>
+  this: Syntax with Errors with Configs with SignatureSerializer =>
 
   case class ImportError(what: String, where: Attribute) extends Error
 
@@ -16,14 +17,14 @@ trait ModuleResolverImpl extends ModuleResolver {
   }
 
   def resolveImport(config: Config)(imp: Import): Either[Error, ResolvedImport] = imp match {
-    case qi @ QualifiedImport(name, path, attr) =>
+    case qi @ QualifiedImport(path, name, attr) =>
       for (
-        file <- findImport(config, imp.path + ".signature", attr).right;
+        file <- findImport(config, imp.path + ".sl.signature", attr).right;
         signature <- importSignature(file).right
-      ) yield ResolvedQualifiedImport(name, file, signature, qi)
+      ) yield ResolvedQualifiedImport(name, path, file, signature, qi)
     case ei @ ExternImport(path, attr) =>
       for (
-        file <- findImport(config, imp.path + ".js", attr).right
+        file <- findImport(config, imp.path + ".sl.js", attr).right
       ) yield ResolvedExternImport(file, ei)
   }
 
@@ -35,7 +36,8 @@ trait ModuleResolverImpl extends ModuleResolver {
   }
 
   def importSignature(file: File): Either[Error, Program] = {
-    val signature = deserialize(file.getCanonicalPath())
+    val sigJson = Source.fromFile(file).getLines.mkString("\n")
+    val signature = deserialize(sigJson)
     if (null == signature) {
       Left(ImportError("Failed to load signature " + file, EmptyAttribute))
     } else {

@@ -185,6 +185,9 @@ trait Type {
     case TypeScheme(vars, ty) => "forall " + (vars map pprint) + " . " + pprint(ty)
   }
   
+  /**
+   * types of that can appear due to literal expressions.
+   */
   object BaseType {
     val Integer = TypeConstructor(Syntax.TConVar("Int", LocalMod), Nil)
     val String = TypeConstructor(Syntax.TConVar("String", LocalMod), Nil)
@@ -193,5 +196,8 @@ trait Type {
     val DomVoid = TypeConstructor(Syntax.TConVar("DOM", LocalMod), List(Void))
     val Real = TypeConstructor(Syntax.TConVar("Real", LocalMod), Nil)
     val Bool = TypeConstructor(Syntax.TConVar("Bool", LocalMod), Nil)
+    
+    val typeVars = List(Integer, String, Character, Void, DomVoid, Real, Bool).map(_.con)
   }
+ 
 }

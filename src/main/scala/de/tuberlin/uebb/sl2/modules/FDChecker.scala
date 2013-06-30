@@ -33,12 +33,12 @@ package de.tuberlin.uebb.sl2.modules
   */
 trait FDChecker {
 
-  this: Syntax with Errors =>
+  this: Syntax with Context with Type with Errors =>
 
   /**
     * Check a program's top-level function definitions.
     *
     * @return Signatures and definitions of all top-level functions
     */
-  def checkFunctions(in: AST): Either[Error, (Map[Var, FunctionSig], Map[Var, List[FunctionDef]])]
+  def checkFunctions(in: AST): Either[Error, (Map[Var, FunctionSig], Map[Var, List[FunctionDef]], Context)]
 }

@@ -27,8 +27,64 @@
 -- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 -- OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
--- Standard prelude of SL
+-- This is a stub for the predefined types and methods of SL, so that we
+-- can create the prelude by a combination of compilation and hand coding.
+
+IMPORT EXTERN "_prelude" 
+
+DATA Int = ExternalInt
+DATA Real = ExternalReal
+DATA Char = ExternalChar
+DATA Void = ExternalVoid
+DATA String = ExternalString
+DATA DOM a = ExternalDOM a
 
 DATA Bool = True | False
 
+FUN not : Bool -> Bool
+DEF not True = False
+DEF not False = True
+
 DATA List a = Nil | Cons a (List a)
+
+FUN ++ : (String -> String -> String)
+DEF EXTERN ++ = {| _adds |}
+
+FUN &= : (DOM a) -> (a -> (DOM b)) -> (DOM b)
+DEF EXTERN &= = {| _bind |}
+
+FUN yield : a -> (DOM a)
+DEF EXTERN yield =  {| _yield |}
+
+FUN & : (DOM a) -> (DOM b) -> (DOM b)
+DEF x & y = (x &= (\ r . y))
+
+FUN + : Int -> Int -> Int
+DEF EXTERN + = {| _add |}
+
+FUN - : Int -> Int -> Int
+DEF EXTERN - = {| _sub |}
+
+FUN * : Int -> Int -> Int
+DEF EXTERN * = {| _mul |}
+
+FUN / : Int -> Int -> Int
+DEF EXTERN / = {| _div |}
+
+FUN < : Int -> Int -> Bool
+DEF EXTERN < = {| _lesser |}
+
+FUN <= : Int -> Int -> Bool
+DEF EXTERN <= = {| _leq |}
+
+FUN == : Int -> Int -> Bool
+DEF EXTERN == = {| _eq |}
+
+FUN /= : Int -> Int -> Bool
+DEF x /= y = not (x == y)
+
+FUN >= : Int -> Int -> Bool
+DEF EXTERN >= = {| _geq |}
+
+FUN > : Int -> Int -> Bool
+DEF EXTERN > = {| _greater |}

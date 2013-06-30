@@ -1,5 +1,5 @@
 /***********************************/
-// included from: /home/ben/Dokumente/compilerbaupraxis/sl2/src/main/resources/_prelude.js
+// included from: /home/ben/Dokumente/compilerbaupraxis/sl2/src/main/sl/lib/_prelude.js
 /***********************************/
 /*
  * This basic module is necessary as an import to every SL
@@ -143,7 +143,7 @@ function _bindnr(l) {
 }
 /***********************************/
 /***********************************/
-// generated from: prelude_stub2.sl
+// generated from: prelude.sl
 /***********************************/
 ;
 ;
@@ -202,6 +202,62 @@ function $not(_arg0)
     if((_arg0 === $False))
     {
       var _return = $True;
+      return _return
+    }
+    else 
+    {
+      throw "Pattern not exhaustive!"
+    }
+  }
+};
+function $a(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && true))
+    {
+      var $x = _arg0;
+      var $y = _arg1;
+      var $14 = $a$e;
+      var $13 = $x;
+      var $12 = $14($13);
+      var $10 = function (_arg0)
+      {
+        if(true)
+        {
+          var $r = _arg0;
+          var $11 = $y
+        }
+        else 
+        {
+          throw "Pattern for lambda expression did not match arguments"
+        };
+        return $11
+      };
+      var _return = $12($10);
+      return _return
+    }
+    else 
+    {
+      throw "Pattern not exhaustive!"
+    }
+  }
+};
+function $d$e(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && true))
+    {
+      var $x = _arg0;
+      var $y = _arg1;
+      var $20 = $not;
+      var $19 = $e$e;
+      var $18 = $x;
+      var $17 = $19($18);
+      var $16 = $y;
+      var $15 = $17($16);
+      var _return = $20($15);
       return _return
     }
     else 

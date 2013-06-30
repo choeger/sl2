@@ -7,12 +7,13 @@ import java.io.File
  * references.
  */
 trait ModuleResolver {
-  this: Syntax with Context with Errors with Configs =>
+  this: Syntax with Errors with Configs =>
 
   sealed abstract class ResolvedImport
   
   case class ResolvedQualifiedImport(
-      name: String,
+      name: ModuleVar,
+      path: String,
       file: File,
       signature: Program,
       ast: QualifiedImport)

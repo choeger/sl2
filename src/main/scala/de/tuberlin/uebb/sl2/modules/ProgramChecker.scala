@@ -35,12 +35,12 @@ package de.tuberlin.uebb.sl2.modules
   */
 trait ProgramChecker {
 
-  this: Syntax with Context with Errors =>
+  this: Syntax with Context with Errors with ModuleResolver =>
 
   sealed case class ProgramHeader(environment: Context, dependencies: List[String])
 
   /**
     * Context analysis.
     */
-  def checkProgram(in: AST): Either[Error, Unit]
+  def checkProgram(in: AST, modules : List[ResolvedImport]): Either[Error, Unit]
 }

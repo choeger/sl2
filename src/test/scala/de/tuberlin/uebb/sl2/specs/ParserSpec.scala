@@ -183,7 +183,7 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     }
     
     it("Should parse external function definition") {
-      "DEF EXTERN f = \"myJavaScriptFun\"".as.ast should parse(
+      "DEF EXTERN f = {|myJavaScriptFun|}".as.ast should parse(
           Program(List(), Map.empty, Map.empty, Map("f" -> FunctionDefExtern("myJavaScriptFun")), Nil))
     }
   }
