@@ -60,7 +60,7 @@ trait Errors {
   case object NotYetImplemented extends Error
 
   /* Perser: parse error */
-  case class ParseError(msg : String, startIndex : Int, endIndex : Int) extends Error
+  case class ParseError(what: String, where: Attribute) extends Error
 
   /* Type checker: undefined element error */
   case class UndefinedError(what: String, name: String, where: Attribute) extends Error
