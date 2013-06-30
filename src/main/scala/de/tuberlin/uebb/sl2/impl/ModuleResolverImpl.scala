@@ -18,12 +18,12 @@ trait ModuleResolverImpl extends ModuleResolver {
   def resolveImport(config: Config)(imp: Import): Either[Error, ResolvedImport] = imp match {
     case qi @ QualifiedImport(name, path, attr) =>
       for (
-        file <- findImport(config, imp.path + ".signature", attr).right;
+        file <- findImport(config, imp.path + ".sl.signature", attr).right;
         signature <- importSignature(file).right
       ) yield ResolvedQualifiedImport(name, path, file, signature, qi)
     case ei @ ExternImport(path, attr) =>
       for (
-        file <- findImport(config, imp.path + ".js", attr).right
+        file <- findImport(config, imp.path + ".sl.js", attr).right
       ) yield ResolvedExternImport(file, ei)
   }
 
