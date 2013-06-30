@@ -76,9 +76,10 @@ trait CodeGenerator {
           val body = (anchor /: args)((body, arg) => JsFunction("f", arg::Nil, body)) & JsReturn(Some("f"))
           
           //JsDef("_" + c.constructor, JsNum(idx)) & JsFunction($(c.constructor), List("_arg0"), body)
-          JsAssignment(JsQualifiedName(JsName("exports"), JsName("_" + c.constructor)),JsNum(idx)
-              ) & JsDef("_" + c.constructor, JsQualifiedName(JsName("exports"), JsName("_" + c.constructor))
-              ) & JsFunction($(c.constructor), List("_arg0"), body)
+          JsAssignment(JsQualifiedName(JsName("exports"), JsName("_" + c.constructor)),JsNum(idx)) &
+          	JsDef("_" + c.constructor, JsQualifiedName(JsName("exports"), JsName("_" + c.constructor))) &
+          	JsFunction($(c.constructor), List("_arg0"), body) &
+          	JsAssignment(JsQualifiedName(JsName("exports"), JsName($(c.constructor))), JsName($(c.constructor)))
         }
       }
       stmts.foldLeft(Noop:JsStmt)(_ & _)
@@ -108,10 +109,8 @@ trait CodeGenerator {
         val funs = functionDefs(v.ide)
         val args = (for (i <- 0 to (funs(0).patterns.length - 1)) yield (JsName("_arg" + i))).toList
         if (args.length != 0) {
-          //new JsFunction($(v.ide), args(0)::Nil, functionBodyToJs(args.tail, args, v.asInstanceOf[Var], funs))
-          JsAssignment(JsQualifiedName(JsName("exports"), JsName($(v.ide))),
-              JsAnonymousFunction(args(0)::Nil, functionBodyToJs(args.tail, args, v.asInstanceOf[Var], funs)))
-          // TODO: Test with function with arguments, maybe need to create local function, too
+          JsFunction($(v.ide), args(0)::Nil, functionBodyToJs(args.tail, args, v.asInstanceOf[Var], funs)) &
+          JsAssignment(JsQualifiedName(JsName("exports"), JsName($(v.ide))),JsName($(v.ide)))
         } else {
           //JsDef($(v.ide), JsFunctionCall(JsAnonymousFunction(Nil, expToJs(funs(0).expr, $(v.ide)) & JsReturn(Some($(v.ide))))))
           JsAssignment(JsQualifiedName(JsName("exports"), JsName($(v.ide))),
@@ -200,7 +199,12 @@ trait CodeGenerator {
 	    } else {
 	      JsDef(v, JsQualifiedName(JsName(module), JsName(escapeJsIde(ide))))
 	    }
-    case ExCon(Syntax.ConVar(con,_) , _) => JsDef(v, JsName(escapeJsIde(con)))
+    case ExCon(Syntax.ConVar(con, module) , _) =>
+      	if(module == LocalMod) {
+	      JsDef(v, JsName(escapeJsIde(con)))
+	    } else {
+	      JsDef(v, JsQualifiedName(JsName(module), JsName(escapeJsIde(con))))
+	    }
     case ConstInt(value, _) => JsDef(v, JsNum(value))
     case ConstReal(value, _) => JsDef(v, JsNum(value))
     case ConstChar(value, _) => JsDef(v, JsStr(value.toString))

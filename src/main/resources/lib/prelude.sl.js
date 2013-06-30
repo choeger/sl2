@@ -163,6 +163,7 @@ function $Cons(_arg0)
   };
   return f
 };
+exports.$Cons = $Cons;
 var $True = true;
 var $False = false;
 ;
@@ -174,6 +175,7 @@ function $ExternalDOM(_arg0)
   };
   return f
 };
+exports.$ExternalDOM = $ExternalDOM;
 ;
 exports.$ExternalString = 0;
 var $ExternalString = exports.$ExternalString;
