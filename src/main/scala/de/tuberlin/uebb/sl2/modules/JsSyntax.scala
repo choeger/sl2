@@ -75,6 +75,7 @@ trait JsSyntax {
 
   sealed abstract class JsExpr extends JsStmt
   case class JsName(name: String) extends JsExpr
+  case class JsQualifiedName(qualifier: JsName, name: JsName) extends JsExpr
 
   case class JsNum(n: Number) extends JsExpr
   case class JsStr(s: String) extends JsExpr
@@ -155,6 +156,7 @@ trait JsSyntax {
       case JsTryCatch(tb,c,cb) => "try" :/: showJsStmtAsBlock(tb) :/: "catch" :: parens(c) :/: showJsStmtAsBlock(cb)
       case JsThrow(s) => "throw ":: "\"" :: s :: "\""
       case JsName(n) => n
+      case JsQualifiedName(qualifier, n) => qualifier :: "." :: n
       case JsNum(v) => v.toString
       case JsBool(b) => b.toString
       case JsStr(s) => "\"" :: s :: "\""

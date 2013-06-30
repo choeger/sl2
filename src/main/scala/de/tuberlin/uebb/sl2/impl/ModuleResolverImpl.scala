@@ -36,8 +36,10 @@ trait ModuleResolverImpl extends ModuleResolver {
   }
 
   def importSignature(file: File): Either[Error, Program] = {
-    val sigJson = Source.fromFile(file).getLines.mkString("\n")
-    val signature = deserialize(sigJson)
+    val source = scala.io.Source.fromFile(file.getCanonicalPath())
+    val json = source.mkString
+    source.close()
+    val signature = deserialize(json)
     if (null == signature) {
       Left(ImportError("Failed to load signature " + file, EmptyAttribute))
     } else {

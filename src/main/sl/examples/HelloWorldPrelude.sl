@@ -1,4 +1,4 @@
-IMPORT "src/main/resources/lib/prelude" AS P
+IMPORT "prelude" AS P
 
 FUN nums : P.List Int
 DEF nums = P.Cons 11 (P.Cons 12 P.Nil) 

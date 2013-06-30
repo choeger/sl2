@@ -64,15 +64,13 @@ object Main
     with ModuleNormalizerImpl
     with ModuleContextImpl {
 
-  val usage = """Usage:B <sl> [-d destination directory] source file(s)"""
+  val usage = """Usage:B <sl> [-d destination directory] [-cp <class-path-directory>] source file(s)"""
 
   def main(args: Array[String]) {
     if (args.isEmpty)
       println(usage)
     else {
       val config = parseArguments(args.toList)
-      //val prelude = Source.fromURL(getClass.getResource("/prelude.sl")).getLines.mkString("\n")
-      //val preludeJs = Source.fromURL(getClass.getResource("/prelude.js")).getLines.mkString("\n")
       val res = run(config)
       if (res.isLeft)
         res.left.map(x => println("Error: " + x))
@@ -83,6 +81,7 @@ object Main
   
   def parseArguments(args: List[String]): Config = args match {
   	case "-d" :: dir ::  rt => parseArguments(rt).copy(destination = new File(dir))
+  	case "-cp" :: dir :: rt => parseArguments(rt).copy(classpath = new File(dir))
   	case src ::  rt => {
   		val res = parseArguments(rt)
   		res.copy(sources = src :: res.sources)
