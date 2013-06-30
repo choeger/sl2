@@ -50,12 +50,20 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
   val list = (t: Type) => TypeConstructor(Syntax.TConVar("List"), List(t))
   val dom = (t: Type) => TypeConstructor(Syntax.TConVar("DOM"), List(t))
 
+  // in proper program these should be imported from prelude...
   val initialContext: Context = {
     Map(Syntax.ConVar("True") -> bool,
       Syntax.ConVar("False") -> bool,
       Syntax.ConVar("Nil") -> TypeScheme(List(α), list(α)),
       Syntax.ConVar("Cons") -> TypeScheme(List(α), α --> (list(α) --> list(α))),
-      Syntax.ConVar("Pair") -> TypeScheme(List(α, β), α --> (β --> TypeConstructor(Syntax.TConVar("Pair"), List(α, β)))))
+      Syntax.ConVar("Pair") -> TypeScheme(List(α, β), α --> (β --> TypeConstructor(Syntax.TConVar("Pair"), List(α, β)))),
+      Syntax.Var("+") -> (int --> (int --> int)),
+      Syntax.Var("-") -> (int --> (int --> int)),
+      Syntax.Var("==") -> (int --> (int --> bool)),
+      Syntax.Var("ord") -> (char --> int),
+      Syntax.Var("chr") -> (int --> char),
+      Syntax.Var("yield") -> forall(α)(α --> dom(α)),
+      Syntax.Var("&") -> forall(α, β)(dom(α) --> (dom(β) --> dom(β))))
   }
 
   /*
@@ -134,10 +142,6 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
       ((eVar("+") :@ EInt(1)) :@ EInt(1)) should haveType(int)
     }
 
-    it("Should type check application of built-in function '+r'") {
-      ((eVar("+r") :@ EReal(1.0)) :@ EReal(1.0)) should haveType(real)
-    }
-
     it("Should type check application of built-in function '=='") {
       ((eVar("==") :@ EInt(1)) :@ EInt(1)) should haveType(bool)
     }
@@ -208,5 +212,4 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
       ELetRec(List(mapDef, appendDef, evenDef, lengthDef, oddDef, sumDef), eVar("odd") :@ EInt(42)) should haveType(bool)
     }
   }
-
 }
