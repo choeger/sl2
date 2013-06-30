@@ -36,13 +36,7 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
   def equal(expected : AST) = SignatureMatcher(expected)
 
   case class IndirectSignatureMatcher() extends Matcher[ParseSerializeDeserializeResult] {
-    def apply(delivered : ParseSerializeDeserializeResult) = {
-      // TODO this is purely for debugging purposes and should later be removed
-      println(delivered.serialized)
-//      println(serialize(delivered.deserialized))
-      
-      SignatureMatcher(delivered.parsed).apply(delivered.deserialized)
-    }
+    def apply(delivered : ParseSerializeDeserializeResult) = SignatureMatcher(delivered.parsed).apply(delivered.deserialized)
   }
   
   // This matcher basically only matches the strings of the signature's identifiers.
