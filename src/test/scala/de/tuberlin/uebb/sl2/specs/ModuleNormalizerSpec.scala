@@ -5,7 +5,7 @@ import org.scalatest.FunSpec
 import de.tuberlin.uebb.sl2.modules._
 
 trait ModuleNormalizerSpec extends FunSpec with ShouldMatchers {
-  this : ModuleNormalizer with Syntax with Parser with Errors with ModuleResolver =>
+  this : ModuleNormalizer with Syntax with Parser with Type with Errors with ModuleResolver =>
   
   def testedImplementationName(): String
       
