@@ -103,10 +103,10 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   //ignore whitespace and comments between parsers
   override protected val whiteSpace = """(\s|--.*|(?m)\{-(\*(?!/)|[^*])*-\})+""".r
 
-  private def parseTopLevel: Parser[AST] = rep(makeImport | makeDataDef | makeFunctionDef | makeFunctionSig) ^^
+  private def parseTopLevel: Parser[AST] = rep(makeImport | makeDataDef | makeFunctionDef | makeFunctionSig | makeFunctionDefExtern) ^^
     { _.foldLeft(emptyProgram: AST)((z, f) => f(z)) }
 
-  private def makeImport: Parser[AST => AST] = importDef ^^ { i =>
+  private def makeImport: Parser[AST => AST] = (importDef | importExternDef) ^^ { i =>
     (a: AST) =>
       a match {
         case m: Program => m.copy(imports = i :: m.imports)
@@ -134,11 +134,23 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
       }
   }
 
+  def makeFunctionDefExtern: Parser[AST => AST] = functionDefExtern ^^ { x =>
+    (a: AST) =>
+      a match {
+        case m: Program => m.copy(functionDefsExtern = m.functionDefsExtern + x)
+      }
+  }
+
   private def updateMap[T](s: String, t: T, m: Map[String, List[T]]) = m + (s -> (t :: m.get(s).getOrElse(Nil)))
 
   private def importDef: Parser[Import] = 
     importLex ~> string ~ asLex ~ moduleRegex ^^@ {
       case (a, name ~ _ ~ mod) => QualifiedImport(name.value, mod, a)
+    }
+
+  private def importExternDef: Parser[Import] =
+    importLex ~ externLex ~> string ^^@ {
+      case (a, name) => ExternImport(name.value, a)
     }
 
   private def functionDef: Parser[(VarName, FunctionDef)] =
@@ -149,6 +161,11 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   private def binaryOpDef: Parser[(VarName, FunctionDef)] =
     defLex ~> rep1(pat) ~ customOp ~ rep1(pat) ~ funEqLex ~ expr ^^@ {
       case (a, p1 ~ op ~ p2 ~ _ ~ e) => (op, FunctionDef(p1 ++ p2, e, a))
+    }
+
+  private def functionDefExtern: Parser[(VarName, FunctionDefExtern)] =
+    defLex ~ externLex ~> varRegex ~ funEqLex ~ jsRegex ^^@ {
+      case (a, v ~ _ ~ js) => (v, FunctionDefExtern(js))
     }
 
   private def dataDef: Parser[DataDef] =
@@ -220,16 +237,22 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   private def unqualTCon: Parser[Syntax.TConVar] = typeRegex ~ not(".") ^^ { case t~_ => Syntax.TConVar(t)}
 
   //Parse Pattern
-  private def ppat: Parser[Pattern] = patVar | patExpr | "(" ~> patExpr <~ ")"
-  private def pat: Parser[Pattern] = patVar | patCons | "(" ~> patExpr <~ ")"
+  private def ppat: Parser[Pattern] = patVar | patQualExpr | patExpr
+  private def pat: Parser[Pattern] = patVar | patQualCons | patCons | "(" ~> (patQualExpr | patExpr) <~ ")"
   private def patVar: Parser[PatternVar] = varRegex ^^@ {
     (a, s) => PatternVar(s, a)
   }
   private def patCons: Parser[Pattern] = consRegex ^^@ {
     (a, c) => PatternExpr(Syntax.ConVar(c), Nil, a)
   }
+  private def patQualCons: Parser[Pattern] = moduleRegex ~ "." ~ consRegex ^^@ {
+    case (a, m ~ _ ~ c) => PatternExpr(Syntax.ConVar(c, m), Nil, a)
+  }
   private def patExpr: Parser[Pattern] = consRegex ~ rep(pat) ^^@ {
     case (a, c ~ pp) => PatternExpr(Syntax.ConVar(c), pp, a)
+  }
+  private def patQualExpr: Parser[Pattern] = moduleRegex ~ "." ~ consRegex ~ rep(pat) ^^@ {
+    case (a, m ~ _ ~ c ~ pp) => PatternExpr(Syntax.ConVar(c, m), pp, a)
   }
 
   private def consRegex: Parser[String] = not(keyword) ~> """[A-Z][a-zA-Z0-9]*""".r ^^ { case s: String => s }
@@ -252,6 +275,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   }
   private def eqRegex: Parser[String] = """=(?![!§%&/=\?\+\*#\-:\<\>|])""".r ^^ { case s: String => s }
   private def keyword = keywords.mkString("", "|", "").r
+  private def jsRegex = jsOpenLex ~> """(?:(?!\|\}).)*""".r <~ jsCloseLex ^^ { case s: String => s }
 
   //Qualified things
   private def unqualBinop: Parser[ExVar] = 

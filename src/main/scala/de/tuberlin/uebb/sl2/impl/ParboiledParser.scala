@@ -447,17 +447,24 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
     PatternExpr(Syntax.ConVar(c), p)
   }
 
+  def mkQualPattern(mod : String, c : String, p : List[Pattern]) = {
+    PatternExpr(Syntax.ConVar(c, mod), p)
+  }
+
   /* Pattern syntax in DEFs and CASEs differ */
 
   def def_pattern : Rule1[Pattern] = rule {
-    "( " ~ (up_ident_token ~> (x => x)) ~ spacing ~ pattern_rhs ~~> (mkPattern _) ~ ") " |
+    "( " ~ qualification ~ constructor ~ pattern_rhs ~~> (mkQualPattern _) ~ ") " |
+    "( " ~ constructor ~ pattern_rhs ~~> (mkPattern _) ~ ") " |
     low_ident_token ~> (s => PatternVar(s)) ~ spacing |
-    up_ident_token ~> (x => x) ~ spacing ~ push(Nil) ~~> (mkPattern _)
+    qualification ~ constructor ~ push(Nil) ~~> (mkQualPattern _) |
+    constructor ~ push(Nil) ~~> (mkPattern _)
   }
 
   def pattern : Rule1[Pattern] = rule {
     low_ident_token ~> (s => PatternVar(s)) ~ spacing |
-    up_ident_token ~> (x => x) ~ spacing ~ pattern_rhs ~~> (mkPattern _)
+    qualification ~ constructor ~ pattern_rhs ~~> (mkQualPattern _) |
+    constructor ~ pattern_rhs ~~> (mkPattern _)
   }
 
   def pattern_rhs : Rule1[List[Pattern]] = rule {

@@ -192,7 +192,7 @@ trait Syntax {
   /**
    *  Top-level function definitions by mapping to some extern js function.
    */
-  case class FunctionDefExtern(val externName: String, attribute: Attribute = EmptyAttribute)
+  case class FunctionDefExtern(val externName: String, attribute: Attribute = EmptyAttribute) // BUG bad naming: externName is a JS-block
   
   /**
    * Patterns for top-level function definitions.

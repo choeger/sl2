@@ -183,7 +183,7 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     }
     
     it("Should parse external function definition") {
-      "DEF EXTERN f = \"myJavaScriptFun\"".as.ast should parse(
+      "DEF EXTERN f = {|myJavaScriptFun|}".as.ast should parse(
           Program(List(), Map.empty, Map.empty, Map("f" -> FunctionDefExtern("myJavaScriptFun")), Nil))
     }
   }
@@ -479,13 +479,29 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
           ExVar(Syntax.Var("pi","Real"))))
     }
 
-     it("Should parse simple constant signature with qualified type") {
+    it("Should parse simple constant signature with qualified type") {
       "FUN x : Real.Number".as.ast should
         parse(Program(
           List(),
           Map((strX) -> FunctionSig(TyExpr(Syntax.TConVar("Number","Real"), Nil))),
           Map.empty, Map.empty, Nil))
-     }
+    }
+
+    val str = """
+    |CASE y 
+    |  OF P.Nil THEN P.Nil
+    |  OF P.Cons x xs THEN P.Cons (f x) (map f xs)    
+    |""".stripMargin.trim
+
+    def appCons(ft: App, rt: App) = App(App(ExCon(Syntax.ConVar(consLex, "P")), ft), rt)
+
+    it("Should parse qualified list pattern matching") {
+      str.as.expr should parse(
+        Case(exVar("y"),
+          List(Alternative(PatternExpr(Syntax.ConVar(nilLex, "P"), Nil), ExCon(Syntax.ConVar(nilLex, "P"))),
+            Alternative(PatternExpr(Syntax.ConVar(consLex, "P"), List(PatternVar("x"), PatternVar("xs"))),
+              appCons(App(exVar("f"), exVar("x")), App(App(exVar("map"), exVar("f")), exVar("xs")))))))
+    }
   }
 
   describe(testedImplementationName() + " Test case 12 : Import statements") {
