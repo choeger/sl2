@@ -3,7 +3,7 @@ package de.tuberlin.uebb.sl2.impl
 import de.tuberlin.uebb.sl2.modules._
 
 trait ModuleNormalizerImpl extends ModuleNormalizer {
-  this: Syntax with ModuleResolverImpl =>
+  this: Syntax with Type with ModuleResolverImpl =>
 
   /**
    * Normalizes the signature of imported modules.
@@ -106,7 +106,14 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
     normMod
   }
   
-  private def normalizeConType(sub : ModuleVar => ModuleVar) : TConVar => TConVar = tcv => Syntax.TConVar(tcv.ide, sub(tcv.module))
+  private def normalizeConType(sub : ModuleVar => ModuleVar) : TConVar => TConVar = {
+    tcv => 
+      if (BaseType.typeVars.contains(tcv)) {
+        tcv
+      } else {
+        Syntax.TConVar(tcv.ide, sub(tcv.module))
+      }
+  }
   
   /**
    * Builds a map from indirect imports (imports of imports) to translate
