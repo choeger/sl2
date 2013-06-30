@@ -50,10 +50,10 @@ trait ProgramCheckerImpl extends ProgramChecker {
 
 	for (
       initialContext <- checkDataTypes(in).right;
-      (funSigs, funDefs) <- checkFunctions(in).right;
+      (funSigs, funDefs, externContext) <- checkFunctions(in).right;
       elc <- splitLetRecs(Set(), programToELC(funSigs, funDefs)).right;
       mainType <- {
-        checkTypes(initialContext, elc).right
+        checkTypes(initialContext ++ externContext, elc).right
       };
       _ <- checkMain(funSigs, mainType).right
     ) yield ()

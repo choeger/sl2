@@ -35,7 +35,7 @@ import scala.language.postfixOps
  */
 trait FDCheckerImpl extends FDChecker {
 
-  this: Lexic with Syntax with Errors =>
+  this: Lexic with Syntax with Context with Type with Errors =>
 
   /**
    * Check a program's top-level function definitions.
@@ -46,12 +46,16 @@ trait FDCheckerImpl extends FDChecker {
    *
    * @return Definitions and signatures of all top-level functions
    */
-  override def checkFunctions(in: AST): Either[Error, (Map[Var, FunctionSig], Map[Var, List[FunctionDef]])] = in match {
-    case Program(imports, funSigs, funDefs, _, _, _) => {
+  override def checkFunctions(in: AST):
+	  Either[Error, (Map[Var, FunctionSig], Map[Var, List[FunctionDef]], Context)] = in match {
+    case Program(imports, funSigs, funDefs, funDefsExtern, _, _) => {
       val funQualifiedDefs = funDefs.toList.map({case (name,body) => (Syntax.Var(name), body)}).toMap
       val funQualifiedSigs = funSigs.toList.map({case (name,sig) => (Syntax.Var(name), sig)}).toMap
+      val externContext: Context = funDefsExtern.map(
+          {case (name, eDef) => (Syntax.Var(name).asInstanceOf[VarFirstClass] ->
+          							astToType(funSigs(name).typ))})
       for (_ <- checkFunctions(funQualifiedDefs, funQualifiedSigs).right)
-        yield (funQualifiedSigs, funQualifiedDefs)
+        yield (funQualifiedSigs, funQualifiedDefs, externContext)
     }
   }
 
