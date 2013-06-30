@@ -59,7 +59,8 @@ trait CodeGenerator {
       JsDef($("False"), JsBool(false))      
     }
     case _ => {
-      val stmts = for ((c,idx) <- d.constructors.zipWithIndex) yield {
+      val sorted = d.constructors.sortBy(_.constructor)
+      val stmts = for ((c,idx) <- sorted.zipWithIndex) yield {
         if (c.types.isEmpty) {
           JsDef($(c.constructor), JsNum(idx))
         } else {
