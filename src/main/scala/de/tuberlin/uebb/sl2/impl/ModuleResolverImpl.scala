@@ -2,6 +2,7 @@ package de.tuberlin.uebb.sl2.impl
 
 import de.tuberlin.uebb.sl2.modules._
 import java.io.File
+import scala.io.Source
 
 trait ModuleResolverImpl extends ModuleResolver {
   this: Syntax with Errors with Configs with SignatureSerializer =>
@@ -35,7 +36,8 @@ trait ModuleResolverImpl extends ModuleResolver {
   }
 
   def importSignature(file: File): Either[Error, Program] = {
-    val signature = deserialize(file.getCanonicalPath())
+    val sigJson = Source.fromFile(file).getLines.mkString("\n")
+    val signature = deserialize(sigJson)
     if (null == signature) {
       Left(ImportError("Failed to load signature " + file, EmptyAttribute))
     } else {

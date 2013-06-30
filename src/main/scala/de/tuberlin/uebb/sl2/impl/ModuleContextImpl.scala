@@ -38,6 +38,10 @@ trait ModuleContextImpl extends ModuleContext {
 
           context = context + (Syntax.ConVar(conDef.constructor, name) -> conTypeScheme)
         }
+        
+        context ++= prog.signatures.map(
+          {case (funName, sig) => (Syntax.Var(funName, name).asInstanceOf[VarFirstClass] ->
+          							astToType(sig.typ))})
 
         context
     case _ : ResolvedExternImport => Map()

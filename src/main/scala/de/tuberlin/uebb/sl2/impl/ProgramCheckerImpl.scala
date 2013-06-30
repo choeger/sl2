@@ -53,7 +53,7 @@ trait ProgramCheckerImpl extends ProgramChecker {
       (funSigs, funDefs, externContext) <- checkFunctions(in).right;
       elc <- splitLetRecs(Set(), programToELC(funSigs, funDefs)).right;
       mainType <- {
-        checkTypes(initialContext ++ externContext, elc).right
+        checkTypes(moduleContext ++ initialContext ++ externContext, elc).right
       };
       _ <- checkMain(funSigs, mainType).right
     ) yield ()
