@@ -160,7 +160,7 @@ trait JsSyntax {
       case JsNum(v) => v.toString
       case JsBool(b) => b.toString
       case JsStr(s) => "\"" :: s :: "\""
-      case JsRaw(s) =>  s
+      case JsRaw(s) =>  s.trim()
       case JsNew(n,args)  => "new " :: n :: parens(sepred(args.map(show), ", "))
       case JsFunctionCall(n,args @ _*)=> n :: parens(sepred(args.map(show), ", "))
       case JsMemberAccess(o,p) => o::brackets(p)
