@@ -229,12 +229,17 @@ trait CodeGenerator {
       ) yield patternToJs(pattern, access)
       val test = 
         if (subPatterns.size > 0) {
-          JsBinOp(JsMemberAccess(matchee, JsStr("_cid")), "===", "_" + cons)
+          JsBinOp(JsMemberAccess(matchee, JsStr("_cid")), "===", escapeCons(cons,"_"+_))
         } else
-          JsBinOp(matchee, "===", $(cons.ide))
+          JsBinOp(matchee, "===", escapeCons(cons,$))
 
       (JsPattern(test, Nil) /: subPatterns)(_ & _)
     }
+  }
+  
+  def escapeCons(cons: ConVar, escFun: (String=>String)) = cons match {
+    case Syntax.ConVar(ide, Syntax.LocalMod) => JsName(ide)
+    case Syntax.ConVar(ide, module) => JsQualifiedName(JsName(module), JsName(escFun(ide)))
   }
   
 }
