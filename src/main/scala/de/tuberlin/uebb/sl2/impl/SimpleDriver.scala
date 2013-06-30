@@ -101,11 +101,11 @@ trait SimpleDriver extends Driver {
           Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.js"))
     }
     
-    val tarJs = new File(modulesDir, name.substring(0,name.length()-3) + ".js")
+    val tarJs = new File(modulesDir, name + ".js")
     println("compiling "+name+" to "+tarJs)
     // TODO: maybe CombinatorParser does not yet parse qualified imports correctly, like ParboiledParser did before?
     val moduleTemplate = Source.fromURL(getClass().getResource("/js/module_template.js")).getLines.mkString("\n")
-    val moduleWriter = new PrintWriter(new File(modulesDir, name.substring(0, name.length()-3) + ".js"))
+    val moduleWriter = new PrintWriter(new File(modulesDir, name + ".js"))
     for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
       val imp = i.asInstanceOf[ResolvedExternImport]
       val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
@@ -120,7 +120,7 @@ trait SimpleDriver extends Driver {
     moduleWriter.println("/***********************************/") 
     val requires = imports.filter(_.isInstanceOf[ResolvedQualifiedImport]).map(
         x => JsDef(x.asInstanceOf[ResolvedQualifiedImport].name,
-            JsFunctionCall(JsName("require"),JsStr("modules/"+x.asInstanceOf[ResolvedQualifiedImport].path))
+            JsFunctionCall(JsName("require"),JsStr("modules/"+x.asInstanceOf[ResolvedQualifiedImport].path+".sl"))
         	))
     moduleWriter.write(moduleTemplate.replace("%%MODULE_BODY%%", JsPrettyPrinter.pretty(requires)+"\n\n"
         +JsPrettyPrinter.pretty(dataDefsToJs(program.dataDefs)
@@ -128,7 +128,7 @@ trait SimpleDriver extends Driver {
             & functionDefsToJs(program.functionDefs))));
     moduleWriter.close();
     
-    val signatureFile = new File(modulesDir, name.substring(0,name.length()-3) + ".sl.signature")
+    val signatureFile = new File(modulesDir, name + ".signature")
     println("writing signature of "+name+" to "+signatureFile)
     val writerSig = new PrintWriter(signatureFile)
     writerSig.write(serialize(program))
@@ -150,7 +150,7 @@ trait SimpleDriver extends Driver {
 	    mainWriter.println("// generated from: "+name)
 	    mainWriter.println("/***********************************/") 
 	    val mainTemplate = Source.fromURL(getClass.getResource("/js/main_template.js")).getLines.mkString("\n")
-	    mainWriter.write(mainTemplate.replace("%%MODULE_PATHS_LIST%%", "\"modules/"+name.substring(0, name.length()-3)+"\""/*modulePathsList.txt*/)
+	    mainWriter.write(mainTemplate.replace("%%MODULE_PATHS_LIST%%", "\"modules/"+name+"\""/*modulePathsList.txt*/)
 	    	.replace("%%MODULE_NAMES_LIST%%", "$$$"+name.substring(0, name.length()-3)/*moduleNamesList.txt*/)
 	    		.replace("%%MAIN%%", JsPrettyPrinter.pretty(/*compiled &*/ JsFunctionCall("$$$"+name.substring(0, name.length()-3)+".$main"))/*main*/))
 	    mainWriter.close()

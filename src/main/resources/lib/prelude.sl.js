@@ -145,10 +145,15 @@ function _bindnr(l) {
 /***********************************/
 // generated from: prelude.sl
 /***********************************/
+define(function(require, exports, module) {
+    
+
 ;
 ;
-var $Nil = 0;
-var _Cons = 1;
+exports.$Nil = 0;
+var $Nil = exports.$Nil;
+exports._Cons = 1;
+var _Cons = exports._Cons;
 function $Cons(_arg0)
 {
   function f(_arg1)
@@ -161,7 +166,8 @@ function $Cons(_arg0)
 var $True = true;
 var $False = false;
 ;
-var _ExternalDOM = 0;
+exports._ExternalDOM = 0;
+var _ExternalDOM = exports._ExternalDOM;
 function $ExternalDOM(_arg0)
 {
   return {_cid : 0, _var0 : _arg0
@@ -169,37 +175,54 @@ function $ExternalDOM(_arg0)
   return f
 };
 ;
-var $ExternalString = 0;
+exports.$ExternalString = 0;
+var $ExternalString = exports.$ExternalString;
 ;
-var $ExternalVoid = 0;
+exports.$ExternalVoid = 0;
+var $ExternalVoid = exports.$ExternalVoid;
 ;
-var $ExternalChar = 0;
+exports.$ExternalChar = 0;
+var $ExternalChar = exports.$ExternalChar;
 ;
-var $ExternalReal = 0;
+exports.$ExternalReal = 0;
+var $ExternalReal = exports.$ExternalReal;
 ;
-var $ExternalInt = 0;
-var $t =  _mul ;
-var $l$e =  _leq ;
-var $l =  _lesser ;
-var $g$e =  _geq ;
-var $yield =  _yield ;
-var $m =  _sub ;
-var $a$e =  _bind ;
-var $p$p =  _adds ;
-var $e$e =  _eq ;
-var $p =  _add ;
-var $d =  _div ;
-var $g =  _greater ;
-function $not(_arg0)
+exports.$ExternalInt = 0;
+var $ExternalInt = exports.$ExternalInt;
+exports.$t = _mul;
+var $t = exports.$t;
+exports.$l$e = _leq;
+var $l$e = exports.$l$e;
+exports.$l = _lesser;
+var $l = exports.$l;
+exports.$g$e = _geq;
+var $g$e = exports.$g$e;
+exports.$yield = _yield;
+var $yield = exports.$yield;
+exports.$m = _sub;
+var $m = exports.$m;
+exports.$a$e = _bind;
+var $a$e = exports.$a$e;
+exports.$p$p = _adds;
+var $p$p = exports.$p$p;
+exports.$e$e = _eq;
+var $e$e = exports.$e$e;
+exports.$p = _add;
+var $p = exports.$p;
+exports.$d = _div;
+var $d = exports.$d;
+exports.$g = _greater;
+var $g = exports.$g;
+exports.$not = function (_arg0)
 {
-  if((_arg0 === $True))
+  if((_arg0 === True))
   {
     var _return = $False;
     return _return
   }
   else 
   {
-    if((_arg0 === $False))
+    if((_arg0 === False))
     {
       var _return = $True;
       return _return
@@ -210,7 +233,7 @@ function $not(_arg0)
     }
   }
 };
-function $a(_arg0)
+exports.$a = function (_arg0)
 {
   return function (_arg1)
   {
@@ -218,23 +241,23 @@ function $a(_arg0)
     {
       var $x = _arg0;
       var $y = _arg1;
-      var $14 = $a$e;
-      var $13 = $x;
-      var $12 = $14($13);
-      var $10 = function (_arg0)
+      var $25 = $a$e;
+      var $24 = $x;
+      var $23 = $25($24);
+      var $21 = function (_arg0)
       {
         if(true)
         {
           var $r = _arg0;
-          var $11 = $y
+          var $22 = $y
         }
         else 
         {
           throw "Pattern for lambda expression did not match arguments"
         };
-        return $11
+        return $22
       };
-      var _return = $12($10);
+      var _return = $23($21);
       return _return
     }
     else 
@@ -243,7 +266,7 @@ function $a(_arg0)
     }
   }
 };
-function $d$e(_arg0)
+exports.$d$e = function (_arg0)
 {
   return function (_arg1)
   {
@@ -251,13 +274,13 @@ function $d$e(_arg0)
     {
       var $x = _arg0;
       var $y = _arg1;
-      var $20 = $not;
-      var $19 = $e$e;
-      var $18 = $x;
-      var $17 = $19($18);
-      var $16 = $y;
-      var $15 = $17($16);
-      var _return = $20($15);
+      var $31 = $not;
+      var $30 = $e$e;
+      var $29 = $x;
+      var $28 = $30($29);
+      var $27 = $y;
+      var $26 = $28($27);
+      var _return = $31($26);
       return _return
     }
     else 
@@ -266,3 +289,4 @@ function $d$e(_arg0)
     }
   }
 }
+});

@@ -24,13 +24,15 @@ trait ModuleResolverImpl extends ModuleResolver {
       ) yield ResolvedQualifiedImport(name, path, file, signature, qi)
     case ei @ ExternImport(path, attr) =>
       for (
-        file <- findImport(config, imp.path + ".sl.js", attr).right
+        file <- findImport(config, imp.path + ".js", attr).right
       ) yield ResolvedExternImport(file, ei)
   }
 
   def findImport(config: Config, path: String, attr: Attribute): Either[Error, File] = {
     //TODO: look at places according to some defined classpath hierarchie etc.
-    val files = List(new File(config.classpath, path), new File(path))
+    val files = List(new File(config.classpath, path),
+        new File(config.mainUnit.getParentFile(), path),
+        new File(path))
     files.find(_.canRead()).toRight(
       ImportError("Could not find " + quote(path) + " at " + files.map(_.getCanonicalPath()), attr))
   }
