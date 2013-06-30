@@ -5,16 +5,16 @@ import de.tuberlin.uebb.sl2.impl._
 import de.tuberlin.uebb.sl2.tests.specs.ModuleNormalizerSpec
 
 class ModuleNormalizerTest extends
-	ModuleNormalizerSpec
-	with ModuleNormalizerImpl
-	with ParboiledParser 
+  ModuleNormalizerSpec
+  with ModuleNormalizerImpl
+  with ParboiledParser 
     with Syntax
     with Errors
     with Configs
     with ModuleResolverImpl
-	with SignatureJsonSerializer
+  with SignatureJsonSerializer
 {
-	
-	def testedImplementationName = "Substitution module normalizer"
+  
+  def testedImplementationName = "Substitution module normalizer"
 
 }
