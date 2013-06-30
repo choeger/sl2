@@ -1,16 +1,16 @@
 IMPORT "prelude" AS P
 
-FUN nums : P.List Int
-DEF nums = P.Cons 11 (P.Cons 12 P.Nil) 
+FUN words : P.List String
+DEF words = P.Cons "Hello" (P.Cons "World" P.Nil) 
 
 -- apparently qualified names in patterns dont work...
-FUN sums : (P.List Int) -> Int
-DEF sums s =
+FUN conc : (P.List String) -> String
+DEF conc s =
 	CASE s
-		OF P.Nil THEN 0
-		OF (P.Cons ft rt) THEN ft + sums rt
+		OF P.Nil THEN ""
+		OF P.Cons ft rt THEN ft P.++ (conc rt)
 
-DEF hello = "Hello World" P.++ (sums nums)
+DEF hello = "Hey, " P.++ (conc words)
 
 DEF main = (P.yield hello) P.&= (\h.{|
   console.log($h);
