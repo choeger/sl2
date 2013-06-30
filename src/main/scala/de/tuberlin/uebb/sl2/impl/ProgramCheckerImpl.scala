@@ -37,7 +37,7 @@ import de.tuberlin.uebb.sl2.modules._
  */
 trait ProgramCheckerImpl extends ProgramChecker {
 
-  this: Lexic with Syntax with Context with Type with EnrichedLambdaCalculus with DTChecker with FDChecker with LetRecSplitter with TypeChecker with Errors =>
+  this: Lexic with Syntax with Context with ModuleContext with ModuleResolver with Type with EnrichedLambdaCalculus with DTChecker with FDChecker with LetRecSplitter with TypeChecker with Errors =>
 
   /**
    * Context analysis, performing the following checks on a program:
@@ -45,8 +45,10 @@ trait ProgramCheckerImpl extends ProgramChecker {
    * $ - Type checking of function definitions,
    * $ - Checking the type of a program's main function.
    */
-  def checkProgram(in: AST): Either[Error, Unit] = {
-    for (
+  def checkProgram(in: AST, modules : List[ResolvedImport]): Either[Error, Unit] = {
+    val (moduleContext, moduleSigs) = buildModuleContext(modules);
+
+	for (
       initialContext <- checkDataTypes(in).right;
       (funSigs, funDefs) <- checkFunctions(in).right;
       elc <- splitLetRecs(Set(), programToELC(funSigs, funDefs)).right;

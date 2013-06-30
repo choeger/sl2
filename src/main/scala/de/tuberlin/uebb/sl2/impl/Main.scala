@@ -60,7 +60,9 @@ object Main
     with SimpleDriver
     with DebugOutput
     with SignatureJsonSerializer
-    with ModuleResolverImpl {
+    with ModuleResolverImpl
+    with ModuleNormalizerImpl
+    with ModuleContextImpl {
 
   val usage = """Usage:B <sl> [-d destination directory] source file(s)"""
 

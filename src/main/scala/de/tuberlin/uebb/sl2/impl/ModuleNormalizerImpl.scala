@@ -42,11 +42,11 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
 	
 	// Some List and Map mappers
 	
-	private def normalizeImports(sub : ModuleVar => ModuleVar) : List[Import]               => List[Import]               = imports => imports.map(normalizeImport(sub))
-	private def normalizeSigs   (sub : ModuleVar => ModuleVar) : Map [VarName, FunctionSig] => Map [VarName, FunctionSig] = sigs    => sigs   .mapValues(normalizeSig(sub))
-	private def normalizeTypes  (sub : ModuleVar => ModuleVar) : List[ASTType]              => List[ASTType]              = types   => types  .map(normalizeType(sub))
-	private def normalizeDatas  (sub : ModuleVar => ModuleVar) : List[DataDef]              => List[DataDef]              = datas   => datas  .map(normalizeData(sub))
-	private def normalizeCtors  (sub : ModuleVar => ModuleVar) : List[ConstructorDef]       => List[ConstructorDef]       = ctors   => ctors  .map(normalizeCtor(sub))
+	private def normalizeImports(sub : ModuleVar => ModuleVar) : List[Import]               => List[Import]               = _.map(normalizeImport(sub))
+	private def normalizeSigs   (sub : ModuleVar => ModuleVar) : Map [VarName, FunctionSig] => Map [VarName, FunctionSig] = _.mapValues(normalizeSig(sub))
+	private def normalizeTypes  (sub : ModuleVar => ModuleVar) : List[ASTType]              => List[ASTType]              = _.map(normalizeType(sub))
+	private def normalizeDatas  (sub : ModuleVar => ModuleVar) : List[DataDef]              => List[DataDef]              = _.map(normalizeData(sub))
+	private def normalizeCtors  (sub : ModuleVar => ModuleVar) : List[ConstructorDef]       => List[ConstructorDef]       = _.map(normalizeCtor(sub))
 	
 	// actual substitution methods
 	
@@ -114,7 +114,7 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
 	 */
 	private def buildPathModuleMap(imports : List[ResolvedImport]) : Map[String, ModuleVar] = {
 		// build map only from qualified imports
-		imports.filter(imp => imp.isInstanceOf[ResolvedQualifiedImport]).map(imp => {
+		imports.filter(_.isInstanceOf[ResolvedQualifiedImport]).map(imp => {
 			val rqi = imp.asInstanceOf[ResolvedQualifiedImport]
 			
 			// use path as key

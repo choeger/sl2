@@ -37,7 +37,7 @@ import scala.io.Source
 trait SimpleDriver extends Driver {
   self: Parser with CodeGenerator with Syntax with ProgramChecker with JsSyntax
   	with Errors with SignatureSerializer with DebugOutput with Configs
-  	with ModuleResolver =>
+  	with ModuleResolver with ModuleNormalizer =>
 
   override def run(inpCfg: Config): Either[Error, String] = {
     val input = inpCfg.sources
@@ -61,7 +61,7 @@ trait SimpleDriver extends Driver {
       // check and load dependencies
       imports <- inferDependencies(mo, config).right;
       // type check the program
-      _ <- checkProgram(mo).right;
+      _ <- checkProgram(mo, normalizeModules(imports)).right;
       
       // and synthesize
       res <- compile(mo, name, imports, config).right

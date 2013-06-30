@@ -4,11 +4,11 @@ import org.scalatest.matchers._
 import org.scalatest.FunSpec
 import de.tuberlin.uebb.sl2.modules._
 
-trait ModuleNormalizerSpec extends FunSpec with ShouldMatchers {
-	this : ModuleNormalizer with Syntax with Parser with Errors with ModuleResolver =>
+trait ModuleContextSpec extends FunSpec with ShouldMatchers {
+	this : ModuleContext with ModuleResolver with ModuleNormalizer with Syntax with Context with Parser =>
 	
 	def testedImplementationName(): String
-			
+
 	implicit class SignatureString(str: String) {
 		def parsed = {
 			parseAst(str).right.get
@@ -26,7 +26,7 @@ trait ModuleNormalizerSpec extends FunSpec with ShouldMatchers {
 	}
 
 	describe(testedImplementationName() + " this is just debugging println") {
-		it("Should do sth") {
+		it("Should be debugged by programmer") {
 			val astA = """
 				DATA DataA = ConsA
 				
@@ -71,8 +71,17 @@ trait ModuleNormalizerSpec extends FunSpec with ShouldMatchers {
 			val importXB1 = ResolvedQualifiedImport("B1", "b1", null, astB1, astX.getImport("B1"))
 			val importXB2 = ResolvedQualifiedImport("B2", "b2", null, astB2, astX.getImport("B2"))
 			
+			val importsC = normalizeModules(List(importCB1, importCB2))
+			val importsX = normalizeModules(List(importXA, importXB1, importXB2))
+			
+			val contextC = buildModuleContext(importsC)
+			val contextX = buildModuleContext(importsX)
+			
 //			println(normalizeModules(List(importCB1, importCB2)))
 //			println(normalizeModules(List(importXA, importXB1, importXB2)))
+
+//			println(contextC)
+//			println(contextX)
 		}
 	}
 	

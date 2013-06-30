@@ -246,6 +246,9 @@ trait DTCheckerImpl extends DTChecker
    * Calculate the types of the data constructors, i.e., the initial context.
    */
   def dataConTypes(dataDefs: List[DataDef]): Context = {
+    // remark: when you modify this method you probably
+    // should also modify ModuleContextImpl:buildModuleContext
+	
     var context: Context = Map.empty
 
     for (

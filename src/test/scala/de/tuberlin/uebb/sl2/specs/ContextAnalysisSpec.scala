@@ -41,7 +41,7 @@ trait ContextAnalysisSpec extends FunSpec with ShouldMatchers {
 
   def notFail: Matcher[Either[Error, Unit]] = be(Right())
 
-  def checking(program: AST): Either[Error, Unit] = for (_ <- checkProgram(program).right) yield ()
+  def checking(program: AST): Either[Error, Unit] = for (_ <- checkProgram(program, List()).right) yield ()
 
 
   describe("Context analysis: valid programs") {
