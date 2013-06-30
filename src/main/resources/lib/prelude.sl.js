@@ -178,11 +178,18 @@ var $ExternalChar = 0;
 var $ExternalReal = 0;
 ;
 var $ExternalInt = 0;
+var $t =  _mul ;
+var $l$e =  _leq ;
+var $l =  _lesser ;
+var $g$e =  _geq ;
 var $yield =  _yield ;
-var $m =  _greater ;
+var $m =  _sub ;
 var $a$e =  _bind ;
 var $p$p =  _adds ;
+var $e$e =  _eq ;
 var $p =  _add ;
+var $d =  _div ;
+var $g =  _greater ;
 function $not(_arg0)
 {
   if((_arg0 === $True))
@@ -195,6 +202,62 @@ function $not(_arg0)
     if((_arg0 === $False))
     {
       var _return = $True;
+      return _return
+    }
+    else 
+    {
+      throw "Pattern not exhaustive!"
+    }
+  }
+};
+function $a(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && true))
+    {
+      var $x = _arg0;
+      var $y = _arg1;
+      var $14 = $a$e;
+      var $13 = $x;
+      var $12 = $14($13);
+      var $10 = function (_arg0)
+      {
+        if(true)
+        {
+          var $r = _arg0;
+          var $11 = $y
+        }
+        else 
+        {
+          throw "Pattern for lambda expression did not match arguments"
+        };
+        return $11
+      };
+      var _return = $12($10);
+      return _return
+    }
+    else 
+    {
+      throw "Pattern not exhaustive!"
+    }
+  }
+};
+function $d$e(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && true))
+    {
+      var $x = _arg0;
+      var $y = _arg1;
+      var $20 = $not;
+      var $19 = $e$e;
+      var $18 = $x;
+      var $17 = $19($18);
+      var $16 = $y;
+      var $15 = $17($16);
+      var _return = $20($15);
       return _return
     }
     else 

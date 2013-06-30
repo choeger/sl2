@@ -56,8 +56,8 @@ DEF EXTERN &= = {| _bind |}
 FUN yield : a -> (DOM a)
 DEF EXTERN yield =  {| _yield |}
 
--- FUN & : (DOM a) -> (DOM b) -> (DOM b)
--- DEF x & y = (x &= (\ r . y))
+FUN & : (DOM a) -> (DOM b) -> (DOM b)
+DEF x & y = (x &= (\ r . y))
 
 FUN + : Int -> Int -> Int
 DEF EXTERN + = {| _add |}
@@ -66,25 +66,25 @@ FUN - : Int -> Int -> Int
 DEF EXTERN - = {| _sub |}
 
 FUN * : Int -> Int -> Int
-DEF EXTERN - = {| _mul |}
+DEF EXTERN * = {| _mul |}
 
 FUN / : Int -> Int -> Int
-DEF EXTERN - = {| _div |}
+DEF EXTERN / = {| _div |}
 
 FUN < : Int -> Int -> Bool
-DEF EXTERN - = {| _lesser |}
+DEF EXTERN < = {| _lesser |}
 
 FUN <= : Int -> Int -> Bool
-DEF EXTERN - = {| _leq |}
+DEF EXTERN <= = {| _leq |}
 
 FUN == : Int -> Int -> Bool
-DEF EXTERN - = {| _eq |}
+DEF EXTERN == = {| _eq |}
 
--- FUN /= : Int -> Int -> Bool
--- DEF x /= y = not (x == y)
+FUN /= : Int -> Int -> Bool
+DEF x /= y = not (x == y)
 
 FUN >= : Int -> Int -> Bool
-DEF EXTERN - = {| _geq |}
+DEF EXTERN >= = {| _geq |}
 
 FUN > : Int -> Int -> Bool
-DEF EXTERN - = {| _greater |}
+DEF EXTERN > = {| _greater |}
