@@ -163,7 +163,7 @@ object MacroDriver extends CombinatorParser with CodeGenerator with Syntax
 
   def mergeMap[A, B](a: Map[A, B], b: Map[A, B]): Either[Error, Map[A, B]] =
     {
-      val intersect = a.keySet & a.keySet
+      val intersect = a.keySet & b.keySet
       if (intersect.isEmpty)
         Right(a ++ b)
       else
