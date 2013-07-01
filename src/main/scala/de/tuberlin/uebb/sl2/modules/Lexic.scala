@@ -52,13 +52,7 @@ trait Lexic {
   val stolLex = "stol"
   val ltosLex = "ltos"
 
-  val strAdd = "++"
-
-  val realDiv = "/r"
-  val realMul = "*r"
-  val realAdd = "+r"
-  val realSub = "-r"
-
+//  val strAdd = "++"
 
   val arithOps = List(addLex, subLex, mulLex, divLex)
   val cmpOps = List(ltLex, leLex, eqLex, neLex, geLex, gtLex)

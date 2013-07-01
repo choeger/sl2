@@ -214,7 +214,7 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     }
 
     it("Should parse string concatenation") {
-      "x ++ y".as.expr should parse(App(App(exVar(strAdd), exVar("x")), exVar("y")))
+      "x Str.++ y".as.expr should parse(App(App(ExVar(Syntax.Var("++", "Str")), exVar("x")), exVar("y")))
     }
 
     it("Should parse real division") {

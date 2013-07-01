@@ -159,7 +159,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
     }
 
   private def binaryOpDef: Parser[(VarName, FunctionDef)] =
-    defLex ~> rep1(pat) ~ customOp ~ rep1(pat) ~ funEqLex ~ expr ^^@ {
+    defLex ~> rep1(pat) ~ opRegex ~ rep1(pat) ~ funEqLex ~ expr ^^@ {
       case (a, p1 ~ op ~ p2 ~ _ ~ e) => (op, FunctionDef(p1 ++ p2, e, a))
     }
 
@@ -260,19 +260,6 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   private def moduleRegex: Parser[String] = not(keyword) ~> """[A-Z][a-zA-Z0-9]*""".r ^^ { case s: String => s }
   private def varRegex: Parser[String] = """[a-z][a-zA-Z0-9]*""".r ^^ { case s: String => s }
   private def opRegex: Parser[String] = """[!§%&/=\?\+\*#\-\<\>|]+""".r ^^ { case s: String => s }
-  private def customOp: Parser[String] = Parser { in =>
-    opRegex(in) match {
-      case Success(t, in1) =>
-        {
-          // TODO: clean this up
-          // if (predefinedOps.contains(t))
-          //   Failure("Reserved operators are here not allowed", in1)
-          // else
-            Success(t, in1)
-        }
-      case ns: NoSuccess => ns
-    }
-  }
   private def eqRegex: Parser[String] = """=(?![!§%&/=\?\+\*#\-:\<\>|])""".r ^^ { case s: String => s }
   private def keyword = keywords.mkString("", "|", "").r
   private def jsRegex = jsOpenLex ~> """(?:(?!\|\}).)*""".r <~ jsCloseLex ^^ { case s: String => s }
@@ -309,7 +296,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   }
 
   private def clearStack(out: Stack[Expr], ops: Stack[Expr]) =
-    {
+    { 
       val o2 = ops.pop
       val a = out.pop
       val b = out.pop
@@ -329,14 +316,10 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
     case ExVar(Syntax.Var(`bindLex`, _), a) => 1
     case ExVar(Syntax.Var(`bindNRLex`, _), a) => 1
     case ExVar(Syntax.Var(`addLex`, _), a) => 2
-    case ExVar(Syntax.Var(`realAdd`, _), a) => 2
-    case ExVar(Syntax.Var(`strAdd`, _), a) => 2
+//    case ExVar(Syntax.Var(`strAdd`, _), a) => 2
     case ExVar(Syntax.Var(`subLex`, _), a) => 2
-    case ExVar(Syntax.Var(`realSub`, _), a) => 2
     case ExVar(Syntax.Var(`mulLex`, _), a) => 3
-    case ExVar(Syntax.Var(`realMul`, _), a) => 3
     case ExVar(Syntax.Var(`divLex`, _), a) => 3
-    case ExVar(Syntax.Var(`realDiv`, _), a) => 3
     case _ => 0
   }
 
