@@ -95,7 +95,12 @@ trait Syntax {
    * annotated with an explicit type signature.
    */
   case class Program(signatures: Map[Var, FunctionSig], functionDefs: Map[Var, List[FunctionDef]],
-    dataDefs: List[DataDef], attribute: Attribute = EmptyAttribute) extends AST
+		     dataDefs: List[DataDef], attribute: Attribute = EmptyAttribute) extends AST
+
+  /**
+    * An empty program, i.e., a program with no signatures or top-level definitions.
+    */
+  val emptyProgram = Program(Map.empty, Map.empty, Nil)
 
   /**
    * Type signature for top-level function definitions.

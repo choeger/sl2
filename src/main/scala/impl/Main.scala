@@ -59,11 +59,8 @@ object Main extends CombinatorParser with CodeGenerator with Syntax
       }
       val prelude = Source.fromURL(getClass.getResource("/prelude.sl")).getLines.mkString("\n")
       val preludeJs = Source.fromURL(getClass.getResource("/prelude.js")).getLines.mkString("\n")
-      val res = run(prelude +: input.toList)     
-      if (res.isLeft)
-        res.left.map(x => println("Error: " + x))
-      else
-        res.right.map(x => println(preludeJs+"\n"+x))
+
+      run(prelude +: input.toList).fold(err => println("Error: " + err), jsCode => println(preludeJs + "\n" + jsCode))
     }
   }
 }

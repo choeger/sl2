@@ -28,34 +28,35 @@
 
 package de.tuberlin.uebb.sl2.impl
 
-import scala.collection.mutable.ListBuffer
 import de.tuberlin.uebb.sl2.modules._
 
 /**
   * Simple compiler driver.
   */
-trait SimpleDriver extends Driver{
+trait SimpleDriver extends Driver {
 
   self: Parser with CodeGenerator with Syntax with ProgramChecker with JsSyntax with Errors =>
 
   override def run(input: List[String]): Either[Error, String] = {
-    val ast: ListBuffer[Program] = new ListBuffer
+    
+    def parseProgram(in: String): Either[Error, Program] = for ( ast <- parseAst(in).right ) yield ast.asInstanceOf[Program]
 
-    for (f <- input) {
-      parseAst(f) match {
-        case Right(a) => ast += a.asInstanceOf[Program]
-        case Left(a) => return Left(a)
-      }
+    def mergePrograms(progs: List[Program]): Either[Error, Program] = {
+      progs.foldLeft[Either[Error, Program]](Right(emptyProgram))((z, x) => z.right.flatMap(y => mergeAst(y, x)))
     }
 
-    val m = ast.foldLeft[Either[Error, Program]](Right(Program(Map(), Map(), Nil)))((z, x) =>
-      z.right.flatMap(y => mergeAst(y, x)))
-
-    for ( mo <- m.right;
-	  _ <- checkProgram(mo).right )
-    yield JsPrettyPrinter.pretty(astToJs(mo) & JsFunctionCall("$main"))
+    for ( programs <- errorMap(input, (in: String) => parseProgram(in)).right ;
+	  ast <- mergePrograms(programs).right ;
+	  _ <- checkProgram(ast).right )
+    yield JsPrettyPrinter.pretty(astToJs(ast) & JsFunctionCall("$main"))
   }
 
+  /**
+    * Merge the signatures and top-level definitions of two programs.
+    *
+    * @return The merged programs, or a DuplicateError if the two programs have name
+    *         clashes in their top-level function and data type definitions.
+    */
   def mergeAst(a: Program, b: Program): Either[Error, Program] = {
     for ( sigs <- mergeMap(a.signatures, b.signatures).right;
 	  funs <- mergeMap(a.functionDefs, b.functionDefs).right )
