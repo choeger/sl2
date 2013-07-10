@@ -139,9 +139,6 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
     it("Should fail on unequal import paths") {
       "IMPORT \"path\" AS M".parsed should not equal("IMPORT \"elsewhere\" AS M".parsed)
     }
-    it("Should succeed on unequal import names") {
-      "IMPORT \"path\" AS M".parsed should equal("IMPORT \"path\" AS N".parsed)
-    }
     it("Should succeed on equal import names") {
       "IMPORT \"path\" AS M".parsed should equal("IMPORT \"path\" AS M".parsed)
     }
@@ -161,7 +158,7 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
       "FUN f : (X a) -> y".parsed should not equal("FUN f : (Y b) -> y".parsed)
     }
     it("Should fail on unequal module identifiers") {
-      "FUN f : m.X".parsed should not equal("FUN f : n.X".parsed)
+      "FUN f : M.X".parsed should not equal("FUN f : N.X".parsed)
     }
     it("Should fail on unequal data identifiers in DATA definitions") {
       "DATA Type a b c = Cons1 a b | Cons2 c".parsed should not equal("DATA Epyt a b c = Cons1 a b | Cons2 c".parsed)
@@ -170,7 +167,7 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
       "DATA Type a b c = Cons1 a b | Cons2 c".parsed should not equal("DATA Type a b c = Cons1 a b | Cons3 c".parsed)
     }
     it("Should fail on unequal constructor lists") {
-      "DATA Type a b c = Cons1 a b | Cons2 c".parsed should not equal("DATA Type a b c = Cons1 a b | Cons2 c | Cons 3".parsed)
+      "DATA Type a b c = Cons1 a b | Cons2 c".parsed should not equal("DATA Type a b c = Cons1 a b | Cons2 c | Cons3".parsed)
     }
   }
 
