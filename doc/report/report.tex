@@ -1,0 +1,127 @@
+\documentclass{llncs}
+
+\usepackage[utf8]{inputenc}
+\usepackage[german]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{tipa}
+\usepackage{../uebbgrammar}
+\usepackage{listings}
+\usepackage{url}
+\usepackage{color}
+
+% Declare the backslash from cmtt to use as terminal symbol in
+% grammar.
+\DeclareTextSymbol{\BackslashTT}{T1}{"5C}
+
+\author{Benjamin Bisping, Rico Jasper, Sebastian Lohmeier,
+	Friedrich Moritz Psiorz}
+\title{Projektbericht: Erweiterung von SL um ein Modulsystem}
+\institute{Compilerbauprojekt SoSe 2013, Technische Universität Berlin}
+
+\newcommand{\verbatiminput}[2][]{%
+  \lstinputlisting[basewidth=0.5em,
+  columns=fixed,
+  basicstyle=\small\ttfamily,#1]{#2}}
+\newcommand{\TODO}[1]{ \textcolor{red}{\textbf{\texttt{\large{TODO}}} (* #1 *)}\par}
+
+\begin{document}
+
+\def\open{\texttt{(}}
+\def\close{\texttt{)}}
+\def\bropen{\texttt{\{}}
+\def\brclose{\texttt{\}}}
+\def\sqopen{\texttt{[}}
+\def\sqclose{\texttt{]}}
+\def\squote{\texttt{'}}
+\def\dquote{\texttt{''}}
+\def\eq{\texttt{=}}
+\def\colon{\texttt{:}}
+\def\lam{\mbox{\texttt{\BackslashTT}}}
+\def\bar{\texttt{|}}
+\def\comma{\texttt{,}}
+\def\arrow{\texttt{->}}
+
+\def\addint{\texttt{+}}
+\def\subint{\texttt{-}}
+\def\mulint{\texttt{*}}
+\def\divint{\texttt{/}}
+
+\def\ltint{\texttt{<}}
+\def\leint{\texttt{<=}}
+\def\eqint{\texttt{==}}
+\def\neint{\texttt{/=}}
+\def\geint{\texttt{>=}}
+\def\gtint{\texttt{>}}
+
+\def\exclamationOp{\texttt{!}}
+\def\paragraphOp{\texttt{§}}
+\def\percentOp{\texttt{\%}}
+\def\ampOp{\texttt{\&}}
+\def\questionOp{\texttt{?}}
+\def\sharpOp{\texttt{\#}}
+\def\pipeOp{\texttt{|}}
+
+\maketitle
+
+
+\section{Einleitung}
+
+\TODO{Hällü Wörld}
+
+\section{Überblick}
+
+\TODO{Alle/Ben: Kurz die neuen Features bzw. den Ausgangspunkt beschreiben}
+
+\section{Syntax und Parser}
+
+\TODO{Fritz: Syntaxanpassungen, Schwierigkeiten, Designentscheidungen}
+
+\subsection{Qualifizierte Bezeichner}
+
+\subsection{Grammatik}
+
+\section{Semantische Analyse}
+
+\TODO{Rico: Methode, Schwierigkeiten, Designentscheidungen}
+
+\subsection{Auflösung von Importen}
+
+\subsection{Type-Checking}
+
+\section{Codegenerierung}
+
+\TODO{Sebastian: Beispiele, Schwierigkeiten, Designentscheidungen}
+
+\subsection{Signaturen}
+\TODO{Das ist wohl eher für Rico...}
+
+\subsection{require.js}
+
+\subsection{Build-Prozess}
+
+\subsection{Externe Definitionenn}
+\TODO{Das ist wohl eher für Ben...}
+
+\section{Prelude und Bibliotheken}
+
+\TODO{Ben: Beispiele, Schwierigkeiten, Designentscheidungen}
+
+\subsection{Prelude}
+
+\subsection{Floats}
+
+\section{Fehlermeldungen}
+\TODO{Fritz}
+
+\section{Zusammenfassung}
+
+\TODO{...}
+
+\end{document}
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% TeX-PDF-mode: t
+%%% End: 
