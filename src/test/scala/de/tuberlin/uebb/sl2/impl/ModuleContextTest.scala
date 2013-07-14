@@ -9,6 +9,7 @@ class ModuleContextTest extends
   with Configs
   with Errors
   with Syntax
+  with SyntaxTraversal
   with Context
   with Type
   with EnrichedLambdaCalculus

@@ -69,8 +69,8 @@ trait SimpleDriver extends Driver {
       imports <- inferDependencies(mo, config).right;
       // type check the program
       _ <- checkProgram(mo, normalizeModules(imports)).right;
-      // and synthesize
-      res <- compile(mo.asInstanceOf[Program], name, imports, config).right
+      // qualify references to unqualified module and synthesize
+      res <- compile(qualifyUnqualifiedModules(mo.asInstanceOf[Program], imports), name, imports, config).right
     ) yield res
   }
   
@@ -92,13 +92,11 @@ trait SimpleDriver extends Driver {
     }
     
     // copy .js and .signature of imported modules from classpath to modules/ directory
-    for(i <- imports.filter(_.isInstanceOf[ResolvedQualifiedImport])) {
-      val imp = i.asInstanceOf[ResolvedQualifiedImport]
-      println("imported "+imp.path+" as "+imp.name)
-      copy(Paths.get(new File(config.classpath, imp.path+".sl.signature").toURI()),
-          Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.signature"))
-      copy(Paths.get(new File(config.classpath, imp.path+".sl.js").toURI()),
-          Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.js"))
+    // TODO: what about ResolvedExternImport?
+    for(i <- imports.filter(_.isInstanceOf[ResolvedNamedImport])) {
+      val imp = i.asInstanceOf[ResolvedNamedImport]
+      copy(Paths.get(imp.file.toURI),   Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.signature"))
+      copy(Paths.get(imp.jsFile.toURI), Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.js"))
     }
     
     val tarJs = new File(modulesDir, name + ".js")
@@ -118,9 +116,10 @@ trait SimpleDriver extends Driver {
     moduleWriter.println("/***********************************/")
     moduleWriter.println("// generated from: "+name)
     moduleWriter.println("/***********************************/") 
-    val requires = imports.filter(_.isInstanceOf[ResolvedQualifiedImport]).map(
-        x => JsDef(x.asInstanceOf[ResolvedQualifiedImport].name,
-            JsFunctionCall(JsName("require"),JsStr("modules/"+x.asInstanceOf[ResolvedQualifiedImport].path+".sl"))
+    // TODO: what about ResolvedExternImport?
+    val requires = imports.filter(_.isInstanceOf[ResolvedNamedImport]).map(
+        x => JsDef(x.asInstanceOf[ResolvedNamedImport].name,
+            JsFunctionCall(JsName("require"),JsStr("modules/"+x.asInstanceOf[ResolvedNamedImport].path+".sl"))
         	))
     moduleWriter.write(moduleTemplate.replace("%%MODULE_BODY%%", JsPrettyPrinter.pretty(requires)+"\n\n"
         +JsPrettyPrinter.pretty(dataDefsToJs(program.dataDefs)
@@ -150,9 +149,9 @@ trait SimpleDriver extends Driver {
 	    mainWriter.println("// generated from: "+name)
 	    mainWriter.println("/***********************************/") 
 	    val mainTemplate = Source.fromURL(getClass.getResource("/js/main_template.js")).getLines.mkString("\n")
-	    mainWriter.write(mainTemplate.replace("%%MODULE_PATHS_LIST%%", "\"modules/"+name+"\""/*modulePathsList.txt*/)
-	    	.replace("%%MODULE_NAMES_LIST%%", "$$$"+name.substring(0, name.length()-3)/*moduleNamesList.txt*/)
-	    		.replace("%%MAIN%%", JsPrettyPrinter.pretty(/*compiled &*/ JsFunctionCall("$$$"+name.substring(0, name.length()-3)+".$main"))/*main*/))
+	    mainWriter.write(mainTemplate.replace("%%MODULE_PATHS_LIST%%", "\"modules/"+name+"\"")
+	    	.replace("%%MODULE_NAMES_LIST%%", "$$$"+name.substring(0, name.length()-3))
+	    		.replace("%%MAIN%%", JsPrettyPrinter.pretty(JsFunctionCall("$$$"+name.substring(0, name.length()-3)+".$main"))))
 	    mainWriter.close()
 	    
 	    // copy index.html, require.js to config.destination
@@ -166,6 +165,15 @@ trait SimpleDriver extends Driver {
   }
   
   def copy(from: Path, to: Path) = {
+    if(!to.getParent.toFile.exists) {
+    	if(!to.getParent.toFile.mkdirs) {
+    	  // TODO: return an error
+    	  println("Could not create directory: "+to.getParent)
+    	}
+    } else if (to.getParent.toFile.exists && !to.getParent.toFile.isDirectory) {
+    	// TODO: return an error
+      println("Not a directory: "+to.getParent)
+    }
     val target = Files.copy(from, to, StandardCopyOption.REPLACE_EXISTING)
     println("copied "+from+" to "+to);
     target

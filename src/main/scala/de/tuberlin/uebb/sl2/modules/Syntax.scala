@@ -168,6 +168,11 @@ trait Syntax {
 
   abstract class Import(val path: String, val attribute: Attribute = EmptyAttribute)
 
+  case class UnqualifiedImport(
+      override val path: String,
+      override val attribute: Attribute = EmptyAttribute)
+    extends Import(path, attribute)
+  
   case class QualifiedImport(
       override val path: String,
       val name: ModuleVar,

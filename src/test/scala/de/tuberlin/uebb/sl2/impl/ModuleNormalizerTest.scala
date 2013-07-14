@@ -9,6 +9,7 @@ class ModuleNormalizerTest
     with ModuleNormalizerImpl
     with ParboiledParser 
     with Syntax
+    with SyntaxTraversal
     with Type
     with EnrichedLambdaCalculus
     with Context

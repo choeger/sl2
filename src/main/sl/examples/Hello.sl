@@ -1,4 +1,4 @@
-IMPORT "prelude_stub2" AS Ps
+IMPORT "prelude" AS Ps
 
 DEF hello = "Hello World" Ps.++ "23"
 

@@ -3,8 +3,26 @@ package de.tuberlin.uebb.sl2.impl
 import de.tuberlin.uebb.sl2.modules._
 
 trait ModuleNormalizerImpl extends ModuleNormalizer {
-  this: Syntax with Type with ModuleResolverImpl =>
+  this: Syntax with SyntaxTraversal with Type with ModuleResolverImpl =>
 
+  def qualifyUnqualifiedModules(program: Program, imports: List[ResolvedImport]) : Program = {
+    val declarations = getImportedUnqualifiedDeclarations(imports)
+    val f : PartialFunction[Any, Any] = {
+      case Syntax.Var(ide, "") => {Syntax.Var(ide, declarations.getOrElse(ide, ""))}
+      case cv: ConVar => {cv}
+      case tv: TConVar => {tv}
+    }
+    map(f, program)
+  }
+  
+  def getImportedUnqualifiedDeclarations(imports: List[ResolvedImport]) = {
+    // TODO: need to distinguish between dataDefs and signatures?
+    imports.filter(_.isInstanceOf[ResolvedUnqualifiedImport]).flatMap(imp =>
+      { val name = imp.asInstanceOf[ResolvedUnqualifiedImport].name;
+        imp.asInstanceOf[ResolvedUnqualifiedImport].signature.dataDefs.map( _.ide -> name) ++
+        imp.asInstanceOf[ResolvedUnqualifiedImport].signature.signatures.keySet.map(k => k -> name) } ).toMap
+  }
+  
   /**
    * Normalizes the signature of imported modules.
    * It will substitute the module name of ConVar and TConVar identifiers.
@@ -52,18 +70,20 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
   
   private def normalizeModule(sub : ModuleVar => ModuleVar) : ResolvedImport => ResolvedImport = imp => imp match {
     // normalize only qualified imports
-    case ResolvedQualifiedImport(name, path, file, Program(imports, sigs, defs, exts, datas, attrs), ast) =>
+    case ui: ResolvedUnqualifiedImport => ui
+    case ResolvedQualifiedImport(name, path, file, jsFile, Program(imports, sigs, defs, exts, datas, attrs), ast) =>
       val normImports = normalizeImports(sub)(imports)
       val normSigs    = normalizeSigs   (sub)(sigs   )
       val normDatas   = normalizeDatas  (sub)(datas  )
       val normProg    = Program(normImports, normSigs, defs, exts, normDatas, attrs)
       
-      ResolvedQualifiedImport(name, path, file, normProg, ast)
+      ResolvedQualifiedImport(name, path, file, jsFile, normProg, ast)
     case ei : ResolvedExternImport => ei
   }
   
   private def normalizeImport(sub : ModuleVar => ModuleVar) : Import => Import = imp => imp match {
     // normalize only qualified imports
+    case ui : UnqualifiedImport => ui
     case QualifiedImport(path, name, attr) => QualifiedImport(path, sub(name), attr)
     case ei : ExternImport => ei
   }
@@ -121,13 +141,19 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
    */
   private def buildPathModuleMap(imports : List[ResolvedImport]) : Map[String, ModuleVar] = {
     // build map only from qualified imports
-    imports.filter(_.isInstanceOf[ResolvedQualifiedImport]).map(imp => {
+    var unqualifiedPaths = imports.filter(_.isInstanceOf[ResolvedUnqualifiedImport]).map(imp => {
+      val uqi = imp.asInstanceOf[ResolvedUnqualifiedImport]
+      (uqi.path -> Syntax.LocalMod)
+    }).toMap
+    var qualifiedPaths = imports.filter(_.isInstanceOf[ResolvedQualifiedImport]).map(imp => {
       val rqi = imp.asInstanceOf[ResolvedQualifiedImport]
       
       // use path as key
       // use name as value
       (rqi.path -> rqi.name)
     }).toMap
+    // merge the two maps
+    unqualifiedPaths ++ qualifiedPaths.map{ case (k,v) => k -> (v + unqualifiedPaths.getOrElse(k,0)) }
   }
   
   /**
@@ -136,6 +162,22 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
    */
   private def buildModulePathMap(rimp : ResolvedImport) : Map[ModuleVar, String] = rimp match {
     // build map only from qualified imports
+    case rui : ResolvedUnqualifiedImport =>
+      val imports = rui.signature.imports
+      
+      // map the imports of this imported module
+      var modPath = imports.filter(imp => imp.isInstanceOf[QualifiedImport]).map(imp => {
+        val qi = imp.asInstanceOf[QualifiedImport]
+        
+        // use name as key
+        // use path as value
+        (qi.name -> qi.path)
+      }).toMap
+      
+      // add a translation for local modules
+      modPath += (Syntax.LocalMod -> rui.path)
+      
+      modPath
     case rqi : ResolvedQualifiedImport =>
       val imports = rqi.signature.imports
       

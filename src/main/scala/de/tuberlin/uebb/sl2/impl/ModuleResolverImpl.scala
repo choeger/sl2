@@ -12,22 +12,36 @@ trait ModuleResolverImpl extends ModuleResolver {
   def inferDependencies(program: AST, config: Config) = program match {
     case Program(imports, _, _, _, _, attribute) =>
       //TODO: really deal with transitive imports and the like...
-      errorMap(imports, resolveImport(config))
+      val preludeImp = UnqualifiedImport("lib/prelude")
+      errorMap(preludeImp :: imports, resolveImport(config))
     case _ => throw new RuntimeException("")
   }
 
   def resolveImport(config: Config)(imp: Import): Either[Error, ResolvedImport] = imp match {
+    case ui @ UnqualifiedImport(path, attr) => 
+      for (
+        file <- findImportResource(imp.path + ".sl.signature", attr).right;
+        jsFile <- findImportResource(imp.path + ".sl.js", attr).right;
+        signature <- importSignature(file).right
+      ) yield ResolvedUnqualifiedImport(path, file, jsFile, signature, ui)
     case qi @ QualifiedImport(path, name, attr) =>
       for (
         file <- findImport(config, imp.path + ".sl.signature", attr).right;
+        jsFile <- findImport(config, imp.path + ".sl.js", attr).right;
         signature <- importSignature(file).right
-      ) yield ResolvedQualifiedImport(name, path, file, signature, qi)
+      ) yield ResolvedQualifiedImport(name, path, file, jsFile, signature, qi)
     case ei @ ExternImport(path, attr) =>
       for (
         file <- findImport(config, imp.path + ".js", attr).right
       ) yield ResolvedExternImport(file, ei)
   }
 
+  def findImportResource(path: String, attr: Attribute): Either[Error, File] = {
+    val files = List(new File(getClass().getResource("/"+path).toURI()))
+    files.find(_.canRead()).toRight(
+      ImportError("Could not find resource " + quote(path)+ " at " +files.map(_.getCanonicalPath()), attr))
+  }
+  
   def findImport(config: Config, path: String, attr: Attribute): Either[Error, File] = {
     //TODO: look at places according to some defined classpath hierarchie etc.
     val files = List(new File(config.classpath, path),

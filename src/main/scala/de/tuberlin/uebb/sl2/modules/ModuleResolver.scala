@@ -9,20 +9,39 @@ import java.io.File
 trait ModuleResolver {
   this: Syntax with Errors with Configs =>
 
-  sealed abstract class ResolvedImport
+  sealed abstract class ResolvedImport(
+      file:File,
+      ast:Import)
+  
+  sealed abstract class ResolvedNamedImport(
+      val name:String,
+      val path:String,
+      val file:File,
+      val jsFile:File,
+      val signature:Program,
+      val ast:Import) extends ResolvedImport(file, ast)
+      
+  case class ResolvedUnqualifiedImport(
+      override val path: String,
+      override val file: File,
+      override val jsFile: File,
+      override val signature: Program,
+      override val ast: UnqualifiedImport) extends ResolvedNamedImport(
+          "$$"+path.replace('/', '$'), path, file, jsFile, signature, ast)
   
   case class ResolvedQualifiedImport(
-      name: ModuleVar,
-      path: String,
-      file: File,
-      signature: Program,
-      ast: QualifiedImport)
-    extends ResolvedImport
+      override val name: ModuleVar,
+      override val path: String,
+      override val file: File,
+      override val jsFile: File,
+      override val signature: Program,
+      override val ast: QualifiedImport)
+    extends ResolvedNamedImport(name, path, file, jsFile, signature, ast)
     
   case class ResolvedExternImport(
       file: File,
       ast: ExternImport)
-    extends ResolvedImport
+    extends ResolvedImport(file, ast)
     
   def inferDependencies(program: AST, config: Config): Either[Error, List[ResolvedImport]]
 

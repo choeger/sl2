@@ -18,7 +18,31 @@ trait ModuleContextImpl extends ModuleContext {
   }
   
   def buildModuleContext(imp : ResolvedImport) : Context = imp match {
-    case ResolvedQualifiedImport(name, _, _, prog, _) =>
+    case ui: ResolvedUnqualifiedImport =>
+	    // this is almost identical to DTCheckerImpl:dataConTypes
+		// TODO: refactor to remove duplicate code 2x in here and 1x in DTCheckerImpl
+	    var context: Context = Map.empty
+	
+	    for (
+	      dataDef <- ui.signature.dataDefs;
+	      conDef <- dataDef.constructors
+	    ) {
+	      val resultType = TypeConstructor(Syntax.TConVar(dataDef.ide), dataDef.tvars map TypeVariable)
+	      val argTypes = conDef.types map astToType
+	      val conType = argTypes.:+(resultType) reduceRight FunctionType
+	
+	      // Generalize type over its free variables
+	      val conTypeScheme = TypeScheme(conType.freeVars, conType)
+	
+	      context = context + (Syntax.ConVar(conDef.constructor) -> conTypeScheme)
+	    }
+	
+        context ++= ui.signature.signatures.map(
+          {case (funName, sig) => (Syntax.Var(funName).asInstanceOf[VarFirstClass] ->
+          							astToType(sig.typ))})
+	    
+	    context
+    case ResolvedQualifiedImport(name, _, _, _, prog, _) =>
         // this is almost the same implementation as in DTCheckerImpl:dataConTypes
         // note that the difference is in the construction of TConVar and ConVar
         // where the module name is set
@@ -48,7 +72,13 @@ trait ModuleContextImpl extends ModuleContext {
   }
     
   def buildModuleSig(imp : ResolvedImport) : Map[Var, FunctionSig] = imp match {
-    case ResolvedQualifiedImport(name, _, _, prog, _) =>
+    case ui: ResolvedUnqualifiedImport =>
+      ui.signature.signatures.map(kv => {
+        val (ide, sig) = kv
+        
+        (Syntax.Var(ide) -> sig)
+      })
+    case ResolvedQualifiedImport(name, _, _, _, prog, _) =>
       prog.signatures.map(kv => {
         val (ide, sig) = kv
         

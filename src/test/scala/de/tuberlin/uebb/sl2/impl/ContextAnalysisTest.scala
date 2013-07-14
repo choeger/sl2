@@ -37,6 +37,7 @@ class ContextAnalysisTest extends
   ContextAnalysisSpec
   with Lexic
   with Syntax
+  with SyntaxTraversal
   with Context
   with Type
   with ProgramCheckerImpl
