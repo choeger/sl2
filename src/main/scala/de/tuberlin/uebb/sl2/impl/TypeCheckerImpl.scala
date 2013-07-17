@@ -71,7 +71,7 @@ trait TypeCheckerImpl extends TypeChecker with Lexic with Syntax with EnrichedLa
 
     /* JavaScript quote */
     case EJavaScript(_, sig, _) =>
-      Right(empty, sig.getOrElse(BaseType.DomVoid))
+      Right(empty, sig.getOrElse(BaseType.Dom(BaseType.Void)))
 
     /* Variables and constructors */
     case EVar(ide, attr) => ctx.lookupFresh(ide) match {

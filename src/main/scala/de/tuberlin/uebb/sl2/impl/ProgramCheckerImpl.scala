@@ -64,7 +64,7 @@ trait ProgramCheckerImpl extends ProgramChecker {
    */
   def checkMain(signatures: Map[Var, FunctionSig], inferredType: Type): Either[Error, Unit] = {
 
-    val checkInferredType = if (inferredType == BaseType.DomVoid) {
+    val checkInferredType = if (inferredType == BaseType.Dom(BaseType.Void)) {
       Right()
     } else {
       Left(GenericError("Function `main' must be of type `DOM Void', but found: " + quote(inferredType.toString)))

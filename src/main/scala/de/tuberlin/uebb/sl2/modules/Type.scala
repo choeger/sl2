@@ -196,11 +196,11 @@ trait Type {
     val String = TypeConstructor(Syntax.TConVar("String", LocalMod), Nil)
     val Character = TypeConstructor(Syntax.TConVar("Char", LocalMod), Nil)
     val Void = TypeConstructor(Syntax.TConVar("Void", LocalMod), Nil)
-    val DomVoid = TypeConstructor(Syntax.TConVar("DOM", LocalMod), List(Void))
+    def Dom(a: Type) = TypeConstructor(Syntax.TConVar("DOM", LocalMod), List(a))
     val Real = TypeConstructor(Syntax.TConVar("Real", LocalMod), Nil)
     val Bool = TypeConstructor(Syntax.TConVar("Bool", LocalMod), Nil)
 
-    val typeVars = List(Integer, String, Character, Void, DomVoid, Real, Bool).map(_.con)
+    val typeVars = List(Integer, String, Character, Void, Dom(Void), Real, Bool).map(_.con)
   }
 
 }
