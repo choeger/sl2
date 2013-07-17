@@ -149,7 +149,9 @@ trait Unification {
 
   /* Unification errors */
   case class OccursError(tvar: TypeVariable, ty: Type) extends Error
-  case class MisMatchError(t1: Type, t2: Type) extends Error
+  case class MisMatchError(t1: Type, t2: Type) extends Error {
+    override def toString = "Could not match <"+t1+"> and <"+t2+">."
+  }
   case class MoreGeneralError(t1: Type, t2: Type) extends Error
   case class UnificationError(t1: Type, t2: Type) extends Error
 }

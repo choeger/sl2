@@ -115,13 +115,13 @@ trait Type {
     /**
      * Use pretty printer for the String representation.
      */
-    override def toString: String = pprint(this)
+    override def toString: String = TypePrettyPrinter.pretty(this)
   }
 
   case class TypeVariable(ide: TypeVarName) extends Type
 
   case class FunctionType(s: Type, t: Type) extends Type
-  
+
   case class TypeConstructor(con: TConVar, types: List[Type]) extends Type
 
   case class TypeScheme(vars: List[TypeVariable], ty: Type) extends Type {
@@ -153,11 +153,11 @@ trait Type {
    */
   def astToType(astType: ASTType): Type = astType match {
     /* Base types: Int, Char, String, Void */
-//    case TyExpr(Syntax.TConVar("Int", LocalMod), Nil, _) => BaseType(Integer)
-//    case TyExpr(Syntax.TConVar("Char", LocalMod), Nil, _) => BaseType(Character)
-//    case TyExpr(Syntax.TConVar("String", LocalMod), Nil, _) => BaseType(String)
-//    case TyExpr(Syntax.TConVar("Void", LocalMod), Nil, _) => BaseType(Void)
-//    case TyExpr(Syntax.TConVar("Real", LocalMod), Nil, _) => BaseType(Real)
+    //    case TyExpr(Syntax.TConVar("Int", LocalMod), Nil, _) => BaseType(Integer)
+    //    case TyExpr(Syntax.TConVar("Char", LocalMod), Nil, _) => BaseType(Character)
+    //    case TyExpr(Syntax.TConVar("String", LocalMod), Nil, _) => BaseType(String)
+    //    case TyExpr(Syntax.TConVar("Void", LocalMod), Nil, _) => BaseType(Void)
+    //    case TyExpr(Syntax.TConVar("Real", LocalMod), Nil, _) => BaseType(Real)
 
     /* Function types */
     case FunTy(types, _) => {
@@ -172,19 +172,22 @@ trait Type {
   }
 
   /**
-   * Pretty printer for type terms.
-   * TODO: Use Kiama pretty printer
+   * Pretty printer for SL definitions and expressions.
    */
-  def pprint(ty: Type): String = ty match {
-    case TypeVariable(ide) => ide
+  object TypePrettyPrinter extends org.kiama.output.PrettyPrinter {
 
-    case FunctionType(s: Type, t: Type) => "(" + pprint(s) + " -> " + pprint(t) + ")"
+    def pretty(t: Any): String = t match {
+      case t: Type => super.pretty(showType(t))
+      case e => pretty_any(e)
+    }
 
-    case TypeConstructor(con, types) => con + " " + (types map pprint)
-
-    case TypeScheme(vars, ty) => "forall " + (vars map pprint) + " . " + pprint(ty)
+    def showType(ty: Type): Doc = ty match {
+      case TypeVariable(ide) => ide
+      case FunctionType(s: Type, t: Type) => parens(showType(s) <+> "->" <+> showType(t))
+      case TypeConstructor(con, types) => con.toString <+> hsep(types map showType)
+      case TypeScheme(vars, ty) => "forall" <+> hsep(vars map showType) <+> "." <+> showType(ty)
+    }
   }
-  
   /**
    * types of that can appear due to literal expressions.
    */
@@ -196,8 +199,8 @@ trait Type {
     val DomVoid = TypeConstructor(Syntax.TConVar("DOM", LocalMod), List(Void))
     val Real = TypeConstructor(Syntax.TConVar("Real", LocalMod), Nil)
     val Bool = TypeConstructor(Syntax.TConVar("Bool", LocalMod), Nil)
-    
+
     val typeVars = List(Integer, String, Character, Void, DomVoid, Real, Bool).map(_.con)
   }
- 
+
 }

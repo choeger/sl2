@@ -76,7 +76,7 @@ trait TypeCheckerImpl extends TypeChecker with Lexic with Syntax with EnrichedLa
     /* Variables and constructors */
     case EVar(ide, attr) => ctx.lookupFresh(ide) match {
       case Some(ty) => Right(empty, ty)
-      case None => Left(UndefinedError("identifier", ide.toString + "..." + ctx.toString(), attr))
+      case None => Left(UndefinedError("identifier", ide.toString, attr))
     }
     case ECon(con, attr) => ctx.lookupFresh(con) match {
       case Some(ty) => Right(empty, ty)

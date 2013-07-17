@@ -33,8 +33,8 @@ import de.tuberlin.uebb.sl2.impl._
 import de.tuberlin.uebb.sl2.modules._
 import de.tuberlin.uebb.sl2.modules.Syntax.{VarFirstClass}
 
-class ContextAnalysisTest extends
-  ContextAnalysisSpec
+class ContextAnalysisTest
+  extends ContextAnalysisSpec
   with Lexic
   with Syntax
   with SyntaxTraversal

@@ -1,0 +1,1 @@
+{"imports" : [{"name" : "P", "path" : "src\/main\/resources\/lib\/prelude"}], "signatures" : {"nums" : {"type" : "P.List", "params" : [{"type" : ".Int", "params" : []}]}, "sums" : [{"type" : "P.List", "params" : [{"type" : ".Int", "params" : []}]}, {"type" : ".Int", "params" : []}]}, "dataDefs" : []}

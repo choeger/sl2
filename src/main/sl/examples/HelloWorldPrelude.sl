@@ -3,7 +3,6 @@ IMPORT "prelude" AS P
 FUN words : P.List String
 DEF words = P.Cons "Hello" (P.Cons "World" P.Nil) 
 
--- apparently qualified names in patterns dont work...
 FUN conc : (P.List String) -> String
 DEF conc s =
 	CASE s

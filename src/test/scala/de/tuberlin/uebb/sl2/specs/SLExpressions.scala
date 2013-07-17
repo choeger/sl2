@@ -145,7 +145,6 @@ trait SLExpressions {
 
   val wrongIdSig = ("id", FunctionSig(TyExpr(Syntax.TConVar("Int"), Nil)))
 
-  
   /*
    * Programs
    */
