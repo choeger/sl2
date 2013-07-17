@@ -89,5 +89,5 @@ object Main
     case Nil => defaultConfig
   }
   
-  val defaultConfig: Config = Config(List(), new File(""), new File(""), new File(""))
+  val defaultConfig: Config = Config(List(), new File(""), new File(""), null)
 }
