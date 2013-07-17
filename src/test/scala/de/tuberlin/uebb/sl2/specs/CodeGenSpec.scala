@@ -72,15 +72,6 @@ trait CodeGenSpec
     scope
   }
 
-  val preludeSl = Source.fromURL(getClass.getResource("/prelude.sl")).getLines.mkString("\n")
-  val preludeJs = Source.fromURL(getClass.getResource("/prelude.js")).getLines.mkString("\n")
-
-  lazy val exprPrelude = {
-    val ast = parseAst(preludeSl).right.get
-    val astJs = astToJs(ast)
-    JsPrettyPrinter.pretty(astJs) + "\n" + preludeJs
-  }
-
   implicit class jsString(val str: String) {
 
     def evaluated() : String = {
@@ -103,27 +94,27 @@ trait CodeGenSpec
     def compiled() = {
       val exp = parseExpr(str).right.get
       val js = expToJs(exp, "tmp") & JsName("tmp")
-      "/*import code*/\n%s\n/*test code*/\n%s".format(exprPrelude, JsPrettyPrinter.pretty(js))
+      "/*test code*/\n%s".format(JsPrettyPrinter.pretty(js))
     }
 
     def compileProgramAndExpr(expr: String) = {
 //            println(str+"\n"+parseAst(preludeSl + str))
-      val ast = parseAst(preludeSl + str).right.get
+      val ast = parseAst(str).right.get
 
       val astJs = astToJs(ast)
       val exp = parseExpr(expr).right.get
       val js = expToJs(exp, "tmp") & JsName("tmp")
 //      println("/*import code*/\n%s\n/*program code*/\n%s\n/*test code*/\n%s".format(
 //        preludeJs, JsPrettyPrinter.pretty(astJs), JsPrettyPrinter.pretty(js)))
-      "/*import code*/\n%s\n/*program code*/\n%s\n/*test code*/\n%s".format(
-        preludeJs, JsPrettyPrinter.pretty(astJs), JsPrettyPrinter.pretty(js))
+      "/*program code*/\n%s\n/*test code*/\n%s".format(
+        JsPrettyPrinter.pretty(astJs), JsPrettyPrinter.pretty(js))
     }
   }
 
 
   describe("Compiling simple SL expressions") {
 
-    it("Should compile the 'True' literal correctly") {
+    it("Should compile the 'True' literal correctly ") {
       ("True".compiled.evaluated) should equal("true".evaluated)
     }
 
