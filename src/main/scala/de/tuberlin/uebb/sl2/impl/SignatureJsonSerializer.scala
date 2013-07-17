@@ -205,7 +205,9 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Parbo
     map += ("tvars"        -> typeVarNames2Json(data.tvars       ))
     // the constructors of private types are not exported.
     if (data.modifier == PublicModifier) {
-    	map += ("constructors" -> ctors2Json       (data.constructors))
+      map += ("constructors" -> ctors2Json       (data.constructors))
+    } else {
+      map += ("constructors" -> JSONArray(List()))
     }
     JSONObject(map)
   }

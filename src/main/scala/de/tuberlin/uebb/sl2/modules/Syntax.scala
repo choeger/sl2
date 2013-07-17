@@ -445,7 +445,12 @@ trait Syntax {
     def showAlt(a: Alternative): Doc = ofLex <+> showPattern(a.pattern) <+> thenLex <+> nest(showExpr(a.expr))
     def showPattern(p: Pattern): Doc = p match {
       case PatternVar(v, a) => v
-      case PatternExpr(c, ps, a) => text(c.toString) <+> catList(ps.map(showPattern), "")
+      case PatternExpr(c, ps, a) => 
+        if (ps.isEmpty) {
+          text(c.toString)
+        } else {
+          parens(text(c.toString) <+> catList(ps.map(showPattern), ""))
+        }
     }
 
     def catList(l: List[Doc], sep: Doc): Doc = (group(nest(lsep(l, sep))))

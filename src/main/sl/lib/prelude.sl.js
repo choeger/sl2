@@ -149,21 +149,6 @@ define(function(require, exports, module) {
     
 
 ;
-;
-exports.$Nil = 0;
-var $Nil = exports.$Nil;
-exports._Cons = 1;
-var _Cons = exports._Cons;
-function $Cons(_arg0)
-{
-  function f(_arg1)
-  {
-    return {_cid : 1, _var0 : _arg0, _var1 : _arg1
-    }
-  };
-  return f
-};
-exports.$Cons = $Cons;
 var $True = true;
 var $False = false;
 ;
@@ -215,7 +200,7 @@ exports.$d = _div;
 var $d = exports.$d;
 exports.$g = _greater;
 var $g = exports.$g;
-exports.$not = function (_arg0)
+function $not(_arg0)
 {
   if((_arg0 === True))
   {
@@ -235,7 +220,8 @@ exports.$not = function (_arg0)
     }
   }
 };
-exports.$a = function (_arg0)
+exports.$not = $not;
+function $a(_arg0)
 {
   return function (_arg1)
   {
@@ -268,7 +254,8 @@ exports.$a = function (_arg0)
     }
   }
 };
-exports.$d$e = function (_arg0)
+exports.$a = $a;
+function $d$e(_arg0)
 {
   return function (_arg1)
   {
@@ -290,5 +277,6 @@ exports.$d$e = function (_arg0)
       throw "Pattern not exhaustive!"
     }
   }
-}
+};
+exports.$d$e = $d$e
 });

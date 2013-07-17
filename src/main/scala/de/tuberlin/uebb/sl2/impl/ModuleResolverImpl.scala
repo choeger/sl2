@@ -12,8 +12,9 @@ trait ModuleResolverImpl extends ModuleResolver {
   def inferDependencies(program: AST, config: Config) = program match {
     case Program(imports, _, _, _, _, attribute) =>
       //TODO: really deal with transitive imports and the like...
-      val preludeImp = UnqualifiedImport("lib/prelude")
-      errorMap(preludeImp :: imports, resolveImport(config))
+      val preludeImp = if (config.mainUnit.getName() != "prelude.sl")
+        UnqualifiedImport("lib/prelude") :: imports else imports
+      errorMap(preludeImp, resolveImport(config))
     case _ => throw new RuntimeException("")
   }
 
@@ -43,7 +44,6 @@ trait ModuleResolverImpl extends ModuleResolver {
   }
   
   def findImport(config: Config, path: String, attr: Attribute): Either[Error, File] = {
-    //TODO: look at places according to some defined classpath hierarchie etc.
     val files = List(new File(config.classpath, path),
         new File(config.mainUnit.getParentFile(), path),
         new File(path))

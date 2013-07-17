@@ -55,8 +55,8 @@ trait SimpleDriver extends Driver {
 	val file = new File(input.head)
 	val name = file.getName()
 	// if no destination has been specified, the output goes to the folder of the input file.
-	val destination = Some(inpCfg.destination).getOrElse(file.getParentFile())
-	val config = inpCfg.copy(mainUnit = file)
+	val destination = if (inpCfg.destination == null) file.getParentFile() else inpCfg.destination
+	val config = inpCfg.copy(mainUnit = file, destination = destination)
 	val source = scala.io.Source.fromFile(file)
 	val code = source.mkString
 	source.close()
@@ -79,10 +79,8 @@ trait SimpleDriver extends Driver {
   def compile(program: Program, name: String, imports: List[ResolvedImport], config: Config): Either[Error, String] = {    
     val compiled = astToJs(program)
     
-    // TODO: include prelude_stub2.sl implicitly from signature and unqualified
-    
     // Create modules directory, if necessary
-    val modulesDir = new File(config.destination, "modules")
+    val modulesDir = config.destination;//new File(config.destination, "modules")
     if(!modulesDir.exists()) {
       if(modulesDir.mkdirs()) {
         println("Created directory "+modulesDir)
@@ -94,7 +92,6 @@ trait SimpleDriver extends Driver {
     }
     
     // copy .js and .signature of imported modules from classpath to modules/ directory
-    // TODO: what about ResolvedExternImport?
     for(i <- imports.filter(_.isInstanceOf[ResolvedNamedImport])) {
       val imp = i.asInstanceOf[ResolvedNamedImport]
       copy(Paths.get(imp.file.toURI),   Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.signature"))
@@ -118,10 +115,10 @@ trait SimpleDriver extends Driver {
     moduleWriter.println("/***********************************/")
     moduleWriter.println("// generated from: "+name)
     moduleWriter.println("/***********************************/") 
-    // TODO: what about ResolvedExternImport?
+
     val requires = imports.filter(_.isInstanceOf[ResolvedNamedImport]).map(
         x => JsDef(x.asInstanceOf[ResolvedNamedImport].name,
-            JsFunctionCall(JsName("require"),JsStr("modules/"+x.asInstanceOf[ResolvedNamedImport].path+".sl"))
+            JsFunctionCall(JsName("require"),JsStr(x.asInstanceOf[ResolvedNamedImport].path+".sl"))
         	))
     moduleWriter.write(moduleTemplate.replace("%%MODULE_BODY%%", JsPrettyPrinter.pretty(requires)+"\n\n"
         +JsPrettyPrinter.pretty(dataDefsToJs(program.dataDefs)
