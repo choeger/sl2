@@ -139,8 +139,8 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   /**
    * avoid parsing keywords as ide-prefixes
    */
-  def keyword : Rule0 = rule { ("FUN" | "DEF" | "IF" | "THEN" |
-      "ELSE" | "LET" | "IN" | "CASE" | "OF" | "DATA" | "IMPORT" | "AS" | "EXTERN") ~
+  def keyword : Rule0 = rule { ("FUN" | "DEF" | "IF" | "THEN" | "ELSE" |
+      "LET" | "IN" | "CASE" | "OF" | "DATA" | "IMPORT" | "AS" | "EXTERN" | "PUBLIC") ~
       !(digit | non_digit) }
 
   def kw(string : String) : Rule0 = {

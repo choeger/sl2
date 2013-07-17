@@ -407,7 +407,7 @@ trait Syntax {
     }
     
     def showModifier(m: DeclarationModifier): Doc = m match {
-      case DefaultModifier => ""
+      case DefaultModifier => empty
       case PublicModifier => publicLex
     }
 
