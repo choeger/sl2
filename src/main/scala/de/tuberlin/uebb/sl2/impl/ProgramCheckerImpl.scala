@@ -72,7 +72,7 @@ trait ProgramCheckerImpl extends ProgramChecker {
 
     val checkMainSignature = signatures.get(Syntax.Var("main")) match {
       case None => Right()
-      case Some(FunctionSig(signature, attr)) => {
+      case Some(FunctionSig(signature, modi, attr)) => {
         val mainSignature = astToType(signature)
         if (mainSignature == inferredType) Right()
         else Left(AttributedError("Could not match declared type " + quote(mainSignature.toString) + " against inferred type " + quote(inferredType.toString) + " in `main'", attr))

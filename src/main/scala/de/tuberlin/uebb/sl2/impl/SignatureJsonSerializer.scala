@@ -130,6 +130,8 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Parbo
   // actual (de)serialization implementation starts here
   
   private def ast2Json(ast : AST) : JsonExportAst = ast match { case Program(imports, sigs, _, _, datas, _) =>
+    val exportedSigs = sigs.filter{
+        case (_, FunctionSig(_,modi,_)) => PublicModifier == modi}
     var root : Map[String, Any] = Map()
     root += ("imports"    -> imports2Json(imports))
     root += ("signatures" ->    sigs2Json(sigs   ))
@@ -201,8 +203,10 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Parbo
     var map : Map[String, Any] = Map()
     map += ("ide"          -> tConVarName2Json (data.ide         ))
     map += ("tvars"        -> typeVarNames2Json(data.tvars       ))
-    map += ("constructors" -> ctors2Json       (data.constructors))
-    
+    // the constructors of private types are not exported.
+    if (data.modifier == PublicModifier) {
+    	map += ("constructors" -> ctors2Json       (data.constructors))
+    }
     JSONObject(map)
   }
     

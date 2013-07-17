@@ -91,7 +91,7 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
   private def normalizeSig(sub : ModuleVar => ModuleVar) : FunctionSig => FunctionSig = sig => {
     val normType = normalizeType(sub)(sig.typ)
     
-    FunctionSig(normType, sig.attribute)
+    FunctionSig(normType, sig.modifier, sig.attribute)
   }
   
   private def normalizeType(sub : ModuleVar => ModuleVar) : ASTType => ASTType = typ => typ match {
@@ -110,7 +110,7 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
   private def normalizeData(sub : ModuleVar => ModuleVar) : DataDef => DataDef = data => {
     val normCtors = normalizeCtors(sub)(data.constructors)
     
-    DataDef(data.ide, data.tvars, normCtors, data.attribute)
+    DataDef(data.ide, data.tvars, normCtors, data.modifier, data.attribute)
   }
   
   private def normalizeCtor(sub : ModuleVar => ModuleVar) : ConstructorDef => ConstructorDef = ctor => {

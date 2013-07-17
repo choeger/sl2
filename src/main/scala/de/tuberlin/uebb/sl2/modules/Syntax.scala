@@ -185,10 +185,17 @@ trait Syntax {
       override val attribute: Attribute = EmptyAttribute)
     extends Import(path, attribute)
 
+  sealed abstract class DeclarationModifier
+  case object DefaultModifier extends DeclarationModifier
+  case object PublicModifier extends DeclarationModifier
+  
   /**
    * Type signature for top-level function definitions.
    */
-  case class FunctionSig(typ: ASTType, attribute: Attribute = EmptyAttribute)
+  case class FunctionSig(
+      typ: ASTType,
+      modifier: DeclarationModifier = DefaultModifier,
+      attribute: Attribute = EmptyAttribute)
   
   /**
    *  Top-level function definitions.
@@ -224,6 +231,7 @@ trait Syntax {
       ide: TConVarName,
       tvars: List[TypeVarName],
       constructors: List[ConstructorDef],
+      modifier: DeclarationModifier = DefaultModifier,
       attribute: Attribute = EmptyAttribute)
 
   /**
@@ -365,7 +373,7 @@ trait Syntax {
         doc = doc <@> showDataDef(d)
 
       for ((name, s) <- m.signatures)
-        doc = doc <@> funLex <+> name <+> typeLex <+> showType(s.typ) <> line
+        doc = doc <@> showModifier(s.modifier) <+> funLex <+> name <+> typeLex <+> showType(s.typ) <> line
 
       for (
         (name, d) <- m.functionDefsExtern
@@ -390,12 +398,17 @@ trait Syntax {
     }
 
     def showDataDef(d: DataDef): Doc = d match {
-      case DataDef(name, Nil, cons, _) => {
-        dataLex <+> d.ide <+> funEqLex <+> catList(d.constructors map showConstructor, space <> dataSepLex) <> line
+      case DataDef(name, Nil, cons, modifier, _) => {
+        showModifier(modifier) <+> dataLex <+> d.ide <+> funEqLex <+> catList(d.constructors map showConstructor, space <> dataSepLex) <> line
       }
-      case DataDef(name, vars, cons, _) => {
-        dataLex <+> d.ide <+> hsep(d.tvars.map(value)) <+> funEqLex <+> catList(d.constructors map showConstructor, space <> dataSepLex) <> line
+      case DataDef(name, vars, cons, modifier, _) => {
+        showModifier(modifier) <+> dataLex <+> d.ide <+> hsep(d.tvars.map(value)) <+> funEqLex <+> catList(d.constructors map showConstructor, space <> dataSepLex) <> line
       }
+    }
+    
+    def showModifier(m: DeclarationModifier): Doc = m match {
+      case DefaultModifier => ""
+      case PublicModifier => publicLex
     }
 
     def showConstructor(c: ConstructorDef) = c.constructor <+> hsep(c.types.map(showType))

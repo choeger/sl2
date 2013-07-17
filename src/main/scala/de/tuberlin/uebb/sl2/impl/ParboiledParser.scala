@@ -238,13 +238,13 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
     case m:Program => m.copy(dataDefs = d::m.dataDefs)
   }
 
-  def mkFunSig(t : ASTType) = FunctionSig(t)
+  def mkFunSig(m : DeclarationModifier)(t : ASTType) = FunctionSig(t, m)
   
   def mkTyExpr(s : String, ts : List[ASTType]) = TyExpr(Syntax.TConVar(s), ts)
 
   def mkFunType(t : ASTType, ts : List[ASTType]) = FunTy(t::ts)
   
-  def mkDataDef(s : String, vs : List[String], cs : List[ConstructorDef]) = DataDef(s, vs, cs)
+  def mkDataDef(m : DeclarationModifier)(s : String, vs : List[String], cs : List[ConstructorDef]) = DataDef(s, vs, cs, m)
   
   def mkConsDef(s : String, ts : List[ASTType]) = ConstructorDef(s, ts)
 
@@ -332,7 +332,10 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
   
   def data_def : Rule1[DataDef] = rule {
-    kw("DATA") ~ constructor ~ (zeroOrMore(variable) ~ "= " ~ oneOrMore(cons_def, "| ") ~~> (mkDataDef _)) 
+    (kw("PUBLIC") ~ kw("DATA") ~ constructor ~
+    	(zeroOrMore(variable) ~ "= " ~ oneOrMore(cons_def, "| ") ~~> mkDataDef(PublicModifier) _)) |
+    (kw("DATA") ~ constructor ~
+    	(zeroOrMore(variable) ~ "= " ~ oneOrMore(cons_def, "| ") ~~> mkDataDef(DefaultModifier) _))
   }
 
   def cons_def : Rule1[ConstructorDef] = rule {
@@ -347,7 +350,8 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   }
 
   def fun_sig : Rule2[String, FunctionSig] = rule {
-    kw("FUN") ~ (variable | custom_op_token) ~ ": " ~ type_expr ~~> (mkFunSig _)
+    kw("PUBLIC") ~ kw("FUN") ~ (variable | custom_op_token) ~ ": " ~ type_expr ~~> (mkFunSig(PublicModifier) _) |
+    kw("FUN") ~ (variable | custom_op_token) ~ ": " ~ type_expr ~~> (mkFunSig(DefaultModifier) _)
   }
   
   def type_expr : Rule1[ASTType] = rule { type_expr_base ~ optional(fun_rhs) }
