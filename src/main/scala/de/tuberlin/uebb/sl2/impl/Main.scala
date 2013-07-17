@@ -36,7 +36,7 @@ import scala.io.Source
 import java.io.File
 
 object Main
-    extends ParboiledParser 
+    extends CombinatorParser 
     with CodeGenerator
     with Syntax
     with SyntaxTraversal

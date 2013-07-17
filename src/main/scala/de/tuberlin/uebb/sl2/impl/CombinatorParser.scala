@@ -165,7 +165,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
 
   private def functionDefExtern: Parser[(VarName, FunctionDefExtern)] =
     defLex ~ externLex ~> varRegex ~ funEqLex ~ jsRegex ^^@ {
-      case (a, v ~ _ ~ js) => (v, FunctionDefExtern(js))
+      case (a, v ~ _ ~ js) => (v, FunctionDefExtern(js, a))
     }
 
   private def dataDef: Parser[DataDef] = (

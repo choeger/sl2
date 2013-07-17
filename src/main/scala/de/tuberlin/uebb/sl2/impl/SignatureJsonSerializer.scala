@@ -3,7 +3,7 @@ package de.tuberlin.uebb.sl2.impl
 import scala.util.parsing.json._
 import de.tuberlin.uebb.sl2.modules.{ SignatureSerializer, Syntax, Errors }
 
-trait SignatureJsonSerializer extends SignatureSerializer with Syntax with ParboiledParser with Errors {
+trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Errors {
 
   def serialize(ast : AST) : String = ast2Json(ast).toString
   

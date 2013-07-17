@@ -13,7 +13,7 @@ trait ModuleResolverImpl extends ModuleResolver {
     case Program(imports, _, _, _, _, attribute) =>
       //TODO: really deal with transitive imports and the like...
       val preludeImp = if (config.mainUnit.getName() != "prelude.sl")
-        UnqualifiedImport("lib/prelude") :: imports else imports
+        UnqualifiedImport("prelude") :: imports else imports
       errorMap(preludeImp, resolveImport(config))
     case _ => throw new RuntimeException("")
   }
@@ -38,7 +38,7 @@ trait ModuleResolverImpl extends ModuleResolver {
   }
 
   def findImportResource(path: String, attr: Attribute): Either[Error, File] = {
-    val files = List(new File(getClass().getResource("/"+path).toURI()))
+    val files = List(new File(getClass().getResource("/lib/"+path).toURI()))
     files.find(_.canRead()).toRight(
       ImportError("Could not find resource " + quote(path)+ " at " +files.map(_.getCanonicalPath()), attr))
   }

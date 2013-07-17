@@ -422,7 +422,7 @@ trait Syntax {
 
     def showExpr(t: Expr): Doc = t match {
       case Conditional(c, t, e, a) => ifLex <+> showExpr(c) <@> thenLex <+> nest(line <> showExpr(t)) <@> elseLex <> nest(line <> showExpr(e))
-      case Lambda(ps, e, a) => parens(lambdaLex <+> list(ps, "", showPattern _, "") <+> dotLex <> nest(line <> showExpr(e)))
+      case Lambda(ps, e, a) => parens(lambdaLex <+> catList(ps.map(showPattern), "") <+> dotLex <> nest(line <> showExpr(e)))
       case Case(e, as, a) => caseLex <+> showExpr(e) <@> ssep(as.map(showAlt), linebreak)
       case Let(ds, e, a) => letLex <+> nest(line <> cat(ds.map(showLefDef))) <@> inLex <> nest(line <> showExpr(e))
       case App(f, e, a) => parens(showExpr(f) <+> showExpr(e))
@@ -435,7 +435,7 @@ trait Syntax {
       case JavaScript(j, s, a) => {
         val sigDoc = s match {
           case None => empty
-          case Some(sig) => " :" <+> sig.toString
+          case Some(sig) => " :" <+> showType(sig)
         }
         jsOpenLex <+> j <+> jsCloseLex <> sigDoc
       }
