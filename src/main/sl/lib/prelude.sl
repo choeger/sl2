@@ -32,6 +32,8 @@
 
 IMPORT EXTERN "_prelude" 
 
+-- Base Types
+
 DATA Int = ExternalInt
 DATA Real = ExternalReal
 DATA Char = ExternalChar
@@ -39,52 +41,58 @@ DATA Void = ExternalVoid
 DATA String = ExternalString
 DATA DOM a = ExternalDOM a
 
-DATA Bool = True | False
+-- Booleans
 
-FUN not : Bool -> Bool
+PUBLIC DATA Bool = True | False
+
+PUBLIC FUN not : Bool -> Bool
 DEF not True = False
 DEF not False = True
 
-DATA List a = Nil | Cons a (List a)
+-- String functions
 
-FUN ++ : (String -> String -> String)
+PUBLIC FUN ++ : (String -> String -> String)
 DEF EXTERN ++ = {| _adds |}
 
-FUN &= : (DOM a) -> (a -> (DOM b)) -> (DOM b)
+-- Monad functions
+
+PUBLIC FUN &= : (DOM a) -> (a -> (DOM b)) -> (DOM b)
 DEF EXTERN &= = {| _bind |}
 
-FUN yield : a -> (DOM a)
+PUBLIC FUN yield : a -> (DOM a)
 DEF EXTERN yield =  {| _yield |}
 
-FUN & : (DOM a) -> (DOM b) -> (DOM b)
+PUBLIC FUN & : (DOM a) -> (DOM b) -> (DOM b)
 DEF x & y = (x &= (\ r . y))
 
-FUN + : Int -> Int -> Int
+-- Arithmetics on Integers
+
+PUBLIC FUN + : Int -> Int -> Int
 DEF EXTERN + = {| _add |}
 
-FUN - : Int -> Int -> Int
+PUBLIC FUN - : Int -> Int -> Int
 DEF EXTERN - = {| _sub |}
 
-FUN * : Int -> Int -> Int
+PUBLIC FUN * : Int -> Int -> Int
 DEF EXTERN * = {| _mul |}
 
-FUN / : Int -> Int -> Int
+PUBLIC FUN / : Int -> Int -> Int
 DEF EXTERN / = {| _div |}
 
-FUN < : Int -> Int -> Bool
+PUBLIC FUN < : Int -> Int -> Bool
 DEF EXTERN < = {| _lesser |}
 
-FUN <= : Int -> Int -> Bool
+PUBLIC FUN <= : Int -> Int -> Bool
 DEF EXTERN <= = {| _leq |}
 
-FUN == : Int -> Int -> Bool
+PUBLIC FUN == : Int -> Int -> Bool
 DEF EXTERN == = {| _eq |}
 
-FUN /= : Int -> Int -> Bool
+PUBLIC FUN /= : Int -> Int -> Bool
 DEF x /= y = not (x == y)
 
-FUN >= : Int -> Int -> Bool
+PUBLIC FUN >= : Int -> Int -> Bool
 DEF EXTERN >= = {| _geq |}
 
-FUN > : Int -> Int -> Bool
+PUBLIC FUN > : Int -> Int -> Bool
 DEF EXTERN > = {| _greater |}
