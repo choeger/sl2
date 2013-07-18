@@ -63,7 +63,7 @@ PUBLIC FUN yield : a -> (DOM a)
 DEF EXTERN yield =  {| _yield |}
 
 PUBLIC FUN & : (DOM a) -> (DOM b) -> (DOM b)
-DEF x & y = (x &= (\ r . y))
+DEF EXTERN & = {| _bindnr |}
 
 -- Arithmetics on Integers
 
@@ -96,3 +96,22 @@ DEF EXTERN >= = {| _geq |}
 
 PUBLIC FUN > : Int -> Int -> Bool
 DEF EXTERN > = {| _greater |}
+
+
+-- iNaN /= iNaN !!
+PUBLIC FUN iNaN : Int
+DEF EXTERN iNaN = {| NaN |}
+
+PUBLIC FUN isNaN : Int -> Bool
+DEF EXTERN isNaN = {| isNaN |}
+
+-------------------------------------
+
+PUBLIC FUN id : a -> a
+DEF id a = a
+
+PUBLIC FUN intToStr : Int -> String
+DEF EXTERN intToStr = {| function(i){return i.toString();} |}
+
+PUBLIC FUN strToInt : String -> Int
+DEF EXTERN strToInt = {| parseInt |}

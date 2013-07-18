@@ -10,12 +10,22 @@ DEF appendChild doc child = {| $doc.body.appendChild($child) |}
 -- for a document creates a new button with name and callback
 PUBLIC FUN createButton : Document -> String -> (DOM Void) -> (DOM Node)
 DEF createButton doc text callback =
-   {| $doc.createElement('button') |} : DOM Node &=
+   {| $doc.createElement('input') |} : DOM Node &=
    (\button .
-     {| $button.innerText = $text |} &
+     {| $button.type = "button" |} &
+     {| $button.value = $text |} &
      {| $button.onclick = $callback |} &
      (yield button))
-   
-FUN hello : DOM String
-DEF hello = (yield 23) & (yield "S")
-   
+     
+-- for a document creates a new input feild with text and callback
+PUBLIC FUN createInput : Document -> String -> (DOM Void) -> (DOM Node)
+DEF createInput doc text callback =
+   {| $doc.createElement('input') |} : DOM Node &=
+   (\node .
+     {| $node.type = "text" |} &
+     {| $node.value = $text |} &
+     {| $node.onclick = $callback |} &
+     (yield node))
+     
+PUBLIC FUN alert : String -> DOM Void
+DEF alert msg = {| alert($msg) |}

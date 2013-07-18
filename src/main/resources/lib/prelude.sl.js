@@ -1,5 +1,5 @@
 /***********************************/
-// included from: /home/ben/Dokumente/compilerbaupraxis/sl2/src/main/sl/lib/_prelude.js
+// included from: /home/ben/Dokumente/compilerbaupraxis/sl2/src/main/resources/lib/_prelude.js
 /***********************************/
 /*
  * This basic module is necessary as an import to every SL
@@ -182,6 +182,8 @@ exports.$l$e = _leq;
 var $l$e = exports.$l$e;
 exports.$l = _lesser;
 var $l = exports.$l;
+exports.$a = _bindnr;
+var $a = exports.$a;
 exports.$g$e = _geq;
 var $g$e = exports.$g$e;
 exports.$yield = _yield;
@@ -194,12 +196,20 @@ exports.$p$p = _adds;
 var $p$p = exports.$p$p;
 exports.$e$e = _eq;
 var $e$e = exports.$e$e;
+exports.$intToStr = function(i){return i.toString();};
+var $intToStr = exports.$intToStr;
+exports.$isNaN = isNaN;
+var $isNaN = exports.$isNaN;
 exports.$p = _add;
 var $p = exports.$p;
+exports.$iNaN = NaN;
+var $iNaN = exports.$iNaN;
 exports.$d = _div;
 var $d = exports.$d;
 exports.$g = _greater;
 var $g = exports.$g;
+exports.$strToInt = parseInt;
+var $strToInt = exports.$strToInt;
 function $not(_arg0)
 {
   if((_arg0 === True))
@@ -221,40 +231,20 @@ function $not(_arg0)
   }
 };
 exports.$not = $not;
-function $a(_arg0)
+function $id(_arg0)
 {
-  return function (_arg1)
+  if(true)
   {
-    if((true && true))
-    {
-      var $x = _arg0;
-      var $y = _arg1;
-      var $25 = $a$e;
-      var $24 = $x;
-      var $23 = $25($24);
-      var $21 = function (_arg0)
-      {
-        if(true)
-        {
-          var $r = _arg0;
-          var $22 = $y
-        }
-        else 
-        {
-          throw "Pattern for lambda expression did not match arguments"
-        };
-        return $22
-      };
-      var _return = $23($21);
-      return _return
-    }
-    else 
-    {
-      throw "Pattern not exhaustive!"
-    }
+    var $a = _arg0;
+    var _return = $a;
+    return _return
+  }
+  else 
+  {
+    throw "Pattern not exhaustive!"
   }
 };
-exports.$a = $a;
+exports.$id = $id;
 function $d$e(_arg0)
 {
   return function (_arg1)
@@ -263,13 +253,13 @@ function $d$e(_arg0)
     {
       var $x = _arg0;
       var $y = _arg1;
-      var $31 = $not;
-      var $30 = $e$e;
-      var $29 = $x;
-      var $28 = $30($29);
-      var $27 = $y;
-      var $26 = $28($27);
-      var _return = $31($26);
+      var $17 = $not;
+      var $16 = $e$e;
+      var $15 = $x;
+      var $14 = $16($15);
+      var $13 = $y;
+      var $12 = $14($13);
+      var _return = $17($12);
       return _return
     }
     else 
