@@ -115,3 +115,7 @@ DEF EXTERN intToStr = {| function(i){return i.toString();} |}
 
 PUBLIC FUN strToInt : String -> Int
 DEF EXTERN strToInt = {| parseInt |}
+
+
+PUBLIC FUN error : String -> a
+DEF EXTERN error = {| function(msg){throw msg}|} 

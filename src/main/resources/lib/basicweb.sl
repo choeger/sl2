@@ -17,7 +17,7 @@ DEF createButton doc text callback =
      {| $button.onclick = $callback |} &
      (yield button))
      
--- for a document creates a new input feild with text and callback
+-- for a document creates a new input field with text and callback
 PUBLIC FUN createInput : Document -> String -> (DOM Void) -> (DOM Node)
 DEF createInput doc text callback =
    {| $doc.createElement('input') |} : DOM Node &=

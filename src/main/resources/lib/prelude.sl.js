@@ -194,6 +194,8 @@ exports.$a$e = _bind;
 var $a$e = exports.$a$e;
 exports.$p$p = _adds;
 var $p$p = exports.$p$p;
+exports.$error = function(msg){throw msg};
+var $error = exports.$error;
 exports.$e$e = _eq;
 var $e$e = exports.$e$e;
 exports.$intToStr = function(i){return i.toString();};
@@ -212,14 +214,14 @@ exports.$strToInt = parseInt;
 var $strToInt = exports.$strToInt;
 function $not(_arg0)
 {
-  if((_arg0 === True))
+  if((_arg0 === $True))
   {
     var _return = $False;
     return _return
   }
   else 
   {
-    if((_arg0 === False))
+    if((_arg0 === $False))
     {
       var _return = $True;
       return _return
