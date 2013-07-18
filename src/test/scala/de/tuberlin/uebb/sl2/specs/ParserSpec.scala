@@ -214,7 +214,7 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
     }
 
     it("Should parse string concatenation") {
-      "x ++ y".as.expr should parse(App(App(exVar(strAdd), exVar("x")), exVar("y")))
+      "x Str.++ y".as.expr should parse(App(App(ExVar(Syntax.Var("++", "Str")), exVar("x")), exVar("y")))
     }
 
     it("Should parse real division") {
@@ -470,7 +470,25 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
           )),
           Map.empty, Map.empty, Nil))
     }
+
+    it("Should parse higher order function signature without unneccessary parens") {
+      ("FUN &= : DOM a -> (a -> DOM b) -> DOM b").as.ast should
+        parse(Program(
+          List(),
+          Map(("&=") -> FunctionSig(
+            FunTy(List(
+              TyExpr(Syntax.TConVar("DOM"), List(TyVar("a"))),
+              FunTy(List(
+                TyVar("a"), 
+                TyExpr(Syntax.TConVar("DOM"), List(TyVar("b")))
+              )),
+              TyExpr(Syntax.TConVar("DOM"), List(TyVar("b")))
+            ))
+          )),
+          Map.empty, Map.empty, Nil))
+    }
   }
+
 
   describe(testedImplementationName() + " Test case 11 : Qualified identifiers") {
     it("Should parse qualified operators") {

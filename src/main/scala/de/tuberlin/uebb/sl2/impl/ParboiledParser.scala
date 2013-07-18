@@ -357,8 +357,15 @@ trait ParboiledParser extends PBParser with Parser with Lexic with Syntax with E
   def type_expr : Rule1[ASTType] = rule { type_expr_base ~ optional(fun_rhs) }
 
   def type_expr_base : Rule1[ASTType] = rule {
-    constructor ~ !(".") ~ zeroOrMore(type_expr) ~~> (mkTyExpr _) |
-    qualification ~ constructor ~ zeroOrMore(type_expr) ~~> (mkQualTyExpr _) |
+    constructor ~ !(".") ~ zeroOrMore(type_arg) ~~> (mkTyExpr _) |
+    qualification ~ constructor ~ zeroOrMore(type_arg) ~~> (mkQualTyExpr _) |
+    "( " ~ type_expr ~ ") " |
+    variable ~~> (s => TyVar(s))
+  }
+
+  def type_arg : Rule1[ASTType] = rule {
+    constructor ~ !(".") ~~> (s => TyExpr(Syntax.TConVar(s), List())) |
+    qualification ~ constructor ~~> ((m, s) => TyExpr(Syntax.TConVar(s, m), List())) |
     "( " ~ type_expr ~ ") " |
     variable ~~> (s => TyVar(s))
   }
