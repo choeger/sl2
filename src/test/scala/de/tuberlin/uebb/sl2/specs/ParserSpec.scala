@@ -370,6 +370,12 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
         List(strX, strY),
         List(ConstructorDef(strProduct, List(TyVar(strX), TyVar(strY)))))))
     }
+    
+    it("Should parse simple public data type definition") {
+      "PUBLIC DATA Product x y = Product x y".as.ast should parse(dataDef2Modul(DataDef(strProduct,
+        List(strX, strY),
+        List(ConstructorDef(strProduct, List(TyVar(strX), TyVar(strY)))), PublicModifier)))
+    }
 
     it("Should parse algebraic data type definition") {
       "DATA List x = Cons x (List x) | Nil".as.ast should parse(dataDef2Modul(DataDef(strList, List(strX),
@@ -411,6 +417,14 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
         parse(Program(
           List(),
           Map((strX) -> FunctionSig(FunTy(List(TyExpr(Syntax.TConVar("Int"), Nil), TyExpr(Syntax.TConVar("Int"), Nil))))),
+          Map.empty, Map.empty, Nil))
+    }
+    
+    it("Should parse simple public function signature") {
+      "PUBLIC FUN x : (Int) -> (Int)".as.ast should
+        parse(Program(
+          List(),
+          Map((strX) -> FunctionSig(FunTy(List(TyExpr(Syntax.TConVar("Int"), Nil), TyExpr(Syntax.TConVar("Int"), Nil))), PublicModifier)),
           Map.empty, Map.empty, Nil))
     }
 

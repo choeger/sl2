@@ -168,12 +168,15 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
       case (a, v ~ _ ~ js) => (v, FunctionDefExtern(js))
     }
 
-  private def dataDef: Parser[DataDef] =
-    dataLex ~> typeRegex ~ rep(varRegex) ~ funEqLex ~ rep1sep(conDef, dataSepLex) ^^@
-      { case (a, t ~ tvs ~ _ ~ cs) => DataDef(t, tvs, cs, a) }
+  private def dataDef: Parser[DataDef] = (
+      publicLex ~> dataLex ~> typeRegex ~ rep(varRegex) ~ funEqLex ~ rep1sep(conDef, dataSepLex) ^^@
+      { case (a, t ~ tvs ~ _ ~ cs) => DataDef(t, tvs, cs, PublicModifier, a) }
+    | dataLex ~> typeRegex ~ rep(varRegex) ~ funEqLex ~ rep1sep(conDef, dataSepLex) ^^@
+      { case (a, t ~ tvs ~ _ ~ cs) => DataDef(t, tvs, cs, DefaultModifier, a) })
 
-  private def functionSig: Parser[Tuple2[VarName, FunctionSig]] =
-    funLex ~> (varRegex|opRegex) ~ typeLex ~ parseType ^^@ { case (a, v ~ _ ~ t) => (v, FunctionSig(t, a)) }
+  private def functionSig: Parser[Tuple2[VarName, FunctionSig]] = (
+      publicLex ~> funLex ~> (varRegex|opRegex) ~ typeLex ~ parseType ^^@ { case (a, v ~ _ ~ t) => (v, FunctionSig(t, PublicModifier, a)) }
+    | funLex ~> (varRegex|opRegex) ~ typeLex ~ parseType ^^@ { case (a, v ~ _ ~ t) => (v, FunctionSig(t, DefaultModifier, a)) } )
 
   private def expr: Parser[Expr] = binop
   private def simpleexpr: Parser[Expr] = app

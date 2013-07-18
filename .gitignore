@@ -1,5 +1,6 @@
 *.class
 *.log
+*.backup
 
 # MacOS specific
 .DS_Store
@@ -23,3 +24,5 @@ project/plugins/project/
 .project
 .settings/
 
+#tex
+*.aux

@@ -31,17 +31,25 @@ package de.tuberlin.uebb.sl2.tests.specs
 import org.scalatest.matchers._
 import org.scalatest.FunSpec
 import de.tuberlin.uebb.sl2.modules._
+import de.tuberlin.uebb.sl2.specs.SLPrelude
+import java.io.File
 
 trait ContextAnalysisSpec extends FunSpec with ShouldMatchers {
 
-  this: ProgramChecker with Syntax with SLExpressions with Errors =>
-
+  this: ProgramChecker with Syntax with SLExpressions 
+  	with ModuleResolver with Errors with Configs =>
 
   def fail(err: Error) : Matcher[Either[Error, Unit]] = be(Left(err))
 
   def notFail: Matcher[Either[Error, Unit]] = be(Right())
-
-  def checking(program: AST): Either[Error, Unit] = for (_ <- checkProgram(program).right) yield ()
+  
+  def preludeImport = ResolvedUnqualifiedImport(
+        "", new File(""), new File(""),
+        Program(List(), Map(//TODO: Supply the prelude declarations that are used ind prgXX....
+            ), Map(), Map(), List()), null)
+  
+  def checking(program: AST): Either[Error, Unit] =
+    for (_ <- checkProgram(program, List(preludeImport)).right) yield ()
 
 
   describe("Context analysis: valid programs") {

@@ -44,17 +44,19 @@ import scala.io.Source
 trait SimpleDriver extends Driver {
   self: Parser with CodeGenerator with Syntax with ProgramChecker with JsSyntax
   	with Errors with SignatureSerializer with DebugOutput with Configs
-  	with ModuleResolver =>
+  	with ModuleResolver with ModuleNormalizer =>
 
   override def run(inpCfg: Config): Either[Error, String] = {
     val input = inpCfg.sources
     //TODO: implement for multiple files! at the moment only the first 
-	// will be handled.
-	
+	// will be handled
+    
 	// load input file
 	val file = new File(input.head)
 	val name = file.getName()
-	val config = inpCfg.copy(mainUnit = file)
+	// if no destination has been specified, the output goes to the folder of the input file.
+	val destination = if (inpCfg.destination == null) file.getParentFile() else inpCfg.destination
+	val config = inpCfg.copy(mainUnit = file, destination = destination)
 	val source = scala.io.Source.fromFile(file)
 	val code = source.mkString
 	source.close()
@@ -63,26 +65,22 @@ trait SimpleDriver extends Driver {
 	val ast = parseAst(code)
 	debugPrint(ast.toString());
 	
-    println("Type checking disabled right now")
 	for (
       mo <- ast.right;
       // check and load dependencies
       imports <- inferDependencies(mo, config).right;
       // type check the program
-      //_ <- checkProgram(mo).right;
-      
-      // and synthesize
-      res <- compile(mo.asInstanceOf[Program], name, imports, config).right
+      _ <- checkProgram(mo, normalizeModules(imports)).right;
+      // qualify references to unqualified module and synthesize
+      res <- compile(qualifyUnqualifiedModules(mo.asInstanceOf[Program], imports), name, imports, config).right
     ) yield res
   }
   
   def compile(program: Program, name: String, imports: List[ResolvedImport], config: Config): Either[Error, String] = {    
     val compiled = astToJs(program)
     
-    // TODO: include prelude_stub2.sl implicitly from signature and unqualified
-    
     // Create modules directory, if necessary
-    val modulesDir = new File(config.destination, "modules")
+    val modulesDir = config.destination;//new File(config.destination, "modules")
     if(!modulesDir.exists()) {
       if(modulesDir.mkdirs()) {
         println("Created directory "+modulesDir)
@@ -94,20 +92,17 @@ trait SimpleDriver extends Driver {
     }
     
     // copy .js and .signature of imported modules from classpath to modules/ directory
-    for(i <- imports.filter(_.isInstanceOf[ResolvedQualifiedImport])) {
-      val imp = i.asInstanceOf[ResolvedQualifiedImport]
-      println("imported "+imp.path+" as "+imp.name)
-      copy(Paths.get(new File(config.classpath, imp.path+".signature").toURI()),
-          Paths.get(modulesDir.getAbsolutePath(), imp.path+".signature"))
-      copy(Paths.get(new File(config.classpath, imp.path+".js").toURI()),
-          Paths.get(modulesDir.getAbsolutePath(), imp.path+".js"))
+    for(i <- imports.filter(_.isInstanceOf[ResolvedNamedImport])) {
+      val imp = i.asInstanceOf[ResolvedNamedImport]
+      copy(Paths.get(imp.file.toURI),   Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.signature"))
+      copy(Paths.get(imp.jsFile.toURI), Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.js"))
     }
     
-    val tarJs = new File(modulesDir, name.substring(0,name.length()-3) + ".js")
+    val tarJs = new File(modulesDir, name + ".js")
     println("compiling "+name+" to "+tarJs)
     // TODO: maybe CombinatorParser does not yet parse qualified imports correctly, like ParboiledParser did before?
     val moduleTemplate = Source.fromURL(getClass().getResource("/js/module_template.js")).getLines.mkString("\n")
-    val moduleWriter = new PrintWriter(new File(modulesDir, name.substring(0, name.length()-3) + ".js"))
+    val moduleWriter = new PrintWriter(new File(modulesDir, name + ".js"))
     for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
       val imp = i.asInstanceOf[ResolvedExternImport]
       val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
@@ -120,9 +115,10 @@ trait SimpleDriver extends Driver {
     moduleWriter.println("/***********************************/")
     moduleWriter.println("// generated from: "+name)
     moduleWriter.println("/***********************************/") 
-    val requires = imports.filter(_.isInstanceOf[ResolvedQualifiedImport]).map(
-        x => JsDef(x.asInstanceOf[ResolvedQualifiedImport].name,
-            JsFunctionCall(JsName("require"),JsStr("modules/"+x.asInstanceOf[ResolvedQualifiedImport].path))
+
+    val requires = imports.filter(_.isInstanceOf[ResolvedNamedImport]).map(
+        x => JsDef(x.asInstanceOf[ResolvedNamedImport].name,
+            JsFunctionCall(JsName("require"),JsStr(x.asInstanceOf[ResolvedNamedImport].path+".sl"))
         	))
     moduleWriter.write(moduleTemplate.replace("%%MODULE_BODY%%", JsPrettyPrinter.pretty(requires)+"\n\n"
         +JsPrettyPrinter.pretty(dataDefsToJs(program.dataDefs)
@@ -130,7 +126,7 @@ trait SimpleDriver extends Driver {
             & functionDefsToJs(program.functionDefs))));
     moduleWriter.close();
     
-    val signatureFile = new File(modulesDir, name.substring(0,name.length()-3) + ".signature")
+    val signatureFile = new File(modulesDir, name + ".signature")
     println("writing signature of "+name+" to "+signatureFile)
     val writerSig = new PrintWriter(signatureFile)
     writerSig.write(serialize(program))
@@ -152,9 +148,9 @@ trait SimpleDriver extends Driver {
 	    mainWriter.println("// generated from: "+name)
 	    mainWriter.println("/***********************************/") 
 	    val mainTemplate = Source.fromURL(getClass.getResource("/js/main_template.js")).getLines.mkString("\n")
-	    mainWriter.write(mainTemplate.replace("%%MODULE_PATHS_LIST%%", "\"modules/"+name.substring(0, name.length()-3)+"\""/*modulePathsList.txt*/)
-	    	.replace("%%MODULE_NAMES_LIST%%", "$$$"+name.substring(0, name.length()-3)/*moduleNamesList.txt*/)
-	    		.replace("%%MAIN%%", JsPrettyPrinter.pretty(/*compiled &*/ JsFunctionCall("$$$"+name.substring(0, name.length()-3)+".$main"))/*main*/))
+	    mainWriter.write(mainTemplate.replace("%%MODULE_PATHS_LIST%%", "\"modules/"+name+"\"")
+	    	.replace("%%MODULE_NAMES_LIST%%", "$$$"+name.substring(0, name.length()-3))
+	    		.replace("%%MAIN%%", JsPrettyPrinter.pretty(JsFunctionCall("$$$"+name.substring(0, name.length()-3)+".$main"))))
 	    mainWriter.close()
 	    
 	    // copy index.html, require.js to config.destination
@@ -168,6 +164,15 @@ trait SimpleDriver extends Driver {
   }
   
   def copy(from: Path, to: Path) = {
+    if(!to.getParent.toFile.exists) {
+    	if(!to.getParent.toFile.mkdirs) {
+    	  // TODO: return an error
+    	  println("Could not create directory: "+to.getParent)
+    	}
+    } else if (to.getParent.toFile.exists && !to.getParent.toFile.isDirectory) {
+    	// TODO: return an error
+      println("Not a directory: "+to.getParent)
+    }
     val target = Files.copy(from, to, StandardCopyOption.REPLACE_EXISTING)
     println("copied "+from+" to "+to);
     target
@@ -188,7 +193,7 @@ trait SimpleDriver extends Driver {
 
   def mergeMap[A, B](a: Map[A, B], b: Map[A, B]): Either[Error, Map[A, B]] =
     {
-      val intersect = a.keySet & a.keySet
+      val intersect = a.keySet & b.keySet
       if (intersect.isEmpty)
         Right(a ++ b)
       else

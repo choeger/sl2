@@ -62,6 +62,10 @@ object Syntax {
       this.nameToString() == that.asInstanceOf[QualifiedVar].nameToString()
     }
     
+    override def hashCode() = {
+      this.module.hashCode() + this.nameToString().hashCode()
+    }
+    
     override def toString() = {
       if (module == LocalMod) {
         nameToString
@@ -164,6 +168,11 @@ trait Syntax {
 
   abstract class Import(val path: String, val attribute: Attribute = EmptyAttribute)
 
+  case class UnqualifiedImport(
+      override val path: String,
+      override val attribute: Attribute = EmptyAttribute)
+    extends Import(path, attribute)
+  
   case class QualifiedImport(
       override val path: String,
       val name: ModuleVar,
@@ -176,10 +185,17 @@ trait Syntax {
       override val attribute: Attribute = EmptyAttribute)
     extends Import(path, attribute)
 
+  sealed abstract class DeclarationModifier
+  case object DefaultModifier extends DeclarationModifier
+  case object PublicModifier extends DeclarationModifier
+  
   /**
    * Type signature for top-level function definitions.
    */
-  case class FunctionSig(typ: ASTType, attribute: Attribute = EmptyAttribute)
+  case class FunctionSig(
+      typ: ASTType,
+      modifier: DeclarationModifier = DefaultModifier,
+      attribute: Attribute = EmptyAttribute)
   
   /**
    *  Top-level function definitions.
@@ -215,6 +231,7 @@ trait Syntax {
       ide: TConVarName,
       tvars: List[TypeVarName],
       constructors: List[ConstructorDef],
+      modifier: DeclarationModifier = DefaultModifier,
       attribute: Attribute = EmptyAttribute)
 
   /**
@@ -356,7 +373,7 @@ trait Syntax {
         doc = doc <@> showDataDef(d)
 
       for ((name, s) <- m.signatures)
-        doc = doc <@> funLex <+> name <+> typeLex <+> showType(s.typ) <> line
+        doc = doc <@> showModifier(s.modifier) <+> funLex <+> name <+> typeLex <+> showType(s.typ) <> line
 
       for (
         (name, d) <- m.functionDefsExtern
@@ -381,12 +398,17 @@ trait Syntax {
     }
 
     def showDataDef(d: DataDef): Doc = d match {
-      case DataDef(name, Nil, cons, _) => {
-        dataLex <+> d.ide <+> funEqLex <+> catList(d.constructors map showConstructor, space <> dataSepLex) <> line
+      case DataDef(name, Nil, cons, modifier, _) => {
+        showModifier(modifier) <+> dataLex <+> d.ide <+> funEqLex <+> catList(d.constructors map showConstructor, space <> dataSepLex) <> line
       }
-      case DataDef(name, vars, cons, _) => {
-        dataLex <+> d.ide <+> hsep(d.tvars.map(value)) <+> funEqLex <+> catList(d.constructors map showConstructor, space <> dataSepLex) <> line
+      case DataDef(name, vars, cons, modifier, _) => {
+        showModifier(modifier) <+> dataLex <+> d.ide <+> hsep(d.tvars.map(value)) <+> funEqLex <+> catList(d.constructors map showConstructor, space <> dataSepLex) <> line
       }
+    }
+    
+    def showModifier(m: DeclarationModifier): Doc = m match {
+      case DefaultModifier => empty
+      case PublicModifier => publicLex
     }
 
     def showConstructor(c: ConstructorDef) = c.constructor <+> hsep(c.types.map(showType))
@@ -423,7 +445,12 @@ trait Syntax {
     def showAlt(a: Alternative): Doc = ofLex <+> showPattern(a.pattern) <+> thenLex <+> nest(showExpr(a.expr))
     def showPattern(p: Pattern): Doc = p match {
       case PatternVar(v, a) => v
-      case PatternExpr(c, ps, a) => text(c.toString) <+> catList(ps.map(showPattern), "")
+      case PatternExpr(c, ps, a) => 
+        if (ps.isEmpty) {
+          text(c.toString)
+        } else {
+          parens(text(c.toString) <+> catList(ps.map(showPattern), ""))
+        }
     }
 
     def catList(l: List[Doc], sep: Doc): Doc = (group(nest(lsep(l, sep))))

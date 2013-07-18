@@ -1,5 +1,5 @@
 /***********************************/
-// included from: C:\Users\monochromata\git\sl2\src\main\resources\_prelude.js
+// included from: /home/ben/Dokumente/compilerbaupraxis/sl2/src/main/sl/lib/_prelude.js
 /***********************************/
 /*
  * This basic module is necessary as an import to every SL
@@ -143,26 +143,12 @@ function _bindnr(l) {
 }
 /***********************************/
 /***********************************/
-// generated from: prelude_stub2.sl
+// generated from: prelude.sl
 /***********************************/
 define(function(require, exports, module) {
     
 
 ;
-;
-exports.$Nil = 0;
-var $Nil = exports.$Nil;
-exports._Cons = 1;
-var _Cons = exports._Cons;
-function $Cons(_arg0)
-{
-  function f(_arg1)
-  {
-    return {_cid : 1, _var0 : _arg0, _var1 : _arg1
-    }
-  };
-  return f
-};
 var $True = true;
 var $False = false;
 ;
@@ -174,6 +160,7 @@ function $ExternalDOM(_arg0)
   };
   return f
 };
+exports.$ExternalDOM = $ExternalDOM;
 ;
 exports.$ExternalString = 0;
 var $ExternalString = exports.$ExternalString;
@@ -189,40 +176,40 @@ var $ExternalReal = exports.$ExternalReal;
 ;
 exports.$ExternalInt = 0;
 var $ExternalInt = exports.$ExternalInt;
-exports.$t =  _mul ;
+exports.$t = _mul;
 var $t = exports.$t;
-exports.$l$e =  _leq ;
+exports.$l$e = _leq;
 var $l$e = exports.$l$e;
-exports.$l =  _lesser ;
+exports.$l = _lesser;
 var $l = exports.$l;
-exports.$g$e =  _geq ;
+exports.$g$e = _geq;
 var $g$e = exports.$g$e;
-exports.$yield =  _yield ;
+exports.$yield = _yield;
 var $yield = exports.$yield;
-exports.$m =  _sub ;
+exports.$m = _sub;
 var $m = exports.$m;
-exports.$a$e =  _bind ;
+exports.$a$e = _bind;
 var $a$e = exports.$a$e;
-exports.$p$p =  _adds ;
+exports.$p$p = _adds;
 var $p$p = exports.$p$p;
-exports.$e$e =  _eq ;
+exports.$e$e = _eq;
 var $e$e = exports.$e$e;
-exports.$p =  _add ;
+exports.$p = _add;
 var $p = exports.$p;
-exports.$d =  _div ;
+exports.$d = _div;
 var $d = exports.$d;
-exports.$g =  _greater ;
+exports.$g = _greater;
 var $g = exports.$g;
-exports.$not = function (_arg0)
+function $not(_arg0)
 {
-  if((_arg0 === $True))
+  if((_arg0 === True))
   {
     var _return = $False;
     return _return
   }
   else 
   {
-    if((_arg0 === $False))
+    if((_arg0 === False))
     {
       var _return = $True;
       return _return
@@ -232,5 +219,64 @@ exports.$not = function (_arg0)
       throw "Pattern not exhaustive!"
     }
   }
-}
+};
+exports.$not = $not;
+function $a(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && true))
+    {
+      var $x = _arg0;
+      var $y = _arg1;
+      var $25 = $a$e;
+      var $24 = $x;
+      var $23 = $25($24);
+      var $21 = function (_arg0)
+      {
+        if(true)
+        {
+          var $r = _arg0;
+          var $22 = $y
+        }
+        else 
+        {
+          throw "Pattern for lambda expression did not match arguments"
+        };
+        return $22
+      };
+      var _return = $23($21);
+      return _return
+    }
+    else 
+    {
+      throw "Pattern not exhaustive!"
+    }
+  }
+};
+exports.$a = $a;
+function $d$e(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && true))
+    {
+      var $x = _arg0;
+      var $y = _arg1;
+      var $31 = $not;
+      var $30 = $e$e;
+      var $29 = $x;
+      var $28 = $30($29);
+      var $27 = $y;
+      var $26 = $28($27);
+      var _return = $31($26);
+      return _return
+    }
+    else 
+    {
+      throw "Pattern not exhaustive!"
+    }
+  }
+};
+exports.$d$e = $d$e
 });

@@ -76,7 +76,7 @@ trait SyntaxTraversal {
         Program(map(f, imports), map(f, sigs), map(f, fund), map(f, functionDefsExtern), map(f, dataDefs.map(map(f, _))), map(f, a))
       }
 
-      case FunctionSig(typ, a) => FunctionSig(map(f, typ), map(f, a))
+      case FunctionSig(typ, modi, a) => FunctionSig(map(f, typ), map(f, modi), map(f, a))
 
       case FunctionDef(patterns, expr, a) => FunctionDef(map(f, patterns.map(map(f, _))), map(f, expr), map(f, a))
 
@@ -84,7 +84,7 @@ trait SyntaxTraversal {
 
       case PatternExpr(con, patExprs, a) => PatternExpr(map(f, con), map(f, patExprs.map(map(f, _))), map(f, a))
 
-      case DataDef(ide, tvars, constructors, a) => DataDef(map(f, ide), map(f, tvars.map(map(f, _))), map(f, constructors.map(map(f, _))), map(f, a))
+      case DataDef(ide, tvars, constructors, modi, a) => DataDef(map(f, ide), map(f, tvars.map(map(f, _))), map(f, constructors.map(map(f, _))), map(f, modi), map(f, a))
 
       case ConstructorDef(constructor, types, a) => ConstructorDef(map(f, constructor), map(f, types.map(map(f, _))), map(f, a))
 

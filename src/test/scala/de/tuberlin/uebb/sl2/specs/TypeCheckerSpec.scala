@@ -31,32 +31,13 @@ package de.tuberlin.uebb.sl2.tests.specs
 import org.scalatest.matchers._
 import org.scalatest.FunSpec
 import de.tuberlin.uebb.sl2.modules._
+import de.tuberlin.uebb.sl2.specs.SLPrelude
 
-trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
+trait TypeCheckerSpec extends FunSpec with ShouldMatchers with SLPrelude {
 
   this: TypeChecker with Context with Type with NameSupply with EnrichedLambdaCalculus with ELCExpressions with Errors =>
 
   def testedImplementationName(): String
-
-  /*
-   * Prelude and built-in functions
-   */
-  val int = BaseType.Integer
-  val real = BaseType.Real
-  val char = BaseType.Character
-  val bool = BaseType.Bool
-  val α = TypeVariable("alpha")
-  val β = TypeVariable("beta")
-  val list = (t: Type) => TypeConstructor(Syntax.TConVar("List"), List(t))
-  val dom = (t: Type) => TypeConstructor(Syntax.TConVar("DOM"), List(t))
-
-  val initialContext: Context = {
-    Map(Syntax.ConVar("True") -> bool,
-      Syntax.ConVar("False") -> bool,
-      Syntax.ConVar("Nil") -> TypeScheme(List(α), list(α)),
-      Syntax.ConVar("Cons") -> TypeScheme(List(α), α --> (list(α) --> list(α))),
-      Syntax.ConVar("Pair") -> TypeScheme(List(α, β), α --> (β --> TypeConstructor(Syntax.TConVar("Pair"), List(α, β)))))
-  }
 
   /*
    * Custom Matcher handling the Either values returned by the 'checkType' function.
@@ -100,7 +81,7 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
     }
 
     it("Should type check JavaScript quote without type ascription") {
-      EJavaScript("", None) should haveType(BaseType.DomVoid)
+      EJavaScript("", None) should haveType(BaseType.Dom(BaseType.Void))
     }
 
     it("Should type check JavaScript quote with type ascription") {
@@ -134,10 +115,6 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
       ((eVar("+") :@ EInt(1)) :@ EInt(1)) should haveType(int)
     }
 
-    it("Should type check application of built-in function '+r'") {
-      ((eVar("+r") :@ EReal(1.0)) :@ EReal(1.0)) should haveType(real)
-    }
-
     it("Should type check application of built-in function '=='") {
       ((eVar("==") :@ EInt(1)) :@ EInt(1)) should haveType(bool)
     }
@@ -153,7 +130,7 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
     }
 
     it("Should type check application of monadic bind '(yield 5) & {| |}'") {
-      ((eVar("&") :@ (eVar("yield") :@ EInt(5))) :@ EJavaScript("", None)) should haveType(BaseType.DomVoid)
+      ((eVar("&") :@ (eVar("yield") :@ EInt(5))) :@ EJavaScript("", None)) should haveType(BaseType.Dom(BaseType.Void))
     }
   }
 
@@ -208,5 +185,4 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
       ELetRec(List(mapDef, appendDef, evenDef, lengthDef, oddDef, sumDef), eVar("odd") :@ EInt(42)) should haveType(bool)
     }
   }
-
 }

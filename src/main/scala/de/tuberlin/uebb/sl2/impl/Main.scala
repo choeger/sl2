@@ -60,7 +60,9 @@ object Main
     with SimpleDriver
     with DebugOutput
     with SignatureJsonSerializer
-    with ModuleResolverImpl {
+    with ModuleResolverImpl
+    with ModuleNormalizerImpl
+    with ModuleContextImpl {
 
   val usage = """Usage:B <sl> [-d destination directory] [-cp <class-path-directory>] source file(s)"""
 
@@ -87,5 +89,5 @@ object Main
     case Nil => defaultConfig
   }
   
-  val defaultConfig: Config = Config(List(), new File(""), new File(""), new File(""))
+  val defaultConfig: Config = Config(List(), new File(""), new File(""), null)
 }

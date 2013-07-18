@@ -27,8 +27,72 @@
 -- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 -- OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
--- Standard prelude of SL
+-- This is a stub for the predefined types and methods of SL, so that we
+-- can create the prelude by a combination of compilation and hand coding.
 
-DATA Bool = True | False
+IMPORT EXTERN "_prelude" 
 
-DATA List a = Nil | Cons a (List a)
+-- Base Types
+
+DATA Int = ExternalInt
+DATA Real = ExternalReal
+DATA Char = ExternalChar
+DATA Void = ExternalVoid
+DATA String = ExternalString
+DATA DOM a = ExternalDOM a
+
+-- Booleans
+
+PUBLIC DATA Bool = True | False
+
+PUBLIC FUN not : Bool -> Bool
+DEF not True = False
+DEF not False = True
+
+-- String functions
+
+PUBLIC FUN ++ : (String -> String -> String)
+DEF EXTERN ++ = {| _adds |}
+
+-- Monad functions
+
+PUBLIC FUN &= : (DOM a) -> (a -> (DOM b)) -> (DOM b)
+DEF EXTERN &= = {| _bind |}
+
+PUBLIC FUN yield : a -> (DOM a)
+DEF EXTERN yield =  {| _yield |}
+
+PUBLIC FUN & : (DOM a) -> (DOM b) -> (DOM b)
+DEF x & y = (x &= (\ r . y))
+
+-- Arithmetics on Integers
+
+PUBLIC FUN + : Int -> Int -> Int
+DEF EXTERN + = {| _add |}
+
+PUBLIC FUN - : Int -> Int -> Int
+DEF EXTERN - = {| _sub |}
+
+PUBLIC FUN * : Int -> Int -> Int
+DEF EXTERN * = {| _mul |}
+
+PUBLIC FUN / : Int -> Int -> Int
+DEF EXTERN / = {| _div |}
+
+PUBLIC FUN < : Int -> Int -> Bool
+DEF EXTERN < = {| _lesser |}
+
+PUBLIC FUN <= : Int -> Int -> Bool
+DEF EXTERN <= = {| _leq |}
+
+PUBLIC FUN == : Int -> Int -> Bool
+DEF EXTERN == = {| _eq |}
+
+PUBLIC FUN /= : Int -> Int -> Bool
+DEF x /= y = not (x == y)
+
+PUBLIC FUN >= : Int -> Int -> Bool
+DEF EXTERN >= = {| _geq |}
+
+PUBLIC FUN > : Int -> Int -> Bool
+DEF EXTERN > = {| _greater |}

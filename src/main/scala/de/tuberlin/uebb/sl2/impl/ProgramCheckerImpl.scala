@@ -37,7 +37,7 @@ import de.tuberlin.uebb.sl2.modules._
  */
 trait ProgramCheckerImpl extends ProgramChecker {
 
-  this: Lexic with Syntax with Context with Type with EnrichedLambdaCalculus with DTChecker with FDChecker with LetRecSplitter with TypeChecker with Errors =>
+  this: Lexic with Syntax with Context with ModuleContext with ModuleResolver with Type with EnrichedLambdaCalculus with DTChecker with FDChecker with LetRecSplitter with TypeChecker with Errors =>
 
   /**
    * Context analysis, performing the following checks on a program:
@@ -45,13 +45,15 @@ trait ProgramCheckerImpl extends ProgramChecker {
    * $ - Type checking of function definitions,
    * $ - Checking the type of a program's main function.
    */
-  def checkProgram(in: AST): Either[Error, Unit] = {
-    for (
+  def checkProgram(in: AST, modules : List[ResolvedImport]): Either[Error, Unit] = {
+    val (moduleContext, moduleSigs) = buildModuleContext(modules);
+
+	for (
       initialContext <- checkDataTypes(in).right;
-      (funSigs, funDefs) <- checkFunctions(in).right;
+      (funSigs, funDefs, externContext) <- checkFunctions(in).right;
       elc <- splitLetRecs(Set(), programToELC(funSigs, funDefs)).right;
       mainType <- {
-        checkTypes(initialContext, elc).right
+        checkTypes(moduleContext ++ initialContext ++ externContext, elc).right
       };
       _ <- checkMain(funSigs, mainType).right
     ) yield ()
@@ -62,7 +64,7 @@ trait ProgramCheckerImpl extends ProgramChecker {
    */
   def checkMain(signatures: Map[Var, FunctionSig], inferredType: Type): Either[Error, Unit] = {
 
-    val checkInferredType = if (inferredType == BaseType.DomVoid) {
+    val checkInferredType = if (inferredType == BaseType.Dom(BaseType.Void)) {
       Right()
     } else {
       Left(GenericError("Function `main' must be of type `DOM Void', but found: " + quote(inferredType.toString)))
@@ -70,7 +72,7 @@ trait ProgramCheckerImpl extends ProgramChecker {
 
     val checkMainSignature = signatures.get(Syntax.Var("main")) match {
       case None => Right()
-      case Some(FunctionSig(signature, attr)) => {
+      case Some(FunctionSig(signature, modi, attr)) => {
         val mainSignature = astToType(signature)
         if (mainSignature == inferredType) Right()
         else Left(AttributedError("Could not match declared type " + quote(mainSignature.toString) + " against inferred type " + quote(inferredType.toString) + " in `main'", attr))
