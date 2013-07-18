@@ -41,7 +41,7 @@ function $appendChild(_arg0)
   }
 };
 exports.$appendChild = $appendChild;
-function $create(_arg0)
+function $createButton(_arg0)
 {
   return function (_arg1)
   {
@@ -52,42 +52,42 @@ function $create(_arg0)
         var $doc = _arg0;
         var $text = _arg1;
         var $callback = _arg2;
-        var $43 = $$prelude.$a$e;
-        var $42 = function ()
+        var $65 = $$prelude.$a$e;
+        var $64 = function ()
         {
           return $doc.createElement('button')
         };
-        var $41 = $43($42);
-        var $29 = function (_arg0)
+        var $63 = $65($64);
+        var $51 = function (_arg0)
         {
           if(true)
           {
             var $button = _arg0;
-            var $40 = $$prelude.$a;
-            var $39 = $$prelude.$a;
-            var $38 = function ()
+            var $62 = $$prelude.$a;
+            var $61 = $$prelude.$a;
+            var $60 = function ()
             {
               return $button.innerText = $text
             };
-            var $37 = $39($38);
-            var $36 = function ()
+            var $59 = $61($60);
+            var $58 = function ()
             {
               return $button.onclick = $callback
             };
-            var $35 = $37($36);
-            var $34 = $40($35);
-            var $33 = $$prelude.$yield;
-            var $32 = $button;
-            var $31 = $33($32);
-            var $30 = $34($31)
+            var $57 = $59($58);
+            var $56 = $62($57);
+            var $55 = $$prelude.$yield;
+            var $54 = $button;
+            var $53 = $55($54);
+            var $52 = $56($53)
           }
           else 
           {
             throw "Pattern for lambda expression did not match arguments"
           };
-          return $30
+          return $52
         };
-        var _return = $41($29);
+        var _return = $63($51);
         return _return
       }
       else 
@@ -97,5 +97,19 @@ function $create(_arg0)
     }
   }
 };
-exports.$create = $create
+exports.$createButton = $createButton;
+exports.$hello = function ()
+{
+  var $73 = $$prelude.$a;
+  var $72 = $$prelude.$yield;
+  var $71 = 23;
+  var $70 = $72($71);
+  var $69 = $73($70);
+  var $68 = $$prelude.$yield;
+  var $67 = "S";
+  var $66 = $68($67);
+  var $hello = $69($66);
+  return $hello
+}();
+var $hello = exports.$hello
 });

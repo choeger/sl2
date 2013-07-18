@@ -39,7 +39,7 @@ trait ModuleContextImpl extends ModuleContext {
 	
         context ++= ui.signature.signatures.map(
           {case (funName, sig) => (Syntax.Var(funName).asInstanceOf[VarFirstClass] ->
-          							astToType(sig.typ))})
+          							astToType(sig.typ).generalize(Map()))})
 	    
 	    context
     case ResolvedQualifiedImport(name, _, _, _, prog, _) =>
@@ -65,7 +65,7 @@ trait ModuleContextImpl extends ModuleContext {
         
         context ++= prog.signatures.map(
           {case (funName, sig) => (Syntax.Var(funName, name).asInstanceOf[VarFirstClass] ->
-          							astToType(sig.typ))})
+          							astToType(sig.typ).generalize(Map()))})
 
         context
     case _ : ResolvedExternImport => Map()
