@@ -37,7 +37,8 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers with Parboiled
   def equal(expected : AST) = SignatureMatcher(expected)
 
   case class IndirectSignatureMatcher() extends Matcher[ParseSerializeDeserializeResult] {
-    def apply(delivered : ParseSerializeDeserializeResult) = SignatureMatcher(delivered.parsed).apply(delivered.deserialized)
+    def apply(delivered : ParseSerializeDeserializeResult) =
+      SignatureMatcher(delivered.parsed).apply(delivered.deserialized)
   }
   
   // This matcher basically only matches the strings of the signature's identifiers.
@@ -50,7 +51,6 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers with Parboiled
   case class SignatureMatcher(expected : AST) extends Matcher[AST] {
     def apply(delivered : AST) = {
       var result = true
-      
       // TODO compare import
       expected match {
         case Program(parsedImports, parsedSig, _, _, parsedData, _) => delivered match {
@@ -177,13 +177,16 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers with Parboiled
       "IMPORT \"path\" AS M".parsedSerializedAndDeserialized should equalParsed()
     }
     it("Should serialize and deserialize one function signature") {
-      "FUN f : (X a) -> y".parsedSerializedAndDeserialized should equalParsed()
+      "PUBLIC FUN f : (X a) -> y".parsedSerializedAndDeserialized should equalParsed()
     }
     it("Should serialize and deserialize imported types") {
-      "FUN f : M.X -> N.Y".parsedSerializedAndDeserialized should equalParsed()
+      "PUBLIC FUN f : M.X -> N.Y".parsedSerializedAndDeserialized should equalParsed()
     }
-    it("Should serialize and deserialize one data definition") {
-      "DATA Type a b c = Cons1 a b | Cons2 c".parsedSerializedAndDeserialized should equalParsed()
+    it("Should not serialize private definitions.") {
+      "FUN f : M.X -> N.Y".parsedSerializedAndDeserialized.deserialized should equal("".parsed)
+    }
+    it("Should serialize and deserialize one public data definition") {
+      "PUBLIC DATA Type a b c = Cons1 a b | Cons2 c".parsedSerializedAndDeserialized should equalParsed()
     }
   }
   
