@@ -229,10 +229,18 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
     (a, t) => TyVar(t, a)
   }
   private def typeExpr: Parser[TyExpr] =
-    (unqualTCon|qualTCon) ~ rep(parseType) ^^@ {
+    typeCon ~ rep(baseType) ^^@ {
       case (a, t ~ ts) => TyExpr(t, ts, a)
     }
   private def baseType: Parser[ASTType] = typeVar | typeExpr | "(" ~> (parseType) <~ ")"
+
+  private def typeArg: Parser[ASTType] = simpleType | typeVar | "(" ~> parseType <~ ")"
+
+  private def simpleType: Parser[ASTType] = typeCon ^^@ {
+    (a, t) => TyExpr(t, List(), a)
+  }
+
+  private def typeCon: Parser[Syntax.TConVar] = qualTCon | unqualTCon
 
   private def qualTCon: Parser[Syntax.TConVar] = moduleRegex ~ "." ~ typeRegex ^^ {
     case m~_~t => Syntax.TConVar(t, m)
