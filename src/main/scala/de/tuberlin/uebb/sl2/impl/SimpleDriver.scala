@@ -148,7 +148,7 @@ trait SimpleDriver extends Driver {
 	    mainWriter.println("// generated from: "+name)
 	    mainWriter.println("/***********************************/") 
 	    val mainTemplate = Source.fromURL(getClass.getResource("/js/main_template.js")).getLines.mkString("\n")
-	    mainWriter.write(mainTemplate.replace("%%MODULE_PATHS_LIST%%", "\"modules/"+name+"\"")
+	    mainWriter.write(mainTemplate.replace("%%MODULE_PATHS_LIST%%", "\""+name+"\"")
 	    	.replace("%%MODULE_NAMES_LIST%%", "$$$"+name.substring(0, name.length()-3))
 	    		.replace("%%MAIN%%", JsPrettyPrinter.pretty(JsFunctionCall("$$$"+name.substring(0, name.length()-3)+".$main"))))
 	    mainWriter.close()
