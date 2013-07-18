@@ -153,7 +153,10 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
       (rqi.path -> rqi.name)
     }).toMap
     // merge the two maps
-    unqualifiedPaths ++ qualifiedPaths.map{ case (k,v) => k -> (v + unqualifiedPaths.getOrElse(k,0)) }
+    //TODO: was macht das? hier stand eben noch unqualifiedPaths.getOrElse(k,0), woduch selbst
+    // die typen von konstruktoren und funktionen, die direkt aus demselben modul kamen clashten
+    // -- ben 2013/07/13
+    unqualifiedPaths ++ qualifiedPaths.map{ case (k,v) => k -> (v + unqualifiedPaths.getOrElse(k,"")) }
   }
   
   /**

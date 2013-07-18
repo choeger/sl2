@@ -242,7 +242,7 @@ trait CodeGenerator {
   }
   
   def escapeCons(cons: ConVar, escFun: (String=>String)) = cons match {
-    case Syntax.ConVar(ide, Syntax.LocalMod) => JsName(ide)
+    case Syntax.ConVar(ide, Syntax.LocalMod) => JsName(escFun(ide))
     case Syntax.ConVar(ide, module) => JsQualifiedName(JsName(module), JsName(escFun(ide)))
   }
   
