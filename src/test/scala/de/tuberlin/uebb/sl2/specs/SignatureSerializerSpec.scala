@@ -4,9 +4,10 @@ import org.scalatest.matchers._
 import org.scalatest.FunSpec
 import scala.language.implicitConversions
 import de.tuberlin.uebb.sl2.modules._
+import de.tuberlin.uebb.sl2.impl.ParboiledParser
 
-trait SignatureSerializerSpec extends FunSpec with ShouldMatchers {
-  this : SignatureSerializer with Syntax with Parser with Errors =>
+trait SignatureSerializerSpec extends FunSpec with ShouldMatchers with ParboiledParser {
+  this : SignatureSerializer with Syntax with Errors =>
 
   def testedImplementationName(): String
   
