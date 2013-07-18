@@ -116,9 +116,9 @@ trait SyntaxTraversal {
 
       case JavaScript(j, s, a) => JavaScript(map(f, j), map(f, s), map(f, a))
 
-      case Alternative(pattern, expr, a) => x
+      case Alternative(pattern, expr, a) => Alternative(map(f, pattern), map(f, expr), map(f, a))
 
-      case LetDef(lhs, rhs, a) => x
+      case LetDef(lhs, rhs, a) => LetDef(map(f, lhs), map(f, rhs), map(f, a))
 
       case a => a
     }
