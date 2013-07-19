@@ -92,14 +92,114 @@
 
 \TODO{Sebastian: Beispiele, Schwierigkeiten, Designentscheidungen}
 
+\TODO{Aufruf des Compilers, aus binary und in sbt, durchgehendes Beispiel}
+
+Die Ausführung des generierten JavaScript-Codes wird in
+node.js\footnote{http://nodejs.org/ - getestet mit Version 0.10.10
+(\TODO{aktualisieren auf 0.10.13})},
+Firefox\footnote{\TODO{URL, zum Testen benutzte Version und OS}},
+Chrome\footnote{\TODO{URL, zum Testen benutzte Version und OS}} und
+Internet Explorer\footnote{\TODO{URL, zum Testen benutzte Version und OS}}
+unterstützt.
+
+Bei Aufruf des Compilers mit
+\begin{lstlisting}
+$> <PROGRAMM-NAME> -d <outputDirectory> -cp <classpathDirectory>
+[ -sourcepath <sourceDirectory> ] <moduleFile>
+\end{lstlisting}
+
+werden aus dem \texttt{<classpathDirectory>} die Signatur-Dateien
+bereits kompilierter Module geladen, sowie das angegebene
+\texttt{<moduleFile>} sowie alle von diesem transitiv verwendeten Module,
+die noch nicht kompiliert im \texttt{<outputDirectory>} vorhanden sind
+bzw. deren \TODO{keine Metonymie!} Modifikationsdatum im
+\texttt{<outputDirectory>} vor dem Modifikationdatum der
+SL-Moduldatei im \texttt{<sourceDirectory>} liegt, kompiliert. Dabei
+werden Signaturen (siehe Abschnitt \ref{sec:compSig}), sowie
+JavaScript-Dateien (siehe Abschnitt \ref{sec:compBuild}) für alle
+kompilierten Module erstellt, wobei require.js (siehe Abschnitt
+\ref{sec:compReq}) verwendet wird, um die JavaScript-Dateien der
+Module zu laden. Sofern das beim Aufruf des Compilers angegebene
+\texttt{<moduleFile>} eine Funktion namens
+\texttt{main} deklariert, werden für dieses noch eine
+\texttt{main.js}-Datei und eine \texttt{index.html}-Datei erstellt,
+die den Aufruf der main-Funktion in node.js und im Browser erlauben
+(siehe Abschnitt \ref{sec:compBuild}).
+
+\TODO{Ausführung des Codes in (unterstützem) Browser und node.js,
+Voraussetzungen dafür}
+
 \subsection{Signaturen}
+\label{sec:compSig}
 \TODO{Das ist wohl eher für Rico...}
 
 \subsection{require.js}
+\label{sec:compReq}
+
+Um die Module zur Laufzeit in JavaScript zu laden, wurde
+require.js\footnote{http://requirejs.org/ v. 2.1.6 \TODO{updaten auf 2.1.8}}
+statt CommonJS\footnote{http://www.commonjs.org/} ausgewählt, da es im
+Gegensatz zum Modulsystem von node.js auch im Browser verfügbar ist,
+jedoch auch in node.js genutzt werden kann\TODO{naja, das stimmt noch nicht ganz}.
+
+In node.js stehen zwei Wege zur Verfügung, um Abhängigkeiten zwischen
+Modulen zu deklarieren und zur Laufzeit aufzulösen, siehe Listings
+\ref{lst:req1} und \ref{lst:req2}. \TODO{AMD besprechen?} Die
+Moduldefinition mit einem Array von Abhängigkeiten (siehe Beispiel im
+Listing \ref{lst:req1}) erlaubt den Zugriff auf verwendete Module,
+können jedoch keine zirkulären statischen Abhängigkeiten auflösen, da
+für die Erstellung der gegenseitig abhängigen Module jeweils das
+andere Modul-Objekt als Parameter bei Erstellung des Moduls übergeben
+werden muss. Dieses Problem wird in require.js mittels
+Export-Objekten gelöst, die beim Erstellen eines Moduls übergeben und
+zur Laufzeit verwendet werden (siehe Beispiel im Listing
+\ref{lst:req2}). Die Moduldefinition mit Export-Objekten wurde in SL2
+gewählt, um später statische zirkuläre Abhängigkeiten auflösen zu
+können, auch wenn die bisherige Implementierung des Compilers dies
+nicht erlaubt.
+
+\begin{lstlisting}{caption={Moduldefinition mit Abhängigkeits-Array},label=lst:req1}
+define(["modules/B"], function(b) {
+  return {
+    "a" : function() { return "A.a"; },
+    "b" : function() { return b.b(); }
+  };
+});
+\end{lstlisting}
+
+\begin{lstlisting}{caption={Moduldefinition mit Export-Objekt},label=lst:req2}
+define(function(require, exports, module) {
+  var b = require("modules/B");
+  exports.a = function() { return "A.a"; };
+  exports.b = function() { return b.b(); };
+});
+\end{lstlisting}
+
+\TODO{Kompilierung der Module}
+
+\TODO{Kompilierung der main-Funktion}
+
+\TODO{Designentscheidung für require.js-Verwendung, die theoretisch
+auch statisch zirkuläre Abhängigkeiten auflösen kann}
+\TODO{require.js wird mitgeliefert, sodass es für Ausführung im
+Browser nicht installiert werden muss}
+\TODO{Installation von requirejs in node.js -- im lokalen Verzeichnis
+oder global? in Systemvoraussetzungen für SL2 beschreiben}
 
 \subsection{Build-Prozess}
+\label{sec:compBuild}
 
-\subsection{Externe Definitionenn}
+\TODO{implizit unqualifiziert importieres prelude aus dem
+resources-Verzeichnis der SL2-Distribution, Zugriffe darauf werden
+nach dem Typcheck qualifiziert mit /lib/prelude -- bzw. mit /lib/prelude}
+
+\TODO{Übersetzung der / (oder aller nicht-zugelassenen Zeichen) zu \$
+in JavaScript?}
+
+\TODO{Ort, an dem die Templates, prelude, und require.js (im Distributable)
+gespeichert sind}
+
+\subsection{Externe Definitionen}
 \TODO{Das ist wohl eher für Ben...}
 
 \section{Prelude und Bibliotheken}
