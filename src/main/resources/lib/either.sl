@@ -22,5 +22,6 @@ DEF mapR f (Right b) = Right (f b)
 PUBLIC FUN left : Either a b -> Option.Option a
 DEF left e = fold Option.Some (\b.Option.None) e
 
+-- why does this code pass the type check? (actually it would have to be Option.Option b, i think) 
 PUBLIC FUN right : Either a b -> Option.Option a
 DEF right e = fold (\a.Option.None) Option.Some e
