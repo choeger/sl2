@@ -1,5 +1,5 @@
 /***********************************/
-// generated from: HelloWorldPrelude.sl
+// generated from: HelloWorld-Error.sl
 /***********************************/
 if (typeof window === 'undefined') {
     /* in node.js */
@@ -12,12 +12,12 @@ if (typeof window === 'undefined') {
         nodeRequire: require
     });
     
-    requirejs(["modules/HelloWorldPrelude.sl"], function($$$HelloWorldPrelude) {
-        $$$HelloWorldPrelude.$main()
+    requirejs(["HelloWorld-Error.sl"], function($$$HelloWorld-Error) {
+        $$$HelloWorld-Error.$main()
     });
 } else {
     /* in browsers*/ 
-    require(["modules/HelloWorldPrelude.sl"], function($$$HelloWorldPrelude) {
-        $$$HelloWorldPrelude.$main()
+    require(["HelloWorld-Error.sl"], function($$$HelloWorld-Error) {
+        $$$HelloWorld-Error.$main()
     });
 }

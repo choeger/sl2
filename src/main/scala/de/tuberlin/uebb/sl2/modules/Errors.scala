@@ -45,6 +45,8 @@ trait Errors {
       * Combine two errors into an error list.
       */
     def <+>(that: Error): ErrorList = ErrorList(List(this, that))
+    
+    override def toString(): String = errorMessage(this)
   }
 
   /* Generic error with a static error message */
@@ -74,6 +76,22 @@ trait Errors {
   /* Context analysis: generic error with location hint */
   case class AttributedError(what: String, where: Attribute) extends Error
 
+  /* Context analysis: unimplemented function declaration */
+  case class NotImplementedError(what: String, name: String, where: Attribute) extends Error
+
+  def errorMessage(e: Error): String = e match {
+    case GenericError(what) => "Error: " + what + "\n"
+    case CouldNotRun(what, why) => "Could not run " + what + ", for the following reason:\n" + why.toString + "\n"
+    case NotYetImplemented => "Error: Unimplemented feature"
+    case ParseError(what, where) => where.toString + ": " + what + "\n"
+    case UndefinedError(what, name, where) => where.toString + ": " + what + ": " + quote(name) + "\n"
+    case TypeError(what, where, cause) => where.toString + ": " + what + ", for the following reason:\n" + cause.toString  + "\n"
+    case DuplicateError(what, name, where) => "Duplicate definition of " + quote(name) + ": " + what + ". Locations:\n" + where.map(_.toString).mkString("\n") + "\n"
+    case AttributedError(what, where) => where.toString + ": " + what + "\n"
+    case NotImplementedError(what, name, where) => where.toString + ": " + quote(name) + " declared but not implemented. " + what + "\n"
+    case ErrorList(errors) => errors.map(_.toString).mkString("")
+    case _ => "Unknown error\n"
+  }
 
   /**
     * Apply a function which might result in an Error to all elements of a list

@@ -107,7 +107,16 @@ trait Syntax {
    * manually.
    */
   sealed abstract class Location
-  case class FileLocation(file: String, from: Position, to: Position) extends Location
+  case class FileLocation(file: String, from: Position, to: Position) extends Location {
+    override def toString(): String = 
+      if (from.line == to.line) {
+        if (from.col == to.col)
+          file + ":" + from.line.toString + ":" + from.col.toString
+        else
+          file + ":" + from.line.toString + ":" + from.col.toString + "-" + to.col.toString
+      } else
+        file + ":" + from.line.toString + "-" + to.line.toString
+  }
   case object NoLocation extends Location
 
   /**
@@ -127,8 +136,12 @@ trait Syntax {
       case _ => false
     }
   }
-  case class AttributeImpl(location: Location) extends Attribute
-  case object EmptyAttribute extends Attribute
+  case class AttributeImpl(location: Location) extends Attribute {
+    override def toString() = location.toString
+  }
+  case object EmptyAttribute extends Attribute {
+    override def toString() = "Unknown location"
+  }
 
   type VarName = Syntax.VarName
   type TypeVarName = Syntax.TypeVarName

@@ -48,11 +48,11 @@ trait ProgramCheckerImpl extends ProgramChecker {
   def checkProgram(in: AST, modules : List[ResolvedImport]): Either[Error, Unit] = {
     val (moduleContext, moduleSigs) = buildModuleContext(modules);
 
-	for (
+    for (
       initialContext <- checkDataTypes(in).right;
       (funSigs, funDefs, externContext) <- checkFunctions(in).right;
       elc <- splitLetRecs(moduleContext.keySet ++ initialContext.keySet,
-          programToELC(moduleSigs ++ funSigs, funDefs)).right;
+        programToELC(moduleSigs ++ funSigs, funDefs)).right;
       mainType <- {
         checkTypes(moduleContext ++ initialContext ++ externContext, elc).right
       };

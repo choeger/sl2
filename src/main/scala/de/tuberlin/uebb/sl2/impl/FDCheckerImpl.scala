@@ -59,13 +59,28 @@ trait FDCheckerImpl extends FDChecker {
     }
   }
 
+  def checkCompleteImplementation(funDefs: Map[Var, List[FunctionDef]], funSigs: Map[Var, FunctionSig]): Either[Error, Unit] = {
+    val unimplemented = funSigs -- funDefs.keySet
+    def mkErrors(funSigs: Map[Var, FunctionSig]): List[Error] =
+      for ( sig <- funSigs.toList ) yield (sig match {
+        case (name, FunctionSig(_, _, attr)) =>
+          NotImplementedError("unimplemented function signature", name.toString, attr)
+      })
+
+    if (unimplemented.isEmpty)
+      Right()
+    else
+      Left(ErrorList(mkErrors(unimplemented).toList))
+  }
+
   /**
    * Check a program's top-level function definitions.
    */
   def checkFunctions(funDefs: Map[Var, List[FunctionDef]], funSigs: Map[Var, FunctionSig]): Either[Error, Unit] = {
     for (
       _ <- checkArities(funDefs, funSigs).right;
-      _ <- checkDuplicatePatVars(funDefs).right
+      _ <- checkDuplicatePatVars(funDefs).right;
+      _ <- checkCompleteImplementation(funDefs, funSigs).right
     ) yield ()
   }
 

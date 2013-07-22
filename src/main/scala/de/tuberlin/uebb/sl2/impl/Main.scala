@@ -36,7 +36,7 @@ import scala.io.Source
 import java.io.File
 
 object Main
-    extends ParboiledParser 
+    extends CombinatorParser 
     with CodeGenerator
     with Syntax
     with SyntaxTraversal
@@ -73,7 +73,7 @@ object Main
       val config = parseArguments(args.toList)
       val res = run(config)
       if (res.isLeft)
-        res.left.map(x => println("Error: " + x))
+        res.left.map(x => println("Errors:\n" + x))
       else
         res.right.map(x => println(x))
     }

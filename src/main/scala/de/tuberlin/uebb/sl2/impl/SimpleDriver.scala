@@ -49,23 +49,24 @@ trait SimpleDriver extends Driver {
   override def run(inpCfg: Config): Either[Error, String] = {
     val input = inpCfg.sources
     //TODO: implement for multiple files! at the moment only the first 
-	// will be handled
+    // will be handled
     
-	// load input file
-	val file = new File(input.head)
-	val name = file.getName()
-	// if no destination has been specified, the output goes to the folder of the input file.
-	val destination = if (inpCfg.destination == null) file.getParentFile() else inpCfg.destination
-	val config = inpCfg.copy(mainUnit = file, destination = destination)
-	val source = scala.io.Source.fromFile(file)
-	val code = source.mkString
-	source.close()
-	
-	// parse the syntax 
-	val ast = parseAst(code)
-	debugPrint(ast.toString());
-	
-	for (
+    // load input file
+    val file = new File(input.head)
+    val name = file.getName()
+    // if no destination has been specified, the output goes to the folder of the input file.
+    val destination = if (inpCfg.destination == null) file.getParentFile() else inpCfg.destination
+    val config = inpCfg.copy(mainUnit = file, destination = destination)
+    val source = scala.io.Source.fromFile(file)
+    val code = source.mkString
+    source.close()
+
+    // parse the syntax
+    fileName = name
+    val ast = parseAst(code)
+    debugPrint(ast.toString());
+
+    for (
       mo <- ast.right;
       // check and load dependencies
       imports <- inferDependencies(mo, config).right;
