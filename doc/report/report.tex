@@ -206,7 +206,109 @@ gespeichert sind}
 
 \TODO{Ben: Beispiele, Schwierigkeiten, Designentscheidungen}
 
+
 \subsection{Prelude}
+
+Alle vormals fest in den Compiler eingebauten Funktionen und Konstruktoren
+werden jetzt durch ein eigenes, umfangreicheres Prelude-Modul definiert.
+Dieses wird implizit durch jedes SL-Programm unqualifiziert importiert.
+Im Prelude werden auch alle Basistypen deklariert. (Allerdings sind diese
+gleichzeitig noch in den Compiler integriert, damit die Literale einen Typ
+unabhängig vom Prelude-Import erhalten können.)
+
+Unter anderem sind \verb|#| für Funktionskomposition und \verb|id| als
+Identitätsfunktion im Prelude hinzugekommen.
+
+\begin{lstlisting}{caption={Prelude},label=lst:prelude}
+PUBLIC DATA Bool = True | False
+PUBLIC FUN not : Bool -> Bool
+
+-- Function composition
+PUBLIC FUN # : (b -> c) -> (a -> b) -> (a -> c)
+PUBLIC FUN id : a -> a
+
+-- String functions
+
+PUBLIC FUN ++ : (String -> String -> String)
+
+-------------------------------------
+
+PUBLIC FUN intToStr : Int -> String
+PUBLIC FUN strToInt : String -> Int
+
+\end{lstlisting}
+
+\subsection{Error}
+
+\begin{verbatim}
+PUBLIC FUN error : String -> a
+DEF EXTERN error = {| function(msg){throw msg} |} 
+\end{verbatim}
+
+Eine spannende neue Funktion im Prelude ist \verb|error|. Diese hat einen
+beliebigen Rückgabetyp, kann also an beliebigen Stellen in den Code
+geschrieben werden. Allerdings wird \verb|error| niemals einen Wert
+zurückgeben, sondern schlicht das Programm mit einer Fehlermeldung enden
+lassen.\footnote{Diese Funktion ist also keine echte, wohldefinierte Funktion,
+sondern hat dasselbe ``Ergebnis'' wie eine Endlosrekursion.} Das ist sehr
+praktisch, wenn man im Implementierungsprozess schon teile Testen möchte,
+aber noch nicht überall sinnvollen Code eintragen kann.
+
+\subsection{println-Debugging}
+
+\begin{verbatim}
+PUBLIC FUN print : String -> DOM Void
+PUBLIC FUN andPrint : a -> (a -> String) -> a
+PUBLIC FUN andPrintDbg : a -> String -> a
+\end{verbatim}
+
+Mit einem ähnlichen Trick arbeitet das neue Modul \verb|basicio|. Dieses
+erlaubt, normale Programme mit Konsolenausgaben zu versehen, die neben
+der Programmausführung ausgegeben werden.
+
+\begin{verbatim}
+IO.andPrint (L.Cons 1 (L.Cons 2 L.Nil)) (L.toString intToStr)
+\end{verbatim}
+
+Dieser Ausdruck hat als Rückgabewert die Liste $\langle1,2\rangle$,
+während als (fürs Programm hoffentlich unsichtbarer) Seiteneffekt,
+noch \verb|"<1,2>"| auf die Konsole geschrieben wird. Semantisch sollten
+\verb|andPrint| sowie \verb|andPrintDbg| äquivalent zur Identitätsfunktion
+mit ein paar unnötigen Parametern sein.
+
+\subsection{List, Option, Either}
+
+\begin{verbatim}
+PUBLIC DATA List a     = Nil | Cons a (List a)
+PUBLIC DATA Option a   = None | Some a
+PUBLIC DATA Either a b = Left a | Right b
+\end{verbatim}
+
+Unsere mitgelieferten Module enthalten die klassischen algebraischen,
+generischen Datentypen \verb|List| (aka Sequence), \verb|Option| (aka Maybe)
+und \verb|Either| (aka Union). Bis auf \verb|List.fromString| sind diese
+Module komplett in SL geschrieben ohne Rückgriff auf JavaScript. Wir
+haben auch ein paar der grundlegenden Funktionen wie \verb|map| und
+\verb|reduce| implementiert. Vorrangig ging es uns aber darum, komplexere
+importierte Konstruktoren beim Pattern Matching anhand dieser Typen
+auszuprobieren.
+
+\subsection{Dictionarys}
+
+Der abstrakte Datentyp \verb|Dict| hingegen ist komplett ohne SLs
+algebraische Datentypen umgesetzt. Stattdessen arbeiten die Implementierungen
+der einzelnen Funktionen ausschließlich mit JavaScripts \verb|Object|,
+also den in JavaScript grundlegenden Wörterbuchobjekten.
+
+\begin{verbatim}
+DATA Dict a
+PUBLIC FUN empty : Dict a
+PUBLIC FUN put : Dict a -> String -> a -> Dict a
+PUBLIC FUN get : Dict a -> String -> a
+PUBLIC FUN has : Dict a -> String -> Bool
+\end{verbatim}
+
+\subsection{Browseranbindung}
 
 \subsection{Floats}
 
