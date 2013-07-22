@@ -1,5 +1,7 @@
 
-PUBLIC DATA Option a = Some a | None
+PUBLIC DATA Option a =
+	  Some a
+	| None
 
 PUBLIC FUN map : (a -> b) -> Option a -> Option b
 DEF map f (Some a) = Some (f a) 

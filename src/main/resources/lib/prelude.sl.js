@@ -212,6 +212,40 @@ exports.$g = _greater;
 var $g = exports.$g;
 exports.$strToInt = parseInt;
 var $strToInt = exports.$strToInt;
+function $s(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && true))
+    {
+      var $f = _arg0;
+      var $g = _arg1;
+      var _return = function (_arg0)
+      {
+        if(true)
+        {
+          var $x = _arg0;
+          var $26 = $f;
+          var $25 = $g;
+          var $24 = $x;
+          var $23 = $25($24);
+          var $22 = $26($23)
+        }
+        else 
+        {
+          throw "Pattern for lambda expression did not match arguments"
+        };
+        return $22
+      };
+      return _return
+    }
+    else 
+    {
+      throw "Pattern not exhaustive!"
+    }
+  }
+};
+exports.$s = $s;
 function $not(_arg0)
 {
   if((_arg0 === $True))
@@ -255,13 +289,13 @@ function $d$e(_arg0)
     {
       var $x = _arg0;
       var $y = _arg1;
-      var $17 = $not;
-      var $16 = $e$e;
-      var $15 = $x;
-      var $14 = $16($15);
-      var $13 = $y;
-      var $12 = $14($13);
-      var _return = $17($12);
+      var $32 = $not;
+      var $31 = $e$e;
+      var $30 = $x;
+      var $29 = $31($30);
+      var $28 = $y;
+      var $27 = $29($28);
+      var _return = $32($27);
       return _return
     }
     else 

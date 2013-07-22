@@ -49,6 +49,13 @@ PUBLIC FUN not : Bool -> Bool
 DEF not True = False
 DEF not False = True
 
+-- Function composition
+PUBLIC FUN # : (b -> c) -> (a -> b) -> (a -> c)
+DEF f # g = \ x . f (g x)
+
+PUBLIC FUN id : a -> a
+DEF id a = a
+
 -- String functions
 
 PUBLIC FUN ++ : (String -> String -> String)
@@ -106,9 +113,6 @@ PUBLIC FUN isNaN : Int -> Bool
 DEF EXTERN isNaN = {| isNaN |}
 
 -------------------------------------
-
-PUBLIC FUN id : a -> a
-DEF id a = a
 
 PUBLIC FUN intToStr : Int -> String
 DEF EXTERN intToStr = {| function(i){return i.toString();} |}
