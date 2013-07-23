@@ -1,5 +1,5 @@
 /***********************************/
-// included from: /home/ben/Dokumente/compilerbaupraxis/sl2/src/main/resources/lib/_prelude.js
+// included from: /home/fpz/code/sl2/src/main/resources/lib/_prelude.js
 /***********************************/
 /*
  * This basic module is necessary as an import to every SL
