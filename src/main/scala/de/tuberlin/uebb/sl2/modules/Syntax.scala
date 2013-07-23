@@ -138,9 +138,19 @@ trait Syntax {
   }
   case class AttributeImpl(location: Location) extends Attribute {
     override def toString() = location.toString
+    override def hashCode(): Int = { classOf[Attribute].hashCode() }
+    override def equals(other: Any) = other match {
+      case a: Attribute => true
+      case _ => false
+    }
   }
   case object EmptyAttribute extends Attribute {
     override def toString() = "Unknown location"
+    override def hashCode(): Int = { classOf[Attribute].hashCode() }
+    override def equals(other: Any) = other match {
+      case a: Attribute => true
+      case _ => false
+    }
   }
 
   type VarName = Syntax.VarName
