@@ -132,7 +132,7 @@ trait SLExpressions {
 										      List(Alternative(PatternVar("b"),
 												       ExVar(Syntax.Var("b")))))))))))
 
-  val invalidFunName = ("ord", List(FunctionDef(Nil, ConstInt(1))))
+  val invalidFunName = ("intToStr", List(FunctionDef(Nil, ConstInt(1))))
 
   val dupPatternVar = ("foo", List(FunctionDef(List(PatternExpr(Syntax.ConVar("Cons"), List(PatternVar("x"), PatternVar("a"))), PatternVar("a")),
 					       ExVar(Syntax.Var("a")))))

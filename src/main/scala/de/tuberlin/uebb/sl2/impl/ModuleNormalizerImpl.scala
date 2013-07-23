@@ -169,7 +169,7 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
       val imports = rui.signature.imports
       
       // map the imports of this imported module
-      var modPath = imports.filter(imp => imp.isInstanceOf[QualifiedImport]).map(imp => {
+      var modPath = imports.filter(_.isInstanceOf[QualifiedImport]).map(imp => {
         val qi = imp.asInstanceOf[QualifiedImport]
         
         // use name as key
@@ -185,7 +185,7 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
       val imports = rqi.signature.imports
       
       // map the imports of this imported module
-      var modPath = imports.filter(imp => imp.isInstanceOf[QualifiedImport]).map(imp => {
+      var modPath = imports.filter(_.isInstanceOf[QualifiedImport]).map(imp => {
         val qi = imp.asInstanceOf[QualifiedImport]
         
         // use name as key
