@@ -13,7 +13,7 @@ trait ModuleResolver {
       file:File,
       ast:Import)
   
-  sealed abstract class ResolvedNamedImport(
+  sealed abstract class ResolvedModuleImport(
       val name:String,
       val path:String,
       val file:File,
@@ -26,7 +26,7 @@ trait ModuleResolver {
       override val file: File,
       override val jsFile: File,
       override val signature: Program,
-      override val ast: UnqualifiedImport) extends ResolvedNamedImport(
+      override val ast: UnqualifiedImport) extends ResolvedModuleImport(
           "$$"+path.replace('/', '$'), path, file, jsFile, signature, ast)
   
   case class ResolvedQualifiedImport(
@@ -36,7 +36,7 @@ trait ModuleResolver {
       override val jsFile: File,
       override val signature: Program,
       override val ast: QualifiedImport)
-    extends ResolvedNamedImport(name, path, file, jsFile, signature, ast)
+    extends ResolvedModuleImport(name, path, file, jsFile, signature, ast)
     
   case class ResolvedExternImport(
       file: File,
