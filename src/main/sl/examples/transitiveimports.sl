@@ -4,7 +4,7 @@ IMPORT "basicio" AS IO
 
 DEF main =
 	LET dict = IO.andPrint
-		(Dict.put (Dict.put Dict.empty "twentythree" 23) "fourtytwo" 42)
+		(Dict.put "fourtytwo" 42 (Dict.put "twentythree" 23 Dict.empty))
 		(Dict.toString intToStr) IN
 	-- sel is of type Option (Option.Option in list.sl and Opt.option in dict.sl)
 	-- still it should work!
