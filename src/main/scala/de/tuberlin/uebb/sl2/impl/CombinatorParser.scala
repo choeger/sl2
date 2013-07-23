@@ -273,7 +273,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   private def opRegex: Parser[String] = """[!§%&/=\?\+\*#\-\<\>|]+""".r ^^ { case s: String => s }
   private def eqRegex: Parser[String] = """=(?![!§%&/=\?\+\*#\-:\<\>|])""".r ^^ { case s: String => s }
   private def keyword = keywords.mkString("", "|", "").r
-  private def jsRegex = jsOpenLex ~> """(?:(?!\|\}).)*""".r <~ jsCloseLex ^^ { case s: String => s }
+  private def jsRegex = jsOpenLex ~> """(?:(?!\|\}).|\n)*""".r <~ jsCloseLex ^^ { case s: String => s }
 
   //Qualified things
   private def unqualBinop: Parser[ExVar] = 
