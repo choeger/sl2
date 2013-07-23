@@ -208,15 +208,17 @@ trait DTCheckerImpl extends DTChecker
    * Check if all type constructors are applied to enough arguments.
    */
   def checkTypeConsApp(dataDefs: List[DataDef], imports : List[ResolvedImport]): Either[Error, Unit] = {
-    val importedDataDefs = imports.map( _ match {
-      case rimp : ResolvedQualifiedImport => rimp.signature.dataDefs
+    val importedConArities: List[(TConVar, Int)] = imports.map{
+      case rimp : ResolvedQualifiedImport =>
+        rimp.signature.dataDefs.map{dataDef => ((Syntax.TConVar(dataDef.ide, rimp.name), dataDef.tvars.length))}
+      case rimp : ResolvedUnqualifiedImport =>
+        rimp.signature.dataDefs.map{dataDef => ((Syntax.TConVar(dataDef.ide), dataDef.tvars.length))}
       case _ => List()
-    }).reduce(_ ++ _)
+    }.flatten
     
     val constructorArities: Map[TConVar, Int] = {
       val constructorArity = (dataDef: DataDef) => (Syntax.TConVar(dataDef.ide), dataDef.tvars.length)
-      val allDataDefs = dataDefs// ++ importedDataDefs
-      (allDataDefs.map(constructorArity)).toMap
+      (dataDefs.map(constructorArity) ++ importedConArities).toMap
     }
 
     def checkTypeConsApp(dataDef: DataDef) = {

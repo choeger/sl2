@@ -9,7 +9,7 @@ DEF main =
 	Web.createInput doc "" {||} &= \ input .
 	Web.createButton doc "Add Number" (cbAddNumber doc numbers input) &= \ btnAddNumber .
 	Web.createButton doc "Sum" (cbSum doc numbers) &= \ btnSum .
-	Web.createButton doc "Sort" (cbSum doc numbers) &= \ btnSort .
+	Web.createButton doc "Sort" (cbSort doc numbers) &= \ btnSort .
 	Web.appendChild body input &
 	Web.appendChild body btnAddNumber &
 	Web.appendChild body btnSum &
@@ -43,8 +43,8 @@ DEF getNode (NodeWithNumber n1 i1) = n1
 DEF cbSort doc numberNode =
 	Web.getChildNodes numberNode &= \ numberNodes .
 	List.mapDom (\node. Web.getValue node &=
-					\v. NodeWithNumber node ((yield # strToInt) v)) numberNodes &= \ nodeWithNumbers .
-	LET sorted = selectionSort numberNodes IN
+					\v. yield (NodeWithNumber node (strToInt v))) numberNodes &= \ nodesWithNumbers .
+	LET sorted = Dbg.andPrint (selectionSort nodesWithNumbers) (List.toString Dbg.anyToString) IN
 	List.mapDom (Web.removeChild numberNode) numberNodes &
 	List.mapDom (Web.appendChild numberNode # getNode) sorted &
 	{||}

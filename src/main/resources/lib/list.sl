@@ -46,7 +46,7 @@ DEF filter p (Cons ft rt) =
 PUBLIC FUN removeFirst : (a -> Bool) -> List a -> List a
 DEF removeFirst p Nil = Nil
 DEF removeFirst p (Cons ft rt) =
-	IF p ft THEN rt ELSE removeFirst p rt
+	IF p ft THEN rt ELSE Cons ft (removeFirst p rt)
 		
 PUBLIC FUN map : (a -> b) -> List a -> List b
 DEF map f Nil = Nil
