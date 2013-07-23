@@ -38,6 +38,7 @@ DEF minNode (NodeWithNumber n1 i1) (NodeWithNumber n2 i2) =
 	THEN (NodeWithNumber n1 i1)
 	ELSE (NodeWithNumber n2 i2)
 DEF eqNode (NodeWithNumber n1 i1) (NodeWithNumber n2 i2) = i1 == i2
+DEF getNode (NodeWithNumber n1 i1) = n1
 
 DEF cbSort doc numberNode =
 	Web.getChildNodes numberNode &= \ numberNodes .
@@ -45,11 +46,11 @@ DEF cbSort doc numberNode =
 					\v. NodeWithNum node ((yield # strToInt) v)) numberNodes &= \ nodeWithNumbers .
 	LET sorted = selectionSort numberNodes IN
 	List.mapDom (Web.removeChild numberNode) numberNodes &
-	List.mapDom (Web.appendChild numberNode # ) sorted &
+	List.mapDom (Web.appendChild numberNode # getNode) sorted &
 	{||}
 	
 DEF selectionSort List.Nil = List.Nil
-DEF selectionSort list =
-	LET min = List.reduce minNode (List.hd list) list;
+DEF selectionSort list = removeFirst p rt
+	LET min = List.reduce minNode (List.hd list) list
 		newList = List.removeFirst (eqNode minNode) list IN
 	List.Cons min (selectionSort newList)
