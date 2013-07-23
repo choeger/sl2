@@ -175,6 +175,7 @@ trait DTCheckerImpl extends DTChecker
       val rhsTypeVars = dataDef.constructors.flatMap(_.types).flatMap(selectTypeVars).toSet
       var message = ""
 
+      if (dataDef.constructors.isEmpty) Right()
       if (lhsTypeVars == rhsTypeVars) Right()
       else {
         // Undefined type variables in the constructor definitions

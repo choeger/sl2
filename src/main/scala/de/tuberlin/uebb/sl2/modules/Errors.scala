@@ -35,7 +35,7 @@ trait Errors {
 
   self: Syntax =>
   
-  abstract class Error {
+  abstract class Error extends Throwable {
     /**
       * Produce an error message.
       */
