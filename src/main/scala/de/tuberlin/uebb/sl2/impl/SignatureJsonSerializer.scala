@@ -4,16 +4,19 @@ import scala.util.parsing.json._
 import de.tuberlin.uebb.sl2.modules.{ SignatureSerializer, Syntax, Errors }
 
 trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Errors {
+  
+  var serializerLocation: Location = NoLocation
 
   def serialize(ast : AST) : String = ast2Json(ast).toString
   
-  // TODO throw appropriate exception for None case
-  def deserialize(jsonString : String) : AST = JSON.parseFull(jsonString) match {
-    case Some(result) =>
-      val jsonAst = result.asInstanceOf[JsonImportAst]
-      
-      json2Ast(jsonAst)
-    case None => null
+  def deserialize(jsonString : String, location : Location = NoLocation) : AST = {
+    serializerLocation = location
+    JSON.parseFull(jsonString) match {
+      case Some(result) =>
+        val jsonAst = result.asInstanceOf[JsonImportAst]
+        json2Ast(jsonAst)
+      case None => null
+    }
   }
   
   // syntax' json export types
@@ -175,7 +178,7 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Error
   private def json2Sig(jsonSig : (JsonImportVarName, JsonImportFunctionSig)) : (VarName, FunctionSig) = {
     var (fun, sig) = jsonSig
     
-    (json2VarName(fun), FunctionSig(json2Type(sig)))
+    (json2VarName(fun), FunctionSig(json2Type(sig), DefaultModifier, AttributeImpl(serializerLocation)))
   }
 
   private def type2Json(typ : ASTType) : JsonExportAstType = typ match {
@@ -217,7 +220,7 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Error
     val jsonTvars = jsonData.get("tvars"       ).get.asInstanceOf[JsonImportTypeVarNameList   ]
     val jsonCtors = jsonData.get("constructors").get.asInstanceOf[JsonImportConstructorDefList]
     
-    DataDef(json2TConVarName(jsonIde), json2TypeVarNames(jsonTvars), json2Ctors(jsonCtors))
+    DataDef(json2TConVarName(jsonIde), json2TypeVarNames(jsonTvars), json2Ctors(jsonCtors), DefaultModifier, AttributeImpl(serializerLocation))
   }
 
   private def ctor2Json(ctor : ConstructorDef) : JsonExportConstructorDef = {
@@ -232,7 +235,7 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Error
     val jsonIde   = jsonCtor.get("constructor").get.asInstanceOf[JsonImportConVarName ]
     val jsonTypes = jsonCtor.get("types"      ).get.asInstanceOf[JsonImportAstTypeList]
     
-    ConstructorDef(json2ConVarName(jsonIde), json2Types(jsonTypes))
+    ConstructorDef(json2ConVarName(jsonIde), json2Types(jsonTypes), AttributeImpl(serializerLocation))
   }
 
 }

@@ -72,9 +72,13 @@ trait DTCheckerImpl extends DTChecker
    * context containing all data constructors.
    */
   def checkDataTypes(dataDefs: List[DataDef], imports : List[ResolvedImport]): Either[Error, Context] = {
+    val unqualifiedImportedDataDefs = imports.map{
+      case rimp:ResolvedUnqualifiedImport => rimp.signature.dataDefs
+      case _ => List()
+    }.flatten
     for (
-      _ <- checkTypeConsDisjoint(dataDefs).right;
-      _ <- checkDataConsDisjoint(dataDefs).right;
+      _ <- checkTypeConsDisjoint(dataDefs ++ unqualifiedImportedDataDefs).right;
+      _ <- checkDataConsDisjoint(dataDefs ++ unqualifiedImportedDataDefs).right;
       _ <- checkTypeParamsDisjoint(dataDefs).right;
       _ <- checkNoUndefinedTypeCons(dataDefs, imports).right;
       _ <- checkTypeVarUsage(dataDefs).right;
@@ -184,9 +188,9 @@ trait DTCheckerImpl extends DTChecker
       val rhsTypeVars = dataDef.constructors.flatMap(_.types).flatMap(selectTypeVars).toSet
       var message = ""
 
-      if (dataDef.constructors.isEmpty) Right()
-      if (lhsTypeVars == rhsTypeVars) Right()
-      else {
+      if (dataDef.constructors.isEmpty || lhsTypeVars == rhsTypeVars) {
+        Right()
+      } else {
         // Undefined type variables in the constructor definitions
         if (lhsTypeVars subsetOf rhsTypeVars) {
           val undefinedTypeVars = rhsTypeVars diff lhsTypeVars
@@ -195,6 +199,8 @@ trait DTCheckerImpl extends DTChecker
         else {
           val unusedTypeVars = lhsTypeVars diff rhsTypeVars
           message = "Unused type variable(s) in type " + quote(dataDef.ide) + ": " + quote(unusedTypeVars)
+          // Note that for data defs with no constructors it is acceptable to have unused type vars,
+          // as these types are constrcuted using EXTERN features.
         }
         Left(AttributedError(message, dataDef.attribute))
       }
