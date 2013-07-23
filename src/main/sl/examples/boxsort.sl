@@ -9,9 +9,11 @@ DEF main =
 	Web.createInput doc "" {||} &= \ input .
 	Web.createButton doc "Add Number" (cbAddNumber doc numbers input) &= \ btnAddNumber .
 	Web.createButton doc "Sum" (cbSum doc numbers) &= \ btnSum .
+	Web.createButton doc "Sort" (cbSum doc numbers) &= \ btnSort .
 	Web.appendChild body input &
 	Web.appendChild body btnAddNumber &
 	Web.appendChild body btnSum &
+	Web.appendChild body btnSort &
 	Web.appendChild body numbers
 	
 DEF cbAddNumber doc numberNode inp =
@@ -29,3 +31,25 @@ DEF cbSum doc numberNode =
 	List.mapDom (\node. Web.getValue node &= (yield # strToInt)) numberNodes &= \ nums .
 	LET sum = List.reduce (\x.\y.x+y) 0 nums IN
 	Web.alert ("Sum: " ++ intToStr sum)
+	
+DATA NumNode = NodeWithNumber Web.Node Int
+DEF minNode (NodeWithNumber n1 i1) (NodeWithNumber n2 i2) =
+	IF i1 <= i2
+	THEN (NodeWithNumber n1 i1)
+	ELSE (NodeWithNumber n2 i2)
+DEF eqNode (NodeWithNumber n1 i1) (NodeWithNumber n2 i2) = i1 == i2
+
+DEF cbSort doc numberNode =
+	Web.getChildNodes numberNode &= \ numberNodes .
+	List.mapDom (\n	ode. Web.getValue node &=
+					\v. NodeWithNum node ((yield # strToInt) v)) numberNodes &= \ nodeWithNumbers .
+	LET sorted = selectionSort numberNodes IN
+	List.mapDom (Web.removeChild numberNode) numberNodes &
+	List.mapDom (Web.appendChild numberNode # ) sorted &
+	{||}
+	
+DEF selectionSort List.Nil = List.Nil
+DEF selectionSort list =
+	LET min = List.reduce minNode (List.hd list) list;
+		newList = List.removeFirst (eqNode minNode) list IN
+	List.Cons min (selectionSort newList)
