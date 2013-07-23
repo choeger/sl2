@@ -157,10 +157,14 @@ exports.$l = _lesser;
 var $l = exports.$l;
 exports.$g$e = _geq;
 var $g$e = exports.$g$e;
+exports.$cos = Math.cos;
+var $cos = exports.$cos;
+exports.$pow = function(a){return function(b){return Math.pow(a,b)};
+var $pow = exports.$pow;
 exports.$m = _sub;
 var $m = exports.$m;
-exports.$e$e = _eq;
-var $e$e = exports.$e$e;
+exports.$sqrt = Math.sqrt;
+var $sqrt = exports.$sqrt;
 exports.$fromInt = function(i){return i;};
 var $fromInt = exports.$fromInt;
 exports.$isNaN = isNaN;
@@ -169,14 +173,54 @@ exports.$round = Math.round;
 var $round = exports.$round;
 exports.$p = _add;
 var $p = exports.$p;
+exports.$tan = Math.tan;
+var $tan = exports.$tan;
 exports.$abs = Math.abs;
 var $abs = exports.$abs;
+exports.$sin = Math.sin;
+var $sin = exports.$sin;
+exports.$log = Math.log;
+var $log = exports.$log;
 exports.$iNaN = NaN;
 var $iNaN = exports.$iNaN;
 exports.$d = _div;
 var $d = exports.$d;
 exports.$g = _greater;
 var $g = exports.$g;
+exports.$eps = function ()
+{
+  var $eps = 1.0E-16;
+  return $eps
+}();
+var $eps = exports.$eps;
+function $e$e(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && true))
+    {
+      var $a = _arg0;
+      var $b = _arg1;
+      var $37 = $l;
+      var $36 = $abs;
+      var $35 = $m;
+      var $34 = $a;
+      var $33 = $35($34);
+      var $32 = $b;
+      var $31 = $33($32);
+      var $30 = $36($31);
+      var $29 = $37($30);
+      var $28 = $eps;
+      var _return = $29($28);
+      return _return
+    }
+    else 
+    {
+      throw "Pattern not exhaustive!"
+    }
+  }
+};
+exports.$e$e = $e$e;
 function $d$e(_arg0)
 {
   return function (_arg1)
@@ -185,13 +229,13 @@ function $d$e(_arg0)
     {
       var $x = _arg0;
       var $y = _arg1;
-      var $16 = $$prelude.$not;
-      var $15 = $e$e;
-      var $14 = $x;
-      var $13 = $15($14);
-      var $12 = $y;
-      var $11 = $13($12);
-      var _return = $16($11);
+      var $43 = $$prelude.$not;
+      var $42 = $e$e;
+      var $41 = $x;
+      var $40 = $42($41);
+      var $39 = $y;
+      var $38 = $40($39);
+      var _return = $43($38);
       return _return
     }
     else 

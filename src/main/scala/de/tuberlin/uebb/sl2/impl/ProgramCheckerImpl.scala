@@ -47,14 +47,18 @@ trait ProgramCheckerImpl extends ProgramChecker {
    */
   def checkProgram(in: AST, modules : List[ResolvedImport]): Either[Error, Unit] = {
     val (moduleContext, moduleSigs) = buildModuleContext(modules);
-
     for (
       initialContext <- checkDataTypes(in, modules).right;
       (funSigs, funDefs, externContext) <- checkFunctions(in).right;
-      elc <- splitLetRecs(moduleContext.keySet ++ initialContext.keySet,
+      // remove local definitions from imported module context. (imported unqualified names
+      // may otherwise clash with local names. this way they are shadowed.)
+      elc <- splitLetRecs(moduleContext.keySet
+    		  -- funSigs.keySet.map(_.asInstanceOf[VarFirstClass])
+    		  ++ initialContext.keySet,
         programToELC(moduleSigs ++ funSigs, funDefs)).right;
       mainType <- {
-        checkTypes(moduleContext ++ initialContext ++ externContext, elc).right
+        checkTypes(moduleContext -- funSigs.keySet.map(_.asInstanceOf[VarFirstClass])
+            ++ initialContext ++ externContext, elc).right
       };
       _ <- checkMain(funSigs, mainType).right
     ) yield ()
