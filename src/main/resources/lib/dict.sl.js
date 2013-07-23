@@ -49,7 +49,7 @@ exports.$reduce = function(f){return function(neut){return function(dict){
     return neut;
 }}};
 var $reduce = exports.$reduce;
-exports.$put = function(dict){return function(k){return function(v){
+exports.$put = function(k){return function(v){return function(dict){
 	var newDict = Object();
 	newDict.__proto__ = dict;
 	newDict[k] = v;
@@ -129,14 +129,14 @@ function $fromList(_arg0)
             {
               var $d = _arg0;
               var $94 = $put;
-              var $93 = $d;
+              var $93 = $k;
               var $92 = $94($93);
-              var $91 = $k;
-              var $90 = $92($91);
-              var $89 = $generator;
-              var $88 = $k;
-              var $87 = $89($88);
-              var $86 = $90($87)
+              var $91 = $generator;
+              var $90 = $k;
+              var $89 = $91($90);
+              var $88 = $92($89);
+              var $87 = $d;
+              var $86 = $88($87)
             }
             else 
             {
@@ -175,7 +175,7 @@ function $toString(_arg0)
       var $dict = _arg1;
       var $107 = $$prelude.$p$p;
       var $106 = $$prelude.$p$p;
-      var $105 = "<";
+      var $105 = "{";
       var $104 = $106($105);
       var $103 = $toStringI;
       var $102 = $tS;
@@ -184,7 +184,7 @@ function $toString(_arg0)
       var $99 = $101($100);
       var $98 = $104($99);
       var $97 = $107($98);
-      var $96 = ">";
+      var $96 = "}";
       var _return = $97($96);
       return _return
     }

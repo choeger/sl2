@@ -45,15 +45,15 @@ function $conc(_arg0)
         var $ft = _arg0["_var0"];
         var $rt = _arg0["_var1"];
         var $list = _arg1;
-        var $210 = $Cons;
-        var $209 = $ft;
-        var $208 = $210($209);
-        var $207 = $conc;
-        var $206 = $rt;
-        var $205 = $207($206);
-        var $204 = $list;
-        var $203 = $205($204);
-        var _return = $208($203);
+        var $311 = $Cons;
+        var $310 = $ft;
+        var $309 = $311($310);
+        var $308 = $conc;
+        var $307 = $rt;
+        var $306 = $308($307);
+        var $305 = $list;
+        var $304 = $306($305);
+        var _return = $309($304);
         return _return
       }
       else 
@@ -81,17 +81,17 @@ function $map(_arg0)
         var $f = _arg0;
         var $ft = _arg1["_var0"];
         var $rt = _arg1["_var1"];
-        var $220 = $Cons;
-        var $219 = $f;
-        var $218 = $ft;
-        var $217 = $219($218);
-        var $216 = $220($217);
-        var $215 = $map;
-        var $214 = $f;
-        var $213 = $215($214);
-        var $212 = $rt;
-        var $211 = $213($212);
-        var _return = $216($211);
+        var $321 = $Cons;
+        var $320 = $f;
+        var $319 = $ft;
+        var $318 = $320($319);
+        var $317 = $321($318);
+        var $316 = $map;
+        var $315 = $f;
+        var $314 = $316($315);
+        var $313 = $rt;
+        var $312 = $314($313);
+        var _return = $317($312);
         return _return
       }
       else 
@@ -115,9 +115,9 @@ function $head(_arg0)
   {
     if((_arg0 === $Nil))
     {
-      var $222 = $$prelude.$error;
-      var $221 = "Cannot select head from empty list.";
-      var _return = $222($221);
+      var $323 = $$prelude.$error;
+      var $322 = "Cannot select head from empty list.";
+      var _return = $323($322);
       return _return
     }
     else 
@@ -132,11 +132,11 @@ function $fromOption(_arg0)
   if(((_arg0["_cid"] === Option._Some) && true))
   {
     var $a = _arg0["_var0"];
-    var $226 = $Cons;
-    var $225 = $a;
-    var $224 = $226($225);
-    var $223 = $Nil;
-    var _return = $224($223);
+    var $327 = $Cons;
+    var $326 = $a;
+    var $325 = $327($326);
+    var $324 = $Nil;
+    var _return = $325($324);
     return _return
   }
   else 
@@ -193,28 +193,28 @@ function $filter(_arg0)
         var $p = _arg0;
         var $ft = _arg1["_var0"];
         var $rt = _arg1["_var1"];
-        var $229 = $p;
-        var $228 = $ft;
-        var $227 = $229($228);
-        if($227)
+        var $330 = $p;
+        var $329 = $ft;
+        var $328 = $330($329);
+        if($328)
         {
-          var $237 = $Cons;
-          var $236 = $ft;
-          var $235 = $237($236);
-          var $234 = $filter;
-          var $233 = $p;
-          var $232 = $234($233);
-          var $231 = $rt;
-          var $230 = $232($231);
-          var _return = $235($230)
+          var $338 = $Cons;
+          var $337 = $ft;
+          var $336 = $338($337);
+          var $335 = $filter;
+          var $334 = $p;
+          var $333 = $335($334);
+          var $332 = $rt;
+          var $331 = $333($332);
+          var _return = $336($331)
         }
         else 
         {
-          var $241 = $filter;
-          var $240 = $p;
-          var $239 = $241($240);
-          var $238 = $rt;
-          var _return = $239($238)
+          var $342 = $filter;
+          var $341 = $p;
+          var $340 = $342($341);
+          var $339 = $rt;
+          var _return = $340($339)
         };
         return _return
       }
@@ -226,6 +226,107 @@ function $filter(_arg0)
   }
 };
 exports.$filter = $filter;
+function $removeFirst(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && (_arg1 === $Nil)))
+    {
+      var $p = _arg0;
+      var _return = $Nil;
+      return _return
+    }
+    else 
+    {
+      if((true && (((_arg1["_cid"] === _Cons) && true) && true)))
+      {
+        var $p = _arg0;
+        var $ft = _arg1["_var0"];
+        var $rt = _arg1["_var1"];
+        var $345 = $p;
+        var $344 = $ft;
+        var $343 = $345($344);
+        if($343)
+        {
+          var _return = $rt
+        }
+        else 
+        {
+          var $349 = $removeFirst;
+          var $348 = $p;
+          var $347 = $349($348);
+          var $346 = $rt;
+          var _return = $347($346)
+        };
+        return _return
+      }
+      else 
+      {
+        throw "Pattern not exhaustive!"
+      }
+    }
+  }
+};
+exports.$removeFirst = $removeFirst;
+function $reduceDom(_arg0)
+{
+  return function (_arg1)
+  {
+    return function (_arg2)
+    {
+      if(((true && true) && (_arg2 === $Nil)))
+      {
+        var $f = _arg0;
+        var $n = _arg1;
+        var _return = $n;
+        return _return
+      }
+      else 
+      {
+        if(((true && true) && (((_arg2["_cid"] === _Cons) && true) && true)))
+        {
+          var $f = _arg0;
+          var $n = _arg1;
+          var $ft = _arg2["_var0"];
+          var $rt = _arg2["_var1"];
+          var $364 = $$prelude.$a$e;
+          var $363 = $reduceDom;
+          var $362 = $f;
+          var $361 = $363($362);
+          var $360 = $n;
+          var $359 = $361($360);
+          var $358 = $rt;
+          var $357 = $359($358);
+          var $356 = $364($357);
+          var $350 = function (_arg0)
+          {
+            if(true)
+            {
+              var $res = _arg0;
+              var $355 = $f;
+              var $354 = $ft;
+              var $353 = $355($354);
+              var $352 = $res;
+              var $351 = $353($352)
+            }
+            else 
+            {
+              throw "Pattern for lambda expression did not match arguments"
+            };
+            return $351
+          };
+          var _return = $356($350);
+          return _return
+        }
+        else 
+        {
+          throw "Pattern not exhaustive!"
+        }
+      }
+    }
+  }
+};
+exports.$reduceDom = $reduceDom;
 function $reduce(_arg0)
 {
   return function (_arg1)
@@ -247,17 +348,17 @@ function $reduce(_arg0)
           var $n = _arg1;
           var $ft = _arg2["_var0"];
           var $rt = _arg2["_var1"];
-          var $251 = $f;
-          var $250 = $ft;
-          var $249 = $251($250);
-          var $248 = $reduce;
-          var $247 = $f;
-          var $246 = $248($247);
-          var $245 = $n;
-          var $244 = $246($245);
-          var $243 = $rt;
-          var $242 = $244($243);
-          var _return = $249($242);
+          var $374 = $f;
+          var $373 = $ft;
+          var $372 = $374($373);
+          var $371 = $reduce;
+          var $370 = $f;
+          var $369 = $371($370);
+          var $368 = $n;
+          var $367 = $369($368);
+          var $366 = $rt;
+          var $365 = $367($366);
+          var _return = $372($365);
           return _return
         }
         else 
@@ -269,6 +370,80 @@ function $reduce(_arg0)
   }
 };
 exports.$reduce = $reduce;
+function $mapDom(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && (_arg1 === $Nil)))
+    {
+      var $f = _arg0;
+      var $398 = $$prelude.$yield;
+      var $397 = $Nil;
+      var _return = $398($397);
+      return _return
+    }
+    else 
+    {
+      if((true && (((_arg1["_cid"] === _Cons) && true) && true)))
+      {
+        var $f = _arg0;
+        var $ft = _arg1["_var0"];
+        var $rt = _arg1["_var1"];
+        var $396 = $$prelude.$a$e;
+        var $395 = $f;
+        var $394 = $ft;
+        var $393 = $395($394);
+        var $392 = $396($393);
+        var $375 = function (_arg0)
+        {
+          if(true)
+          {
+            var $newFt = _arg0;
+            var $391 = $$prelude.$a$e;
+            var $390 = $mapDom;
+            var $389 = $f;
+            var $388 = $390($389);
+            var $387 = $rt;
+            var $386 = $388($387);
+            var $385 = $391($386);
+            var $377 = function (_arg0)
+            {
+              if(true)
+              {
+                var $newRt = _arg0;
+                var $384 = $$prelude.$yield;
+                var $383 = $Cons;
+                var $382 = $newFt;
+                var $381 = $383($382);
+                var $380 = $newRt;
+                var $379 = $381($380);
+                var $378 = $384($379)
+              }
+              else 
+              {
+                throw "Pattern for lambda expression did not match arguments"
+              };
+              return $378
+            };
+            var $376 = $385($377)
+          }
+          else 
+          {
+            throw "Pattern for lambda expression did not match arguments"
+          };
+          return $376
+        };
+        var _return = $392($375);
+        return _return
+      }
+      else 
+      {
+        throw "Pattern not exhaustive!"
+      }
+    }
+  }
+};
+exports.$mapDom = $mapDom;
 function $length(_arg0)
 {
   if((_arg0 === $Nil))
@@ -282,13 +457,13 @@ function $length(_arg0)
     {
       var $ft = _arg0["_var0"];
       var $rt = _arg0["_var1"];
-      var $257 = $$prelude.$p;
-      var $256 = 1;
-      var $255 = $257($256);
-      var $254 = $length;
-      var $253 = $rt;
-      var $252 = $254($253);
-      var _return = $255($252);
+      var $404 = $$prelude.$p;
+      var $403 = 1;
+      var $402 = $404($403);
+      var $401 = $length;
+      var $400 = $rt;
+      var $399 = $401($400);
+      var _return = $402($399);
       return _return
     }
     else 
@@ -314,9 +489,9 @@ function $toStringI(_arg0)
       {
         var $ft = _arg0["_var0"];
         var $tS = _arg1;
-        var $273 = $tS;
-        var $272 = $ft;
-        var _return = $273($272);
+        var $420 = $tS;
+        var $419 = $ft;
+        var _return = $420($419);
         return _return
       }
       else 
@@ -326,21 +501,21 @@ function $toStringI(_arg0)
           var $ft = _arg0["_var0"];
           var $rt = _arg0["_var1"];
           var $tS = _arg1;
-          var $271 = $$prelude.$p$p;
-          var $270 = $$prelude.$p$p;
-          var $269 = $tS;
-          var $268 = $ft;
-          var $267 = $269($268);
-          var $266 = $270($267);
-          var $265 = ",";
-          var $264 = $266($265);
-          var $263 = $271($264);
-          var $262 = $toStringI;
-          var $261 = $rt;
-          var $260 = $262($261);
-          var $259 = $tS;
-          var $258 = $260($259);
-          var _return = $263($258);
+          var $418 = $$prelude.$p$p;
+          var $417 = $$prelude.$p$p;
+          var $416 = $tS;
+          var $415 = $ft;
+          var $414 = $416($415);
+          var $413 = $417($414);
+          var $412 = ",";
+          var $411 = $413($412);
+          var $410 = $418($411);
+          var $409 = $toStringI;
+          var $408 = $rt;
+          var $407 = $409($408);
+          var $406 = $tS;
+          var $405 = $407($406);
+          var _return = $410($405);
           return _return
         }
         else 
@@ -357,13 +532,13 @@ function $flatten(_arg0)
   if(true)
   {
     var $list = _arg0;
-    var $279 = $reduce;
-    var $278 = $conc;
-    var $277 = $279($278);
-    var $276 = $Nil;
-    var $275 = $277($276);
-    var $274 = $list;
-    var _return = $275($274);
+    var $426 = $reduce;
+    var $425 = $conc;
+    var $424 = $426($425);
+    var $423 = $Nil;
+    var $422 = $424($423);
+    var $421 = $list;
+    var _return = $422($421);
     return _return
   }
   else 
@@ -380,19 +555,19 @@ function $toString(_arg0)
     {
       var $tS = _arg0;
       var $list = _arg1;
-      var $291 = $$prelude.$p$p;
-      var $290 = $$prelude.$p$p;
-      var $289 = "<";
-      var $288 = $290($289);
-      var $287 = $toStringI;
-      var $286 = $list;
-      var $285 = $287($286);
-      var $284 = $tS;
-      var $283 = $285($284);
-      var $282 = $288($283);
-      var $281 = $291($282);
-      var $280 = ">";
-      var _return = $281($280);
+      var $438 = $$prelude.$p$p;
+      var $437 = $$prelude.$p$p;
+      var $436 = "<";
+      var $435 = $437($436);
+      var $434 = $toStringI;
+      var $433 = $list;
+      var $432 = $434($433);
+      var $431 = $tS;
+      var $430 = $432($431);
+      var $429 = $435($430);
+      var $428 = $438($429);
+      var $427 = ">";
+      var _return = $428($427);
       return _return
     }
     else 

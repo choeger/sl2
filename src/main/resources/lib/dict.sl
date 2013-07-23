@@ -6,8 +6,8 @@ DATA Dict a = Dict a
 PUBLIC FUN empty : Dict a
 DEF EXTERN empty = {| {} |}
 
-PUBLIC FUN put : Dict a -> String -> a -> Dict a
-DEF EXTERN put = {| function(dict){return function(k){return function(v){
+PUBLIC FUN put : String -> a -> Dict a -> Dict a
+DEF EXTERN put = {| function(k){return function(v){return function(dict){
 	var newDict = Object();
 	newDict.__proto__ = dict;
 	newDict[k] = v;
@@ -64,7 +64,7 @@ DEF EXTERN reduce = {| function(f){return function(neut){return function(dict){
 }}} |}
 
 PUBLIC FUN toString : (a -> String) -> Dict a -> String
-DEF toString tS dict = "<" ++ toStringI tS dict ++ ">"
+DEF toString tS dict = "{" ++ toStringI tS dict ++ "}"
 	FUN toStringI : (a -> String) -> Dict a -> String
 	DEF EXTERN toStringI = {| function(tS){return function(dict){
 	    var str = "";
@@ -77,4 +77,4 @@ DEF toString tS dict = "<" ++ toStringI tS dict ++ ">"
 
 PUBLIC FUN fromList : (String -> a) -> List.List String -> Dict a
 DEF fromList generator list =
-	List.reduce (\k.\d.put d k (generator k)) empty list
+	List.reduce (\k.\d.put k (generator k) d) empty list
