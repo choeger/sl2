@@ -188,6 +188,9 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers with Parboiled
     it("Should serialize and deserialize one public data definition") {
       "PUBLIC DATA Type a b c = Cons1 a b | Cons2 c".parsedSerializedAndDeserialized should equalParsed()
     }
+    it("Should not serialize private data constructors") {
+      "DATA Type a = Cons a".parsedSerializedAndDeserialized.deserialized should equal(Program(List(), Map(), Map(), Map(), List(DataDef("Type", List("a"), List()))))
+    }
   }
   
 }
