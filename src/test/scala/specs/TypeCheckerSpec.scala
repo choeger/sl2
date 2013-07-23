@@ -34,7 +34,7 @@ import de.tuberlin.uebb.sl2.modules._
 
 trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
 
-  this: TypeChecker with Context with Type with NameSupply with EnrichedLambdaCalculus with ELCExpressions with Errors =>
+  this: TypeChecker with Syntax with Context with Type with NameSupply with EnrichedLambdaCalculus with ELCExpressions with Errors =>
 
   def testedImplementationName(): String
 
@@ -84,6 +84,10 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
 
   def haveType(ty: Type) = TypeCheckMatcher(ty)
 
+  def checking(expr: ELC): Either[Error, Type] = for (ty <- checkTypes(initialContext <++> predefsContext, expr).right) yield ty
+
+  def fail(err: Error): Matcher[Either[Error, Type]] = be(Left(err))
+
 
   describe(testedImplementationName() + ": Built-in values") {
     it("Should type check Integer values") {
@@ -108,6 +112,11 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers {
 
     it("Should type check JavaScript quote with type ascription") {
       EJavaScript("", Some(int)) should haveType(int)
+    }
+
+    it("Should fail on JavaScript quote with invalid type ascription") {
+      val invalidType = TypeConstructor("InvalidType", Nil)
+      checking(EJavaScript("", Some(invalidType))) should fail(AttributedError("Invalid type in type ascription for JavaScript quote: `InvalidType'", EmptyAttribute))
     }
   }
 
