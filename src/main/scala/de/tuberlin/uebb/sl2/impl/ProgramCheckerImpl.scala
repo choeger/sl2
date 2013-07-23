@@ -49,7 +49,7 @@ trait ProgramCheckerImpl extends ProgramChecker {
     val (moduleContext, moduleSigs) = buildModuleContext(modules);
 
     for (
-      initialContext <- checkDataTypes(in).right;
+      initialContext <- checkDataTypes(in, modules).right;
       (funSigs, funDefs, externContext) <- checkFunctions(in).right;
       elc <- splitLetRecs(moduleContext.keySet ++ initialContext.keySet,
         programToELC(moduleSigs ++ funSigs, funDefs)).right;

@@ -33,11 +33,11 @@ package de.tuberlin.uebb.sl2.modules
   */
 trait DTChecker {
 
-  self: Syntax with Context with Errors =>
+  self: Syntax with Context with Errors with ModuleResolver =>
 
   /**
     * Check all data type definitions in a program and return
     * the initial context containing all data constructors.
     */
-  def checkDataTypes(in: AST): Either[Error, Context]
+  def checkDataTypes(in: AST, imports : List[ResolvedImport]): Either[Error, Context]
 }

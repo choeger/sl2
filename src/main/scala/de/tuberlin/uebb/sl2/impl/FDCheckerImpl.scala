@@ -109,9 +109,7 @@ trait FDCheckerImpl extends FDChecker {
 		 * first function definition.
 		 */
         val attribute = funSigs.get(funName).map(_.attribute).getOrElse(defs.head.attribute)
-        val message = "Signature and definition of "+ quote(funName.toString) +" have different arities." + 
-        			" Signature arity: " + funSigs.get(funName).map(_.typ.arity.toString) +
-        			" Arguments: "+arguments.toString
+        val message = "Signature and definition of "+ quote(funName.toString) +" have different arities."
         Left(AttributedError(message, attribute))
       } else Right()
     }

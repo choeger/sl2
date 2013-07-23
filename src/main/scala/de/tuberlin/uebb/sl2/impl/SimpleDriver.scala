@@ -81,7 +81,7 @@ trait SimpleDriver extends Driver {
     val compiled = astToJs(program)
     
     // Create modules directory, if necessary
-    val modulesDir = config.destination;//new File(config.destination, "modules")
+    val modulesDir = config.destination; // new File(config.destination, "modules")
     if(!modulesDir.exists()) {
       if(modulesDir.mkdirs()) {
         println("Created directory "+modulesDir)
