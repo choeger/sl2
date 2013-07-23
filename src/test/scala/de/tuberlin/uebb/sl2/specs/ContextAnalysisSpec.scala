@@ -37,19 +37,20 @@ import java.io.File
 trait ContextAnalysisSpec extends FunSpec with ShouldMatchers {
 
   this: ProgramChecker with Syntax with SLExpressions 
-  	with ModuleResolver with Errors with Configs =>
+  	with ModuleResolver with ModuleNormalizer with Errors with Configs =>
 
   def fail(err: Error) : Matcher[Either[Error, Unit]] = be(Left(err))
 
   def notFail: Matcher[Either[Error, Unit]] = be(Right())
   
-  def preludeImport = ResolvedUnqualifiedImport(
-        "", new File(""), new File(""),
-        Program(List(), Map(//TODO: Supply the prelude declarations that are used ind prgXX....
-            ), Map(), Map(), List()), null)
-  
-  def checking(program: AST): Either[Error, Unit] =
-    for (_ <- checkProgram(program, List(preludeImport)).right) yield ()
+  def checking(program: AST): Either[Error, Unit] = {
+    val emptyConfig = Config(List(), new File(""), new File(""), new File(""))
+    
+    for (
+      imports <- inferDependencies(program, emptyConfig).right;
+      res <- checkProgram(program, normalizeModules(imports)).right
+    ) yield ()
+  }
 
 
   describe("Context analysis: valid programs") {
@@ -67,16 +68,19 @@ trait ContextAnalysisSpec extends FunSpec with ShouldMatchers {
   }
 
   describe("Context analysis: erroneous function definitions") {
-    it("Should fail on a program using an invalid function name") {
-      checking(prg04) should fail(AttributedError("Function name `ord' clashes with predefined function.", EmptyAttribute))
-    }
+  // the concept of 'predefined' functions was changed
+  // basic functions are now imported with by an implicit unqualified import of the prelude
+  // therefore duplicate functions rather complain about bad type or duplicate definitions
+//    it("Should fail on a program using an invalid function name") {
+//      checking(prg04) should fail(AttributedError("Function name `intToStr' clashes with predefined function.", EmptyAttribute))
+//    }
 
     it("Should fail on a program with a function using duplicate pattern variables") {
       checking(prg05) should fail(ErrorList(List(AttributedError("Duplicate pattern variable `a' in function definition.", EmptyAttribute))))
     }
 
     it("Should fail on a program where a function and its signature do not have the same arity") {
-      checking(prg06) should fail(AttributedError("Signature and definitions of `id' have different arities.", EmptyAttribute))
+      checking(prg06) should fail(AttributedError("Signature and definition of `id' have different arities.", EmptyAttribute))
     }
   }
 

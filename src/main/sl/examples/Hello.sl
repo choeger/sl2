@@ -1,7 +1,5 @@
-IMPORT "prelude" AS Ps
+DEF hello = "Hello World" ++ "23"
 
-DEF hello = "Hello World" Ps.++ "23"
-
-DEF main = (Ps.yield hello) Ps.&= (\h.{|
+DEF main = (yield hello) &= (\h.{|
 	console.log($h);
 |})
