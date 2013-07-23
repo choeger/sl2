@@ -133,9 +133,9 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Error
     val exportedSigs = sigs.filter{
         case (_, FunctionSig(_,modi,_)) => PublicModifier == modi}
     var root : Map[String, Any] = Map()
-    root += ("imports"    -> imports2Json(imports))
-    root += ("signatures" ->    sigs2Json(sigs   ))
-    root += ("dataDefs"   ->   datas2Json(datas  ))
+    root += ("imports"    -> imports2Json(imports     ))
+    root += ("signatures" ->    sigs2Json(exportedSigs))
+    root += ("dataDefs"   ->   datas2Json(datas       ))
     
     JSONObject(root)
   }
