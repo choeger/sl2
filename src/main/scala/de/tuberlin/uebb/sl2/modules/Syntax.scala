@@ -256,8 +256,8 @@ trait Syntax {
   /**
    * All type constructors of a program.
    */ 
-  def allTypeCons(dataDefs: List[DataDef]): List[TConVar] =
-    dataDefs.map(_.ide).map(Syntax.TConVar(_))
+  def allTypeCons(dataDefs: List[DataDef], module : ModuleVar = LocalMod): List[TConVar] =
+    dataDefs.map(_.ide).map(Syntax.TConVar(_, module))
 
   /**
    * All data constrcutor of a program.

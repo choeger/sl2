@@ -42,15 +42,15 @@ DEF getNode (NodeWithNumber n1 i1) = n1
 
 DEF cbSort doc numberNode =
 	Web.getChildNodes numberNode &= \ numberNodes .
-	List.mapDom (\n	ode. Web.getValue node &=
-					\v. NodeWithNum node ((yield # strToInt) v)) numberNodes &= \ nodeWithNumbers .
+	List.mapDom (\node. Web.getValue node &=
+					\v. NodeWithNumber node ((yield # strToInt) v)) numberNodes &= \ nodeWithNumbers .
 	LET sorted = selectionSort numberNodes IN
 	List.mapDom (Web.removeChild numberNode) numberNodes &
 	List.mapDom (Web.appendChild numberNode # getNode) sorted &
 	{||}
 	
 DEF selectionSort List.Nil = List.Nil
-DEF selectionSort list = removeFirst p rt
-	LET min = List.reduce minNode (List.hd list) list
-		newList = List.removeFirst (eqNode minNode) list IN
+DEF selectionSort list =
+	LET min = List.reduce minNode (List.head list) list
+		newList = List.removeFirst (eqNode min) list IN
 	List.Cons min (selectionSort newList)

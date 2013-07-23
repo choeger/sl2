@@ -147,7 +147,7 @@ trait DTCheckerImpl extends DTChecker
   def checkNoUndefinedTypeCons(dataDefs: List[DataDef], imports : List[ResolvedImport]): Either[Error, Unit] = {
     val localTypeConstructors = (allTypeCons(dataDefs)).toSet
     val importedTypeConstructurs = imports.map(_ match {
-      case rimp : ResolvedNamedImport => allTypeCons(rimp.signature.dataDefs).toSet
+      case rimp : ResolvedNamedImport => allTypeCons(rimp.signature.dataDefs, rimp.name).toSet
       case _ => Set()
     }).reduce(_ ++ _)
     
