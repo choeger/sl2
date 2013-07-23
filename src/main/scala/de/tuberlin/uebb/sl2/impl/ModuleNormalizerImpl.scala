@@ -6,7 +6,10 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
   this: Syntax with SyntaxTraversal with Type with ModuleResolverImpl =>
 
   def qualifyUnqualifiedModules(program: Program, imports: List[ResolvedImport]) : Program = {
-    val declarations = getImportedUnqualifiedDeclarations(imports)
+    val declarations = getImportedUnqualifiedDeclarations(imports).filterKeys{
+      // allow defined functions to be overridden.
+      name => !program.signatures.contains(name)
+    }
     val f : PartialFunction[Any, Any] = {
       case Syntax.Var(ide, "") => {Syntax.Var(ide, declarations.getOrElse(ide, Syntax.LocalMod))}
       case Syntax.ConVar(ide, "") => {Syntax.ConVar(ide, declarations.getOrElse(ide, Syntax.LocalMod))}

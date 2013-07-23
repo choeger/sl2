@@ -149,33 +149,30 @@ define(function(require, exports, module) {
     
 
 ;
+;
+;
+exports.$Void = 0;
+var $Void = exports.$Void;
+;
+;
+;
+;
 var $True = true;
 var $False = false;
-;
-exports._ExternalDOM = 0;
-var _ExternalDOM = exports._ExternalDOM;
-function $ExternalDOM(_arg0)
-{
-  return {_cid : 0, _var0 : _arg0
-  };
-  return f
-};
-exports.$ExternalDOM = $ExternalDOM;
-;
-exports.$ExternalString = 0;
-var $ExternalString = exports.$ExternalString;
-;
-exports.$ExternalVoid = 0;
-var $ExternalVoid = exports.$ExternalVoid;
-;
-exports.$ExternalChar = 0;
-var $ExternalChar = exports.$ExternalChar;
-;
-exports.$ExternalReal = 0;
-var $ExternalReal = exports.$ExternalReal;
-;
-exports.$ExternalInt = 0;
-var $ExternalInt = exports.$ExternalInt;
+exports.$stringToInt = parseInt;
+var $stringToInt = exports.$stringToInt;
+exports.$charToInt = function(c){return c.charCodeAt(0);};
+var $charToInt = exports.$charToInt;
+exports.$stringGetChar = function(s){return function(i){
+	if (s.length < i) {
+		throw "stringGetChar failed: Char index out of bounds"
+	} else {
+		return s.charAt(i);
+	}
+}};
+var $stringGetChar = exports.$stringGetChar;
+exports.$charToString = function(c){return c;};
+var $charToString = exports.$charToString;
 exports.$t = _mul;
 var $t = exports.$t;
 exports.$l$e = _leq;
@@ -188,6 +185,8 @@ exports.$g$e = _geq;
 var $g$e = exports.$g$e;
 exports.$yield = _yield;
 var $yield = exports.$yield;
+exports.$intToChar = String.fromCharCode;
+var $intToChar = exports.$intToChar;
 exports.$m = _sub;
 var $m = exports.$m;
 exports.$a$e = _bind;
@@ -198,10 +197,10 @@ exports.$error = function(msg){throw msg};
 var $error = exports.$error;
 exports.$e$e = _eq;
 var $e$e = exports.$e$e;
-exports.$intToStr = function(i){return i.toString();};
-var $intToStr = exports.$intToStr;
 exports.$isNaN = isNaN;
 var $isNaN = exports.$isNaN;
+exports.$intToString = function(i){return i.toString();};
+var $intToString = exports.$intToString;
 exports.$p = _add;
 var $p = exports.$p;
 exports.$iNaN = NaN;
@@ -210,8 +209,28 @@ exports.$d = _div;
 var $d = exports.$d;
 exports.$g = _greater;
 var $g = exports.$g;
-exports.$strToInt = parseInt;
-var $strToInt = exports.$strToInt;
+exports.$noop = function ()
+{
+  var $26 = $yield;
+  var $25 = $Void;
+  var $noop = $26($25);
+  return $noop
+}();
+var $noop = exports.$noop;
+function $id(_arg0)
+{
+  if(true)
+  {
+    var $a = _arg0;
+    var _return = $a;
+    return _return
+  }
+  else 
+  {
+    throw "Pattern not exhaustive!"
+  }
+};
+exports.$id = $id;
 function $s(_arg0)
 {
   return function (_arg1)
@@ -225,17 +244,17 @@ function $s(_arg0)
         if(true)
         {
           var $x = _arg0;
-          var $26 = $f;
-          var $25 = $g;
-          var $24 = $x;
-          var $23 = $25($24);
-          var $22 = $26($23)
+          var $31 = $f;
+          var $30 = $g;
+          var $29 = $x;
+          var $28 = $30($29);
+          var $27 = $31($28)
         }
         else 
         {
           throw "Pattern for lambda expression did not match arguments"
         };
-        return $22
+        return $27
       };
       return _return
     }
@@ -267,20 +286,6 @@ function $not(_arg0)
   }
 };
 exports.$not = $not;
-function $id(_arg0)
-{
-  if(true)
-  {
-    var $a = _arg0;
-    var _return = $a;
-    return _return
-  }
-  else 
-  {
-    throw "Pattern not exhaustive!"
-  }
-};
-exports.$id = $id;
 function $d$e(_arg0)
 {
   return function (_arg1)
@@ -289,13 +294,13 @@ function $d$e(_arg0)
     {
       var $x = _arg0;
       var $y = _arg1;
-      var $32 = $not;
-      var $31 = $e$e;
-      var $30 = $x;
-      var $29 = $31($30);
-      var $28 = $y;
-      var $27 = $29($28);
-      var _return = $32($27);
+      var $37 = $not;
+      var $36 = $e$e;
+      var $35 = $x;
+      var $34 = $36($35);
+      var $33 = $y;
+      var $32 = $34($33);
+      var _return = $37($32);
       return _return
     }
     else 

@@ -18,19 +18,19 @@ DEF main =
 	
 DEF cbAddNumber doc numberNode inp =
 	Web.getValue inp &= \ val .
-	LET value = strToInt val IN
+	LET value = stringToInt val IN
 	IF isNaN value THEN
 	  Web.alert(val ++ " is not a number. Expected a number!")
 	ELSE
-	  Web.createButton doc (intToStr value) {||} &= \ button .
+	  Web.createButton doc (intToString value) {||} &= \ button .
 	  Web.setOnClick button (Web.removeChild numberNode button) &
 	  Web.appendChild numberNode button
 	  
 DEF cbSum doc numberNode =
 	Web.getChildNodes numberNode &= \ numberNodes .
-	List.mapDom (\node. Web.getValue node &= (yield # strToInt)) numberNodes &= \ nums .
+	List.mapDom (\node. Web.getValue node &= (yield # stringToInt)) numberNodes &= \ nums .
 	LET sum = List.reduce (\x.\y.x+y) 0 nums IN
-	Web.alert ("Sum: " ++ intToStr sum)
+	Web.alert ("Sum: " ++ intToString sum)
 	
 DATA NumNode = NodeWithNumber Web.Node Int
 DEF minNode (NodeWithNumber n1 i1) (NodeWithNumber n2 i2) =
@@ -43,9 +43,9 @@ DEF getNode (NodeWithNumber n1 i1) = n1
 DEF cbSort doc numberNode =
 	Web.getChildNodes numberNode &= \ numberNodes .
 	List.mapDom (\node. Web.getValue node &=
-					\v. yield (NodeWithNumber node (strToInt v))) numberNodes &= \ nodesWithNumbers .
-	LET sorted = Dbg.andPrint (selectionSort nodesWithNumbers) (List.toString Dbg.anyToString) IN
-	List.mapDom (Web.removeChild numberNode) numberNodes &
+					\v. yield (NodeWithNumber node (stringToInt v))) numberNodes &= \ nodesWithNumbers .
+	LET sorted = selectionSort nodesWithNumbers IN
+	List.mapDom (Web.removeChild numberNode) numberNodes & 
 	List.mapDom (Web.appendChild numberNode # getNode) sorted &
 	{||}
 	

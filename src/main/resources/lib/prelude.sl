@@ -32,23 +32,16 @@
 
 IMPORT EXTERN "_prelude" 
 
--- Base Types
-
-DATA Int = ExternalInt
-DATA Real = ExternalReal
-DATA Char = ExternalChar
-DATA Void = ExternalVoid
-DATA String = ExternalString
-DATA DOM a = ExternalDOM a
-
+-------------------------------------
 -- Booleans
-
+-- (without Bool, there is no if-then-else)
 PUBLIC DATA Bool = True | False
 
 PUBLIC FUN not : Bool -> Bool
 DEF not True = False
 DEF not False = True
 
+-------------------------------------
 -- Function composition
 PUBLIC FUN # : (b -> c) -> (a -> b) -> (a -> c)
 DEF f # g = \ x . f (g x)
@@ -56,22 +49,42 @@ DEF f # g = \ x . f (g x)
 PUBLIC FUN id : a -> a
 DEF id a = a
 
--- String functions
+-- The representation of the undefined.
+PUBLIC FUN error : String -> a
+DEF EXTERN error = {| function(msg){throw msg} |} 
 
-PUBLIC FUN ++ : (String -> String -> String)
-DEF EXTERN ++ = {| _adds |}
+-------------------------------------
+-- Base Types
+-- (i.e. types that must exist because literals are mapped to them.)
 
+DATA EXTERN Int
+DATA EXTERN Real
+DATA EXTERN Char
+DATA EXTERN String
+
+DATA Void = Void
+DATA EXTERN DOM a
+
+-------------------------------------
 -- Monad functions
 
-PUBLIC FUN &= : (DOM a) -> (a -> (DOM b)) -> (DOM b)
-DEF EXTERN &= = {| _bind |}
-
+-- return / yield function 
 PUBLIC FUN yield : a -> (DOM a)
 DEF EXTERN yield =  {| _yield |}
 
-PUBLIC FUN & : (DOM a) -> (DOM b) -> (DOM b)
+-- shorthand for no operation. (equivalent to {| |} )
+PUBLIC FUN noop : DOM Void
+DEF noop = yield Void
+
+-- bind function
+PUBLIC FUN &= : DOM a -> (a -> DOM b) -> DOM b
+DEF EXTERN &= = {| _bind |}
+
+-- shorthand for bind with no argument
+PUBLIC FUN & : DOM a -> DOM b -> DOM b
 DEF EXTERN & = {| _bindnr |}
 
+-------------------------------------
 -- Arithmetics on Integers
 
 PUBLIC FUN + : Int -> Int -> Int
@@ -104,22 +117,37 @@ DEF EXTERN >= = {| _geq |}
 PUBLIC FUN > : Int -> Int -> Bool
 DEF EXTERN > = {| _greater |}
 
-
--- iNaN /= iNaN !!
 PUBLIC FUN iNaN : Int
 DEF EXTERN iNaN = {| NaN |}
+-- iNaN /= iNaN !!
 
 PUBLIC FUN isNaN : Int -> Bool
 DEF EXTERN isNaN = {| isNaN |}
 
+-- String functions
+PUBLIC FUN ++ : (String -> String -> String)
+DEF EXTERN ++ = {| _adds |}
+
 -------------------------------------
+-- Basic Conversions
 
-PUBLIC FUN intToStr : Int -> String
-DEF EXTERN intToStr = {| function(i){return i.toString();} |}
+PUBLIC FUN intToString : Int -> String
+DEF EXTERN intToString = {| function(i){return i.toString();} |}
+PUBLIC FUN intToChar : Int -> Char
+DEF EXTERN intToChar = {| String.fromCharCode |}
 
-PUBLIC FUN strToInt : String -> Int
-DEF EXTERN strToInt = {| parseInt |}
+PUBLIC FUN charToInt : Char -> Int
+DEF EXTERN charToInt = {| function(c){return c.charCodeAt(0);} |}
+PUBLIC FUN charToString : Char -> String
+DEF EXTERN charToString = {| function(c){return c;} |}
 
-
-PUBLIC FUN error : String -> a
-DEF EXTERN error = {| function(msg){throw msg}|} 
+PUBLIC FUN stringToInt : String -> Int
+DEF EXTERN stringToInt = {| parseInt |}
+PUBLIC FUN stringGetChar : String -> Int -> Char
+DEF EXTERN stringGetChar = {| function(s){return function(i){
+	if (s.length < i) {
+		throw "stringGetChar failed: Char index out of bounds"
+	} else {
+		return s.charAt(i);
+	}
+}} |}

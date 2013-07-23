@@ -1,7 +1,7 @@
 IMPORT "list" AS List
 
-DATA Node = Node
-DATA Document = Document
+DATA EXTERN Node
+DATA EXTERN Document
 
 PUBLIC FUN document : DOM Document
 DEF document = {| document |} : DOM Document
