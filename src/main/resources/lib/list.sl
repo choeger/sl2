@@ -39,6 +39,15 @@ PUBLIC FUN map : (a -> b) -> List a -> List b
 DEF map f Nil = Nil
 DEF map f (Cons ft rt) =
 	Cons (f ft) (map f rt)
+
+-- special function to map a monadic function on a list.
+-- (first element will be evaluated first!)
+PUBLIC FUN mapDom : (a -> DOM b) -> List a -> DOM List b
+DEF mapDom f Nil = yield Nil
+DEF mapDom f (Cons ft rt) =
+	f ft &= \newFt.
+	mapDom f rt &= \newRt.
+	yield (Cons newFt newRt)
 	
 PUBLIC FUN toString : (a -> String) -> List a -> String
 DEF toString tS list = "<" ++ toStringI list tS ++ ">"

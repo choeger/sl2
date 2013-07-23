@@ -5,7 +5,9 @@ IMPORT "basicio" AS IO
 DEF main =
 	LET list = listTest IN
 	LET dict = dictTest list IN
-	IO.print "did it work?"
+	IO.print ("Expected output: \n"
+		++ "<helloooo,world> \n"
+		++ "{helloooo:8,world:5}")
 	
 -- covers: List, List.toString
 DEF listTest =
