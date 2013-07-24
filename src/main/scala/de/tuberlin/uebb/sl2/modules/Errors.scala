@@ -96,7 +96,7 @@ trait Errors {
     case DuplicatePathError  (what, where)        => where.toString + ": duplicate path " + quote(what) + "\n"
     case DuplicateModuleError(what, where)        => where.toString + ": duplicate module name " + quote(what) + "\n"
     case ParseError          (what, where)        => where.toString + ": " + what + "\n"
-    case UndefinedError      (what, name, where)  => where.toString + ": " + what + ": " + quote(name) + "\n"
+    case UndefinedError      (what, name, where)  => where.toString + ": undefined " + what + ": " + quote(name) + "\n"
     case TypeError           (what, where, cause) => where.toString + ": " + what + ", for the following reason:\n" + cause.toString  + "\n"
     case DuplicateError      (what, name, where)  => "Duplicate definition of " + quote(name) + ": " + what + ". Locations:\n" + where.map(_.toString).mkString("\n") + "\n"
     case AttributedError     (what, where)        => where.toString + ": " + what + "\n"

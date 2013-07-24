@@ -18,7 +18,9 @@ trait ModuleResolverImpl extends ModuleResolver {
       
       //TODO: really deal with transitive imports and the like...
       val preludeImp = if (config.mainUnit.getName() != "prelude.sl")
-        UnqualifiedImport("prelude") :: imports else imports
+         UnqualifiedImport("std/prelude") :: imports 
+      else
+         imports
       errorMap(preludeImp, resolveImport(config))
     case _ => throw new RuntimeException("")
   }
@@ -71,10 +73,10 @@ trait ModuleResolverImpl extends ModuleResolver {
   }
   
   private def checkUniqueIde(imports : List[Import]) : Either[Error, Unit] = {
-    if (imports.isEmpty)
-      return Right()
-    
     val qualified = imports.filter(_.isInstanceOf[QualifiedImport]).map(_.asInstanceOf[QualifiedImport])
+
+    if (qualified.isEmpty)
+      return Right()
     
     def checkUniqueness(imp : QualifiedImport) : Either[Error, Unit] = {
       if (qualified.count(_.name == imp.name) == 1)
@@ -89,8 +91,8 @@ trait ModuleResolverImpl extends ModuleResolver {
   def resolveImport(config: Config)(imp: Import): Either[Error, ResolvedImport] = imp match {
     case ui @ UnqualifiedImport(path, attr) => 
       for (
-        file <- findImportResource(imp.path + ".sl.signature", attr).right;
-        jsFile <- findImportResource(imp.path + ".sl.js", attr).right;
+        file <- findImport(config, imp.path + ".sl.signature", attr).right;
+        jsFile <- findImport(config, imp.path + ".sl.js", attr).right;
         signature <- importSignature(file).right
       ) yield ResolvedUnqualifiedImport(path, file, jsFile, signature, ui)
     case qi @ QualifiedImport(path, name, attr) =>
@@ -105,6 +107,7 @@ trait ModuleResolverImpl extends ModuleResolver {
       ) yield ResolvedExternImport(file, ei)
   }
 
+  // unused
   def findImportResource(path: String, attr: Attribute): Either[Error, File] = {
     val files = List(new File(getClass().getResource("/lib/"+path).toURI()))
     files.find(_.canRead()).toRight(
@@ -112,7 +115,11 @@ trait ModuleResolverImpl extends ModuleResolver {
   }
   
   def findImport(config: Config, path: String, attr: Attribute): Either[Error, File] = {
-    val files = List(new File(config.classpath, path),
+    val stdPrefix = "std/" // TODO: Do this less rigidly
+    val files = if (stdPrefix == path.substring(0, stdPrefix.length))
+      List(new File(config.classpath, path.substring(stdPrefix.length)))
+    else
+      List(new File(config.classpath, path),
         new File(config.mainUnit.getParentFile(), path),
         new File(path))
     files.find(_.canRead()).toRight(
