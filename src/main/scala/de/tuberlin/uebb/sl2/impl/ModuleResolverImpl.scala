@@ -7,7 +7,9 @@ import scala.io.Source
 trait ModuleResolverImpl extends ModuleResolver {
   this: Syntax with Errors with Configs with SignatureSerializer =>
 
-  case class ImportError(what: String, where: Attribute) extends Error
+  case class ImportError(what: String, where: Attribute) extends Error {
+    override def toString = where.toString + ": " + what + "\n"
+  }
 
   def inferDependencies(program: AST, config: Config) : Either[Error, List[ResolvedImport]] = program match {
     case Program(imports, _, _, _, _, attribute) =>
@@ -111,7 +113,7 @@ trait ModuleResolverImpl extends ModuleResolver {
   def findImportResource(path: String, attr: Attribute): Either[Error, File] = {
     val files = List(new File(getClass().getResource("/lib/"+path).toURI()))
     files.find(_.canRead()).toRight(
-      ImportError("Could not find resource " + quote(path)+ " at " +files.map(_.getCanonicalPath()), attr))
+      ImportError("Could not find resource " + quote(path)+ " at " + files.map(_.getCanonicalPath()).mkString("\n\t\t\t\tor "), attr))
   }
   
   def findImport(config: Config, path: String, attr: Attribute): Either[Error, File] = {
@@ -123,7 +125,7 @@ trait ModuleResolverImpl extends ModuleResolver {
         new File(config.mainUnit.getParentFile(), path),
         new File(path))
     files.find(_.canRead()).toRight(
-      ImportError("Could not find " + quote(path) + " at " + files.map(_.getCanonicalPath()), attr))
+      ImportError("Could not find " + quote(path) + " at " + files.map(_.getCanonicalPath()).mkString("\n\t\t\t\tor "), attr))
   }
 
   def importSignature(file: File): Either[Error, Program] = {

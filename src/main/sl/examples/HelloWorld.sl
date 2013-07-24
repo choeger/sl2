@@ -2,6 +2,8 @@ IMPORT "std/list" AS List
 IMPORT "std/option" AS Opt
 IMPORT "std/debuglog" AS Log
 IMPORT "std/dict" AS Dict
+IMPORT "wusel" AS Dusel
+IMPORT "std/wusel" AS Wusel
 
 DEF hello = "Hello World" ++ "23"
 

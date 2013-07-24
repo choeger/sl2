@@ -2,7 +2,7 @@
 // generated from: debuglog.sl
 /***********************************/
 define(function(require, exports, module) {
-    var $$prelude = require("prelude.sl")
+    var $$std$prelude = require("std/prelude.sl")
 
 ;
 var $logAvailable = typeof console != "undefined";
