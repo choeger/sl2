@@ -8,8 +8,8 @@ trait ModuleContextImpl extends ModuleContext {
   def buildModuleContext(imp : List[ResolvedImport]) : (Context, Map[Var, FunctionSig]) = {
     if (imp.isEmpty) return (Map(), Map())
     
-    val contexts = imp.map(buildModuleContext)
-    val sigs     = imp.map(buildModuleSig)
+    val contexts = imp.map(buildContext)
+    val sigs     = imp.map(buildSig)
     
     val context = contexts.reduce(_ <++> _)
     val sig     = sigs    .reduce(_  ++  _)
@@ -17,7 +17,7 @@ trait ModuleContextImpl extends ModuleContext {
     (context, sig)
   }
   
-  def buildModuleContext(imp : ResolvedImport) : Context = imp match {
+  def buildContext(imp : ResolvedImport) : Context = imp match {
     case ui: ResolvedUnqualifiedImport =>
 	    // this is almost identical to DTCheckerImpl:dataConTypes
 		// TODO: refactor to remove duplicate code 2x in here and 1x in DTCheckerImpl
@@ -71,7 +71,7 @@ trait ModuleContextImpl extends ModuleContext {
     case _ : ResolvedExternImport => Map()
   }
     
-  def buildModuleSig(imp : ResolvedImport) : Map[Var, FunctionSig] = imp match {
+  def buildSig(imp : ResolvedImport) : Map[Var, FunctionSig] = imp match {
     case ui: ResolvedUnqualifiedImport =>
       ui.signature.signatures.map(kv => {
         val (ide, sig) = kv
