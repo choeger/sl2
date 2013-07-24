@@ -23,11 +23,34 @@ trait ModuleResolverImpl extends ModuleResolver {
     case _ => throw new RuntimeException("")
   }
   
-  private def checkImports(imports : List[Import]) : Either[Error, Unit] = {
+  def checkImports(imports : List[Import]) : Either[Error, Unit] = {
     for (
+      _ <- checkPathSyntax(imports).right;
       _ <- checkUniquePath(imports).right;
       _ <- checkUniqueIde(imports).right
     ) yield ()
+  }
+  
+  private def checkPathSyntax(imports : List[Import]) : Either[Error, Unit] = {
+    /** Checks the syntax of the path
+     *
+     * The underscore indicates terminal symbols.
+     * Within '[' ']' only terminal symbols and regex are enumerated.
+     *
+     * The syntax is defined as follows:
+     *
+     *   path   ::= _/?(dir _/) module
+     *   dir    ::= [:alnum:-_.]+
+     *   module ::= [:alnum:-_]+
+     */
+    def validatePath(path : String) : Boolean = path.matches("/?([a-zA-Z0-9-_.]+/)*[a-zA-Z0-9-_]+")
+    
+    val invalidPaths = imports.filter {imp => !validatePath(imp.path)}
+    
+    if (invalidPaths.isEmpty)
+      return Right()
+    else
+      return Left(InvalidPathError)
   }
   
   private def checkUniquePath(imports : List[Import]) : Either[Error, Unit] = {
@@ -36,11 +59,17 @@ trait ModuleResolverImpl extends ModuleResolver {
     if (duplicates.isEmpty)
       return Right()
     else
-      return Left(DuplicatePathError(duplicates))
+      return Left(DuplicatePathError)
   }
   
   private def checkUniqueIde(imports : List[Import]) : Either[Error, Unit] = {
-    Right()
+    val qualified = imports.filter(_.isInstanceOf[QualifiedImport]).map(_.asInstanceOf[QualifiedImport])
+    val duplicates = qualified.filter {imp => qualified.count(_.name == imp.name) > 1}
+    
+    if (duplicates.isEmpty)
+      return Right()
+    else
+      return Left(DuplicateModuleError)
   }
 
   def resolveImport(config: Config)(imp: Import): Either[Error, ResolvedImport] = imp match {

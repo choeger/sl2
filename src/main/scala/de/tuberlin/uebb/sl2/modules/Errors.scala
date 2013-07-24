@@ -65,8 +65,11 @@ trait Errors {
   case class ParseError(what: String, where: Attribute) extends Error
   
   // TODO
-  // implement error message
-  case class DuplicatePathError(what: List[Import]) extends Error
+  case object InvalidPathError extends Error
+  // TODO
+  case object DuplicatePathError extends Error
+  // TODO
+  case object DuplicateModuleError extends Error
 
   /* Type checker: undefined element error */
   case class UndefinedError(what: String, name: String, where: Attribute) extends Error
