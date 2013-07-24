@@ -91,14 +91,15 @@ trait SimpleDriver extends Driver {
     } else if(!modulesDir.isDirectory()) {
       println(modulesDir+" is not a directory")
     }
-    
+// INSTEAD: ADJUST MAIN TEMPLATE WITH PATHS -- IN PROGRESS
+/*    
     // copy .js and .signature of imported modules from classpath to modules/ directory
     for(i <- imports.filter(_.isInstanceOf[ResolvedModuleImport])) {
       val imp = i.asInstanceOf[ResolvedModuleImport]
       copy(Paths.get(imp.file.toURI),   Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.signature"))
       copy(Paths.get(imp.jsFile.toURI), Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.js"))
     }
-    
+ */    
     val tarJs = new File(modulesDir, name + ".js")
     println("compiling "+name+" to "+tarJs)
     // TODO: maybe CombinatorParser does not yet parse qualified imports correctly, like ParboiledParser did before?
@@ -136,30 +137,32 @@ trait SimpleDriver extends Driver {
     
     // create main.js only if a main function is declared
     if(program.isInstanceOf[Program] && program.asInstanceOf[Program].functionDefs.contains("main")) {
-	    val mainWriter = new PrintWriter(new File(config.destination, "main.js"))
-	    for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
-	      val imp = i.asInstanceOf[ResolvedExternImport]
-	      val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
-	      mainWriter.println("/***********************************/")
-	      mainWriter.println("// included from: "+imp.file.getCanonicalPath())
-	      mainWriter.println("/***********************************/")
-	      mainWriter.println(includedCode)
-	      mainWriter.println("/***********************************/")
-	    }
-	    mainWriter.println("/***********************************/")
-	    mainWriter.println("// generated from: "+name)
-	    mainWriter.println("/***********************************/") 
-	    val mainTemplate = Source.fromURL(getClass.getResource("/js/main_template.js")).getLines.mkString("\n")
-	    mainWriter.write(mainTemplate.replace("%%MODULE_PATHS_LIST%%", "\""+name+"\"")
-	    	.replace("%%MODULE_NAMES_LIST%%", "$$$"+name.substring(0, name.length()-3))
-	    		.replace("%%MAIN%%", JsPrettyPrinter.pretty(JsFunctionCall("$$$"+name.substring(0, name.length()-3)+".$main"))))
-	    mainWriter.close()
-	    
-	    // copy index.html, require.js to config.destination
-	    copy(Paths.get(getClass().getResource("/js/index.html").toURI()),
-	        Paths.get(config.destination.getAbsolutePath(), "index.html"))
-	    copy(Paths.get(getClass().getResource("/js/require.js").toURI()),
-	        Paths.get(config.destination.getAbsolutePath(), "require.js"))
+      val mainWriter = new PrintWriter(new File(config.destination, "main.js"))
+      val paths = JsObject(List((JsName("std"), JsStr(config.classpath.toString))))
+      for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
+	val imp = i.asInstanceOf[ResolvedExternImport]
+	val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
+	mainWriter.println("/***********************************/")
+	mainWriter.println("// included from: "+imp.file.getCanonicalPath())
+	mainWriter.println("/***********************************/")
+	mainWriter.println(includedCode)
+	mainWriter.println("/***********************************/")
+      }
+      mainWriter.println("/***********************************/")
+      mainWriter.println("// generated from: "+name)
+      mainWriter.println("/***********************************/")
+      val mainTemplate = Source.fromURL(getClass.getResource("/js/main_template.js")).getLines.mkString("\n")
+      mainWriter.write(mainTemplate.replace("%%MODULE_PATHS_LIST%%", "\""+name+"\"")
+        .replace("%%PATHS%%", JsPrettyPrinter.pretty(paths))
+	.replace("%%MODULE_NAMES_LIST%%", "$$$"+name.substring(0, name.length()-3))  // FIXME! the -3 here cuts off the .sl extension. should be done less hacky
+	.replace("%%MAIN%%", JsPrettyPrinter.pretty(JsFunctionCall("$$$"+name.substring(0, name.length()-3)+".$main"))))
+      mainWriter.close()
+      
+      // copy index.html, require.js to config.destination
+      copy(Paths.get(getClass().getResource("/js/index.html").toURI()),
+	Paths.get(config.destination.getAbsolutePath(), "index.html"))
+      copy(Paths.get(getClass().getResource("/js/require.js").toURI()),
+	Paths.get(config.destination.getAbsolutePath(), "require.js"))
     }
     
     return Right("compilation successful")

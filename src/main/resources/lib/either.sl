@@ -1,5 +1,5 @@
 
-IMPORT "option" AS Option
+IMPORT "std/option" AS Option
 
 -- simple union data type
 PUBLIC DATA Either a b =

@@ -74,9 +74,6 @@ trait Errors {
 
   /* Import Checker: clashing module identifiers */
   case class DuplicateModuleError(what : String, where : Attribute) extends Error
-
-  /* Module resolver and driver: import error */
-  case class ImportError(what: String, where: Attribute) extends Error
   
   /* Multi driver: circular dependency */
   case class CircularDependencyError(what: String) extends Error
@@ -108,11 +105,10 @@ trait Errors {
     case DuplicatePathError  (what, where)        => where.toString + ": duplicate path " + quote(what) + "\n"
     case DuplicateModuleError(what, where)        => where.toString + ": duplicate module name " + quote(what) + "\n"
     case ParseError          (what, where)        => where.toString + ": " + what + "\n"
-    case ImportError		 (what, where) 		  => where.toString + ": " + what + "\n"
     case CircularDependencyError(what) 			  => what + "\n"
     case FileNotFoundError	 (file) 			  => "File not found:" + file.getAbsolutePath + "\n"
     case FilesNotFoundError  (details, f1, f2)	  => details + "Neither of the files exists:" + f1.getAbsolutePath +", " + f2.getAbsolutePath + "\n"
-    case UndefinedError      (what, name, where)  => where.toString + ": " + what + ": " + quote(name) + "\n"
+    case UndefinedError      (what, name, where)  => where.toString + ": undefined " + what + ": " + quote(name) + "\n"
     case TypeError           (what, where, cause) => where.toString + ": " + what + ", for the following reason:\n" + cause.toString  + "\n"
     case DuplicateError      (what, name, where)  => "Duplicate definition of " + quote(name) + ": " + what + ". Locations:\n" + where.map(_.toString).mkString("\n") + "\n"
     case AttributedError     (what, where)        => where.toString + ": " + what + "\n"

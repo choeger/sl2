@@ -1,8 +1,9 @@
-IMPORT "basicweb" AS Web
-IMPORT "list" AS List
-IMPORT "real" AS Real
-IMPORT "debuglog" AS Dbg
+IMPORT "std/basicweb" AS Web
+IMPORT "std/list" AS List
+IMPORT "std/real" AS Real
+IMPORT "std/debuglog" AS Dbg
 
+PUBLIC FUN main : DOM Void
 DEF main = 
 	Web.document &= \ doc .
 	Web.getBody doc &= \ body .

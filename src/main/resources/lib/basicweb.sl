@@ -1,4 +1,4 @@
-IMPORT "list" AS List
+IMPORT "std/list" AS List
 
 DATA EXTERN Node
 DATA EXTERN Document

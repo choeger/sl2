@@ -1,4 +1,4 @@
-IMPORT "option" AS Option
+IMPORT "std/option" AS Option
 
 PUBLIC DATA List a =
 	  Nil

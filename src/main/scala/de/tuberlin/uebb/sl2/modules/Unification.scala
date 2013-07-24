@@ -147,11 +147,17 @@ trait Unification {
    */
   def unify(equation: Equation): Either[Error, Substitution] = unify(List(equation))
 
-  /* Unification errors */
-  case class OccursError(tvar: TypeVariable, ty: Type) extends Error
-  case class MisMatchError(t1: Type, t2: Type) extends Error {
-    override def toString = "Could not match "+quote(t1.toString)+" and "+quote(t2.toString)+"."
+  /* Unification errors */ // TODO: Better error messages
+  case class OccursError(tvar: TypeVariable, ty: Type) extends Error {
+    override def toString = "Occurs error: " + quote(tvar.toString) + ", " + quote(ty.toString) + ".\n"
   }
-  case class MoreGeneralError(t1: Type, t2: Type) extends Error
-  case class UnificationError(t1: Type, t2: Type) extends Error
+  case class MisMatchError(t1: Type, t2: Type) extends Error {
+    override def toString = "Could not match "+quote(t1.toString)+" and "+quote(t2.toString)+".\n"
+  }
+  case class MoreGeneralError(t1: Type, t2: Type) extends Error {
+    override def toString = "More general error: " + quote(t1.toString) + " and " + quote(t2.toString) +".\n"
+  }
+  case class UnificationError(t1: Type, t2: Type) extends Error {
+    override def toString = "Unification error: " + quote(t1.toString) + " and " + quote(t2.toString) +".\n"
+  }
 }

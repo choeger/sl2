@@ -30,7 +30,7 @@
 -- This is a stub for the predefined types and methods of SL, so that we
 -- can create the prelude by a combination of compilation and hand coding.
 
-IMPORT EXTERN "_prelude" 
+IMPORT EXTERN "std/_prelude" 
 
 -------------------------------------
 -- Booleans

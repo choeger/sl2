@@ -1,5 +1,5 @@
-IMPORT "list" AS List
-IMPORT "option" AS Opt
+IMPORT "std/list" AS List
+IMPORT "std/option" AS Opt
 
 DATA EXTERN Dict a 
 
