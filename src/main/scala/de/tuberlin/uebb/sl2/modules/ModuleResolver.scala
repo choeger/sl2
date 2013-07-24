@@ -10,16 +10,17 @@ trait ModuleResolver {
   this: Syntax with Errors with Configs =>
 
   sealed abstract class ResolvedImport(
-      file:File,
-      ast:Import)
+      val path:String,
+      val file:File,
+      val ast:Import)
   
   sealed abstract class ResolvedNamedImport(
       val name:String,
-      val path:String,
-      val file:File,
+      override val path:String,
+      override val file:File,
       val jsFile:File,
       val signature:Program,
-      val ast:Import) extends ResolvedImport(file, ast)
+      override val ast:Import) extends ResolvedImport(path, file, ast)
       
   case class ResolvedUnqualifiedImport(
       override val path: String,
@@ -39,10 +40,12 @@ trait ModuleResolver {
     extends ResolvedNamedImport(name, path, file, jsFile, signature, ast)
     
   case class ResolvedExternImport(
-      file: File,
-      ast: ExternImport)
-    extends ResolvedImport(file, ast)
+      override val path: String,
+      override val file: File,
+      override val ast: ExternImport)
+    extends ResolvedImport(path, file, ast)
     
   def inferDependencies(program: AST, config: Config): Either[Error, List[ResolvedImport]]
+  def resolveDependencies(program: AST, config: Config): Either[Error, Set[String]]
 
 }

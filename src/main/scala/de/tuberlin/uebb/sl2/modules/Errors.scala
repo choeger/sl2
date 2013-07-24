@@ -28,6 +28,8 @@
 
 package de.tuberlin.uebb.sl2.modules
 
+import java.io.File
+
 /**
  * The module defining the structured error representation
  */
@@ -61,9 +63,19 @@ trait Errors {
   /* Useful during implementation */
   case object NotYetImplemented extends Error
 
-  /* Perser: parse error */
+  /* Parser: parse error */
   case class ParseError(what: String, where: Attribute) extends Error
 
+  /* Module resolver and driver: import error */
+  case class ImportError(what: String, where: Attribute) extends Error
+  
+  /* Multi driver: circular dependency */
+  case class CircularDependencyError(what: String) extends Error
+  
+  /* Multi driver: file not found */
+  case class FileNotFoundError(file: File) extends Error
+  case class FilesNotFoundError(file1: File, file2: File) extends Error
+  
   /* Type checker: undefined element error */
   case class UndefinedError(what: String, name: String, where: Attribute) extends Error
 
@@ -84,6 +96,10 @@ trait Errors {
     case CouldNotRun(what, why) => "Could not run " + what + ", for the following reason:\n" + why.toString + "\n"
     case NotYetImplemented => "Error: Unimplemented feature"
     case ParseError(what, where) => where.toString + ": " + what + "\n"
+    case ImportError(what, where) => where.toString + ": " + what + "\n"
+    case CircularDependencyError(what) => what + "\n"
+    case FileNotFoundError(file) => "File not found:" + file.getAbsolutePath + "\n"
+    case FilesNotFoundError(_1, _2) => "Neither of the files exists:" + _1.getAbsolutePath +", " + _2.getAbsolutePath + "\n"
     case UndefinedError(what, name, where) => where.toString + ": " + what + ": " + quote(name) + "\n"
     case TypeError(what, where, cause) => where.toString + ": " + what + ", for the following reason:\n" + cause.toString  + "\n"
     case DuplicateError(what, name, where) => "Duplicate definition of " + quote(name) + ": " + what + ". Locations:\n" + where.map(_.toString).mkString("\n") + "\n"
@@ -96,7 +112,7 @@ trait Errors {
   /**
     * Apply a function which might result in an Error to all elements of a list
     * and combine the results accordingly, i.e., all occurring errors are collected
-    * and stored an an ErrorList.
+    * and stored in an ErrorList.
     */
   def errorMap[S,T](ts: List[T], f: T => Either[Error, S]): Either[Error, List[S]] = {
 

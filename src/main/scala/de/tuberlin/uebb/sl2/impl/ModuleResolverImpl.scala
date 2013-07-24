@@ -7,17 +7,29 @@ import scala.io.Source
 trait ModuleResolverImpl extends ModuleResolver {
   this: Syntax with Errors with Configs with SignatureSerializer =>
 
-  case class ImportError(what: String, where: Attribute) extends Error
-
   def inferDependencies(program: AST, config: Config) = program match {
     case Program(imports, _, _, _, _, attribute) =>
-      //TODO: really deal with transitive imports and the like...
       val preludeImp = if (config.mainUnit.getName() != "prelude.sl")
         UnqualifiedImport("prelude") :: imports else imports
       errorMap(preludeImp, resolveImport(config))
     case _ => throw new RuntimeException("")
   }
+  
+  /**
+   * Returns the names of modules imported in the given AST. This does not include
+   * the implicitly imported prelude.
+   */
+  def resolveDependencies(program: AST, config: Config) = program match {
+    case Program(imports, _, _, _, _, attribute) =>
+      var paths = Set[String]()
+      for(resolvedImports <- errorMap(imports, collectImport(config)).right;
+          resolvedImport  <- resolvedImports) { paths = paths + resolvedImport }
+      Right(paths)
+    case _ => throw new RuntimeException("")
+  }
 
+  def collectImport(config: Config)(imp: Import): Either[Error, String] = { Right(imp.path) }
+  
   def resolveImport(config: Config)(imp: Import): Either[Error, ResolvedImport] = imp match {
     case ui @ UnqualifiedImport(path, attr) => 
       for (
@@ -34,7 +46,7 @@ trait ModuleResolverImpl extends ModuleResolver {
     case ei @ ExternImport(path, attr) =>
       for (
         file <- findImport(config, imp.path + ".js", attr).right
-      ) yield ResolvedExternImport(file, ei)
+      ) yield ResolvedExternImport(path, file, ei)
   }
 
   def findImportResource(path: String, attr: Attribute): Either[Error, File] = {
@@ -45,6 +57,7 @@ trait ModuleResolverImpl extends ModuleResolver {
   
   def findImport(config: Config, path: String, attr: Attribute): Either[Error, File] = {
     val files = List(new File(config.classpath, path),
+        new File(config.destination, path),
         new File(config.mainUnit.getParentFile(), path),
         new File(path))
     files.find(_.canRead()).toRight(

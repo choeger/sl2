@@ -57,31 +57,38 @@ object Main
     with FDCheckerImpl
     with TypeCheckerImpl
     with ProgramCheckerImpl
-    with SimpleDriver
+    // with SimpleDriver
+    with MultiDriver
     with DebugOutput
     with SignatureJsonSerializer
     with ModuleResolverImpl
     with ModuleNormalizerImpl
-    with ModuleContextImpl {
+    with ModuleContextImpl
+  	with TopologicalSorting {
 
-  val usage = """Usage:B <sl> [-d destination directory] [-cp <class-path-directory>] source file(s)"""
+  val usage = """Usage:B <sl> [-d destination directory] [-cp <class-path-directory>] -sourcepath <source-path> source file(s)"""
 
   def main(args: Array[String]) {
     if (args.isEmpty)
       println(usage)
     else {
       val config = parseArguments(args.toList)
-      val res = run(config)
-      if (res.isLeft)
-        res.left.map(x => println("Errors:\n" + x))
-      else
-        res.right.map(x => println(x))
+      if(config.sourcepath == null || config.sources == null || config.sources.isEmpty) {
+        println(usage)
+      } else {
+	      val res = run(config)
+	      if (res.isLeft)
+	        res.left.map(x => println("Errors:\n" + x))
+	      else
+	        res.right.map(x => println(x))
+      }
     }
   }
   
   def parseArguments(args: List[String]): Config = args match {
   	case "-d" :: dir ::  rt => parseArguments(rt).copy(destination = new File(dir))
   	case "-cp" :: dir :: rt => parseArguments(rt).copy(classpath = new File(dir))
+  	case "-sourcepath" :: dir :: rt => parseArguments(rt).copy(sourcepath = new File(dir))
   	case src ::  rt => {
   		val res = parseArguments(rt)
   		res.copy(sources = src :: res.sources)
@@ -89,5 +96,5 @@ object Main
     case Nil => defaultConfig
   }
   
-  val defaultConfig: Config = Config(List(), new File(""), new File(""), null)
+  val defaultConfig: Config = Config(null, List(), new File(""), new File(""), null)
 }
