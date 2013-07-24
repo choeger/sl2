@@ -1,6 +1,6 @@
 IMPORT "basicweb" AS Web
 IMPORT "timing" AS Time
-IMPORT "basicio" AS Dbg
+IMPORT "debuglog" AS Dbg
 
 DEF createCanvas = 
 	Web.document &= \ doc .

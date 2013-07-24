@@ -1,1 +1,0 @@
-{"imports" : [], "signatures" : {"print" : [{"type" : ".String", "params" : []}, {"type" : ".DOM", "params" : [{"type" : ".Void", "params" : []}]}], "andPrint" : ["a", ["a", {"type" : ".String", "params" : []}], "a"], "andPrintDbg" : ["a", {"type" : ".String", "params" : []}, "a"], "anyToString" : ["a", {"type" : ".String", "params" : []}]}, "dataDefs" : []}

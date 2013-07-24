@@ -1,10 +1,12 @@
 /***********************************/
-// generated from: basicio.sl
+// generated from: debuglog.sl
 /***********************************/
 define(function(require, exports, module) {
     var $$prelude = require("prelude.sl")
 
 ;
+exports.$logAvailable = typeof console != "undefined";
+var $logAvailable = exports.$logAvailable;
 exports.$andPrint = function(res){return function(printer){
 	console && console.log(printer(res)); 
 	return res;
@@ -31,7 +33,7 @@ function $print(_arg0)
   }
 };
 exports.$print = $print;
-function $andPrintDbg(_arg0)
+function $andPrintMessage(_arg0)
 {
   return function (_arg1)
   {
@@ -64,5 +66,5 @@ function $andPrintDbg(_arg0)
     }
   }
 };
-exports.$andPrintDbg = $andPrintDbg
+exports.$andPrintMessage = $andPrintMessage
 });

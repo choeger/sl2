@@ -1,7 +1,7 @@
 IMPORT "basicweb" AS Web
 IMPORT "list" AS List
 IMPORT "real" AS Real
-IMPORT "basicio" AS Dbg
+IMPORT "debuglog" AS Dbg
 
 DEF main = 
 	Web.document &= \ doc .
