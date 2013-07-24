@@ -1,7 +1,8 @@
-IMPORT "dict" AS Dict
-IMPORT "list" AS List
-IMPORT "debuglog" AS Dbg
+IMPORT "std/dict" AS Dict
+IMPORT "std/list" AS List
+IMPORT "std/debuglog" AS Dbg
 
+PUBLIC FUN main : DOM Void
 DEF main =
 	LET list = listTest IN
 	LET dict = dictTest list IN

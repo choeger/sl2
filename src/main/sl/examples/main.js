@@ -1,5 +1,5 @@
 /***********************************/
-// generated from: HelloWorld.sl
+// generated from: librarytest.sl
 /***********************************/
 if (typeof window === 'undefined') {
     /* in node.js */
@@ -13,8 +13,8 @@ if (typeof window === 'undefined') {
 	paths: {std : "/home/fpz/code/sl2/src/main/resources/lib" }
     });
     
-    requirejs(["HelloWorld.sl"], function($$$HelloWorld) {
-        $$$HelloWorld.$main()
+    requirejs(["librarytest.sl"], function($$$librarytest) {
+        $$$librarytest.$main()
     });
 } else {
     require.config({
@@ -22,7 +22,7 @@ if (typeof window === 'undefined') {
     });
 
     /* in browsers*/ 
-    require(["HelloWorld.sl"], function($$$HelloWorld) {
-        $$$HelloWorld.$main()
+    require(["librarytest.sl"], function($$$librarytest) {
+        $$$librarytest.$main()
     });
 }
