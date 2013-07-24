@@ -1,5 +1,5 @@
 /***********************************/
-// generated from: HelloWorld.sl
+// generated from: librarytest.sl
 /***********************************/
 if (typeof window === 'undefined') {
     /* in node.js */
@@ -9,15 +9,20 @@ if (typeof window === 'undefined') {
         //Pass the top-level main.js/index.js require
         //function to requirejs so that node modules
         //are loaded relative to the top-level JS file.
-        nodeRequire: require
+        nodeRequire: require,
+	paths: {std : "/home/fpz/code/sl2/src/main/resources/lib" }
     });
     
-    requirejs(["HelloWorld.sl"], function($$$HelloWorld) {
-        $$$HelloWorld.$main()
+    requirejs(["librarytest.sl"], function($$$librarytest) {
+        $$$librarytest.$main()
     });
 } else {
+    require.config({
+	paths: {std : "/home/fpz/code/sl2/src/main/resources/lib" }
+    });
+
     /* in browsers*/ 
-    require(["HelloWorld.sl"], function($$$HelloWorld) {
-        $$$HelloWorld.$main()
+    require(["librarytest.sl"], function($$$librarytest) {
+        $$$librarytest.$main()
     });
 }

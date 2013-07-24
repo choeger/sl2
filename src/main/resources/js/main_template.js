@@ -6,13 +6,18 @@ if (typeof window === 'undefined') {
         //Pass the top-level main.js/index.js require
         //function to requirejs so that node modules
         //are loaded relative to the top-level JS file.
-        nodeRequire: require
+        nodeRequire: require,
+	paths: %%PATHS%%
     });
     
     requirejs([%%MODULE_PATHS_LIST%%], function(%%MODULE_NAMES_LIST%%) {
         %%MAIN%%
     });
 } else {
+    require.config({
+	paths: %%PATHS%%
+    });
+
     /* in browsers*/ 
     require([%%MODULE_PATHS_LIST%%], function(%%MODULE_NAMES_LIST%%) {
         %%MAIN%%

@@ -1,7 +1,8 @@
-IMPORT "dict" AS Dict
-IMPORT "list" AS List
-IMPORT "debuglog" AS IO
+IMPORT "std/dict" AS Dict
+IMPORT "std/list" AS List
+IMPORT "std/debuglog" AS IO
 
+PUBLIC FUN main : DOM Void
 DEF main =
 	LET dict = IO.andPrint
 		(Dict.put "fourtytwo" 42 (Dict.put "twentythree" 23 Dict.empty))
