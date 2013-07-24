@@ -1,7 +1,7 @@
 IMPORT "list" AS List
 IMPORT "option" AS Opt
 
-DATA Dict a = Dict a
+DATA EXTERN Dict a 
 
 PUBLIC FUN empty : Dict a
 DEF EXTERN empty = {| {} |}
