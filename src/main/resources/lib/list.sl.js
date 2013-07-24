@@ -6,10 +6,9 @@ define(function(require, exports, module) {
 
 ;
 ;
-exports.$Nil = 0;
-var $Nil = exports.$Nil;
-exports._Cons = 1;
-var _Cons = exports._Cons;
+var $Nil = 0;
+exports.$Nil = $Nil;
+var _Cons = 1;
 function $Cons(_arg0)
 {
   function f(_arg1)
@@ -19,15 +18,15 @@ function $Cons(_arg0)
   };
   return f
 };
+exports._Cons = _Cons;
 exports.$Cons = $Cons;
-exports.$fromString = function(str) {
+var $fromString = function(str) {
 	var list = $Nil;
 	for (var i = str.length-1; i >= 0 ; i--) {
 		list = $Cons(str.charAt(i))(list);
 	}
 	return list;
 };
-var $fromString = exports.$fromString;
 function $conc(_arg0)
 {
   return function (_arg1)
@@ -63,7 +62,6 @@ function $conc(_arg0)
     }
   }
 };
-exports.$conc = $conc;
 function $map(_arg0)
 {
   return function (_arg1)
@@ -101,7 +99,6 @@ function $map(_arg0)
     }
   }
 };
-exports.$map = $map;
 function $head(_arg0)
 {
   if((((_arg0["_cid"] === _Cons) && true) && true))
@@ -126,7 +123,6 @@ function $head(_arg0)
     }
   }
 };
-exports.$head = $head;
 function $fromOption(_arg0)
 {
   if(((_arg0["_cid"] === Option._Some) && true))
@@ -152,7 +148,6 @@ function $fromOption(_arg0)
     }
   }
 };
-exports.$fromOption = $fromOption;
 function $tail(_arg0)
 {
   if((((_arg0["_cid"] === _Cons) && true) && true))
@@ -175,7 +170,6 @@ function $tail(_arg0)
     }
   }
 };
-exports.$tail = $tail;
 function $filter(_arg0)
 {
   return function (_arg1)
@@ -225,7 +219,6 @@ function $filter(_arg0)
     }
   }
 };
-exports.$filter = $filter;
 function $removeFirst(_arg0)
 {
   return function (_arg1)
@@ -271,7 +264,6 @@ function $removeFirst(_arg0)
     }
   }
 };
-exports.$removeFirst = $removeFirst;
 function $reduceDom(_arg0)
 {
   return function (_arg1)
@@ -330,7 +322,6 @@ function $reduceDom(_arg0)
     }
   }
 };
-exports.$reduceDom = $reduceDom;
 function $reduce(_arg0)
 {
   return function (_arg1)
@@ -373,7 +364,6 @@ function $reduce(_arg0)
     }
   }
 };
-exports.$reduce = $reduce;
 function $mapDom(_arg0)
 {
   return function (_arg1)
@@ -447,7 +437,6 @@ function $mapDom(_arg0)
     }
   }
 };
-exports.$mapDom = $mapDom;
 function $length(_arg0)
 {
   if((_arg0 === $Nil))
@@ -476,7 +465,6 @@ function $length(_arg0)
     }
   }
 };
-exports.$length = $length;
 function $toStringI(_arg0)
 {
   return function (_arg1)
@@ -530,7 +518,6 @@ function $toStringI(_arg0)
     }
   }
 };
-exports.$toStringI = $toStringI;
 function $flatten(_arg0)
 {
   if(true)
@@ -550,7 +537,6 @@ function $flatten(_arg0)
     throw "Pattern not exhaustive!"
   }
 };
-exports.$flatten = $flatten;
 function $toString(_arg0)
 {
   return function (_arg1)
@@ -580,5 +566,19 @@ function $toString(_arg0)
     }
   }
 };
-exports.$toString = $toString
+;
+exports.$flatten = $flatten;
+exports.$conc = $conc;
+exports.$fromString = $fromString;
+exports.$map = $map;
+exports.$head = $head;
+exports.$fromOption = $fromOption;
+exports.$tail = $tail;
+exports.$filter = $filter;
+exports.$removeFirst = $removeFirst;
+exports.$reduceDom = $reduceDom;
+exports.$reduce = $reduce;
+exports.$mapDom = $mapDom;
+exports.$toString = $toString;
+exports.$length = $length
 });

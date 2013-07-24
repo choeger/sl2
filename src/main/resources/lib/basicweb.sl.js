@@ -7,14 +7,13 @@ define(function(require, exports, module) {
 ;
 ;
 ;
-exports.$getChildNodes = function(node){return function(){
+var $getChildNodes = function(node){return function(){
 	var list = List.$Nil;
 	for (var i=0; i<node.childNodes.length; i++) {
 		list = List.$Cons(node.childNodes[i])(list);
 	}
 	return list;
 }};
-var $getChildNodes = exports.$getChildNodes;
 function $createElement(_arg0)
 {
   return function (_arg1)
@@ -35,7 +34,6 @@ function $createElement(_arg0)
     }
   }
 };
-exports.$createElement = $createElement;
 function $appendChild(_arg0)
 {
   return function (_arg1)
@@ -56,8 +54,7 @@ function $appendChild(_arg0)
     }
   }
 };
-exports.$appendChild = $appendChild;
-exports.$document = function ()
+var $document = function ()
 {
   var $document = function ()
   {
@@ -65,7 +62,6 @@ exports.$document = function ()
   };
   return $document
 }();
-var $document = exports.$document;
 function $alert(_arg0)
 {
   if(true)
@@ -82,7 +78,6 @@ function $alert(_arg0)
     throw "Pattern not exhaustive!"
   }
 };
-exports.$alert = $alert;
 function $setOnClick(_arg0)
 {
   return function (_arg1)
@@ -103,7 +98,6 @@ function $setOnClick(_arg0)
     }
   }
 };
-exports.$setOnClick = $setOnClick;
 function $prompt(_arg0)
 {
   return function (_arg1)
@@ -124,7 +118,6 @@ function $prompt(_arg0)
     }
   }
 };
-exports.$prompt = $prompt;
 function $setValue(_arg0)
 {
   return function (_arg1)
@@ -145,7 +138,6 @@ function $setValue(_arg0)
     }
   }
 };
-exports.$setValue = $setValue;
 function $removeChild(_arg0)
 {
   return function (_arg1)
@@ -166,7 +158,6 @@ function $removeChild(_arg0)
     }
   }
 };
-exports.$removeChild = $removeChild;
 function $getValue(_arg0)
 {
   if(true)
@@ -183,7 +174,6 @@ function $getValue(_arg0)
     throw "Pattern not exhaustive!"
   }
 };
-exports.$getValue = $getValue;
 function $getBody(_arg0)
 {
   if(true)
@@ -200,7 +190,6 @@ function $getBody(_arg0)
     throw "Pattern not exhaustive!"
   }
 };
-exports.$getBody = $getBody;
 function $createInputElement(_arg0)
 {
   return function (_arg1)
@@ -269,7 +258,6 @@ function $createInputElement(_arg0)
     }
   }
 };
-exports.$createInputElement = $createInputElement;
 function $createInput(_arg0)
 {
   return function (_arg1)
@@ -299,7 +287,6 @@ function $createInput(_arg0)
     }
   }
 };
-exports.$createInput = $createInput;
 function $createButton(_arg0)
 {
   return function (_arg1)
@@ -329,5 +316,19 @@ function $createButton(_arg0)
     }
   }
 };
+;
+exports.$createElement = $createElement;
+exports.$appendChild = $appendChild;
+exports.$document = $document;
+exports.$createInputElement = $createInputElement;
+exports.$alert = $alert;
+exports.$setOnClick = $setOnClick;
+exports.$prompt = $prompt;
+exports.$createInput = $createInput;
+exports.$setValue = $setValue;
+exports.$getChildNodes = $getChildNodes;
+exports.$removeChild = $removeChild;
+exports.$getValue = $getValue;
+exports.$getBody = $getBody;
 exports.$createButton = $createButton
 });

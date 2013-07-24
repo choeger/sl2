@@ -124,7 +124,8 @@ trait SimpleDriver extends Driver {
     moduleWriter.write(moduleTemplate.replace("%%MODULE_BODY%%", JsPrettyPrinter.pretty(requires)+"\n\n"
         +JsPrettyPrinter.pretty(dataDefsToJs(program.dataDefs)
             & functionDefsExternToJs(program.functionDefsExtern)
-            & functionDefsToJs(program.functionDefs))));
+            & functionDefsToJs(program.functionDefs)
+            & functionSigsToJs(program.signatures))));
     moduleWriter.close();
     
     val signatureFile = new File(modulesDir, name + ".signature")

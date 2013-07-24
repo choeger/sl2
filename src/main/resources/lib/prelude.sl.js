@@ -1,5 +1,5 @@
 /***********************************/
-// included from: /home/ben/Dokumente/compilerbaupraxis/sl2/src/main/resources/lib/_prelude.js
+// included from: /home/fpz/code/sl2/src/main/resources/lib/_prelude.js
 /***********************************/
 /*
  * This basic module is necessary as an import to every SL
@@ -150,77 +150,56 @@ define(function(require, exports, module) {
 
 ;
 ;
-exports._SUSPEND = 0;
-var _SUSPEND = exports._SUSPEND;
+var _SUSPEND = 0;
 function $SUSPEND(_arg0)
 {
   return {_cid : 0, _var0 : _arg0
   };
   return f
 };
+exports._SUSPEND = _SUSPEND;
 exports.$SUSPEND = $SUSPEND;
 ;
 ;
-exports.$Void = 0;
-var $Void = exports.$Void;
+var $Void = 0;
+exports.$Void = $Void;
 ;
 ;
 ;
 ;
 var $True = true;
 var $False = false;
-exports.$stringToInt = parseInt;
-var $stringToInt = exports.$stringToInt;
-exports.$charToInt = function(c){return c.charCodeAt(0);};
-var $charToInt = exports.$charToInt;
-exports.$stringGetChar = function(s){return function(i){
+exports.$True = true;
+exports.$False = false;
+var $stringToInt = parseInt;
+var $charToInt = function(c){return c.charCodeAt(0);};
+var $stringGetChar = function(s){return function(i){
 	if (s.length < i) {
 		throw "stringGetChar failed: Char index out of bounds"
 	} else {
 		return s.charAt(i);
 	}
 }};
-var $stringGetChar = exports.$stringGetChar;
-exports.$charToString = function(c){return c;};
-var $charToString = exports.$charToString;
-exports.$t = _mul;
-var $t = exports.$t;
-exports.$l$e = _leq;
-var $l$e = exports.$l$e;
-exports.$r = function(a){return function(b){ return a%b; }};
-var $r = exports.$r;
-exports.$l = _lesser;
-var $l = exports.$l;
-exports.$a = _bindnr;
-var $a = exports.$a;
-exports.$g$e = _geq;
-var $g$e = exports.$g$e;
-exports.$yield = _yield;
-var $yield = exports.$yield;
-exports.$intToChar = String.fromCharCode;
-var $intToChar = exports.$intToChar;
-exports.$m = _sub;
-var $m = exports.$m;
-exports.$a$e = _bind;
-var $a$e = exports.$a$e;
-exports.$p$p = _adds;
-var $p$p = exports.$p$p;
-exports.$error = function(msg){throw msg};
-var $error = exports.$error;
-exports.$e$e = _eq;
-var $e$e = exports.$e$e;
-exports.$isNaN = isNaN;
-var $isNaN = exports.$isNaN;
-exports.$intToString = function(i){return i.toString();};
-var $intToString = exports.$intToString;
-exports.$p = _add;
-var $p = exports.$p;
-exports.$iNaN = NaN;
-var $iNaN = exports.$iNaN;
-exports.$d = _div;
-var $d = exports.$d;
-exports.$g = _greater;
-var $g = exports.$g;
+var $charToString = function(c){return c;};
+var $t = _mul;
+var $l$e = _leq;
+var $r = function(a){return function(b){ return a%b; }};
+var $l = _lesser;
+var $a = _bindnr;
+var $g$e = _geq;
+var $yield = _yield;
+var $intToChar = String.fromCharCode;
+var $m = _sub;
+var $a$e = _bind;
+var $p$p = _adds;
+var $error = function(msg){throw msg};
+var $e$e = _eq;
+var $isNaN = isNaN;
+var $intToString = function(i){return i.toString();};
+var $p = _add;
+var $iNaN = NaN;
+var $d = _div;
+var $g = _greater;
 function $force(_arg0)
 {
   if(((_arg0["_cid"] === _SUSPEND) && true))
@@ -236,15 +215,13 @@ function $force(_arg0)
     throw "Pattern not exhaustive!"
   }
 };
-exports.$force = $force;
-exports.$noop = function ()
+var $noop = function ()
 {
   var $33 = $yield;
   var $32 = $Void;
   var $noop = $33($32);
   return $noop
 }();
-var $noop = exports.$noop;
 function $id(_arg0)
 {
   if(true)
@@ -258,7 +235,6 @@ function $id(_arg0)
     throw "Pattern not exhaustive!"
   }
 };
-exports.$id = $id;
 function $s(_arg0)
 {
   return function (_arg1)
@@ -292,7 +268,6 @@ function $s(_arg0)
     }
   }
 };
-exports.$s = $s;
 function $not(_arg0)
 {
   if((_arg0 === $True))
@@ -313,7 +288,6 @@ function $not(_arg0)
     }
   }
 };
-exports.$not = $not;
 function $boolToString(_arg0)
 {
   if((_arg0 === $True))
@@ -334,7 +308,6 @@ function $boolToString(_arg0)
     }
   }
 };
-exports.$boolToString = $boolToString;
 function $d$e(_arg0)
 {
   return function (_arg1)
@@ -358,5 +331,35 @@ function $d$e(_arg0)
     }
   }
 };
-exports.$d$e = $d$e
+;
+exports.$stringToInt = $stringToInt;
+exports.$charToInt = $charToInt;
+exports.$stringGetChar = $stringGetChar;
+exports.$charToString = $charToString;
+exports.$t = $t;
+exports.$force = $force;
+exports.$l$e = $l$e;
+exports.$r = $r;
+exports.$d$e = $d$e;
+exports.$l = $l;
+exports.$a = $a;
+exports.$g$e = $g$e;
+exports.$yield = $yield;
+exports.$intToChar = $intToChar;
+exports.$m = $m;
+exports.$noop = $noop;
+exports.$a$e = $a$e;
+exports.$id = $id;
+exports.$p$p = $p$p;
+exports.$error = $error;
+exports.$e$e = $e$e;
+exports.$s = $s;
+exports.$not = $not;
+exports.$isNaN = $isNaN;
+exports.$boolToString = $boolToString;
+exports.$intToString = $intToString;
+exports.$p = $p;
+exports.$iNaN = $iNaN;
+exports.$d = $d;
+exports.$g = $g
 });

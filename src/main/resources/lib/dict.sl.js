@@ -6,22 +6,18 @@ define(function(require, exports, module) {
 
 ;
 ;
-exports._Dict = 0;
-var _Dict = exports._Dict;
+var _Dict = 0;
 function $Dict(_arg0)
 {
   return {_cid : 0, _var0 : _arg0
   };
   return f
 };
-exports.$Dict = $Dict;
-exports.$empty = {};
-var $empty = exports.$empty;
-exports.$has = function(dict){return function(k){
+var $empty = {};
+var $has = function(dict){return function(k){
 	return (k in dict);
 }};
-var $has = exports.$has;
-exports.$filter = function(predicate){return function(dict){
+var $filter = function(predicate){return function(dict){
 	var newDict = {};
 	for(var key in dict) {
       if (predicate(dict[key])) {
@@ -30,8 +26,7 @@ exports.$filter = function(predicate){return function(dict){
     }
     return newDict;
 }};
-var $filter = exports.$filter;
-exports.$merge = function(dict1){return function(dict2){
+var $merge = function(dict1){return function(dict2){
 	var newDict = {};
 	for(var key in dict1) {
      newDict[key] = dict1[key];
@@ -41,30 +36,26 @@ exports.$merge = function(dict1){return function(dict2){
     }
     return newDict;
 }};
-var $merge = exports.$merge;
-exports.$reduce = function(f){return function(neut){return function(dict){
+var $reduce = function(f){return function(neut){return function(dict){
 	for(var key in dict) {
       neut = f(key)(dict[key]);
     }
     return neut;
 }}};
-var $reduce = exports.$reduce;
-exports.$put = function(k){return function(v){return function(dict){
+var $put = function(k){return function(v){return function(dict){
 	var newDict = Object();
 	newDict.__proto__ = dict;
 	newDict[k] = v;
 	return newDict;
 }}};
-var $put = exports.$put;
-exports.$get = function(dict){return function(k){
+var $get = function(dict){return function(k){
 	if (k in dict) {
 		return dict[k];
 	} else {
 		throw "Could not select <"+k+"> from dictionary.";
 	}
 }};
-var $get = exports.$get;
-exports.$toStringI = function(tS){return function(dict){
+var $toStringI = function(tS){return function(dict){
 	    var str = "";
 		for(var key in dict) {
 		  if (str != "") str += ",";
@@ -72,7 +63,6 @@ exports.$toStringI = function(tS){return function(dict){
     	}
     	return str;
 	}};
-var $toStringI = exports.$toStringI;
 function $getOpt(_arg0)
 {
   return function (_arg1)
@@ -108,7 +98,6 @@ function $getOpt(_arg0)
     }
   }
 };
-exports.$getOpt = $getOpt;
 function $fromList(_arg0)
 {
   return function (_arg1)
@@ -164,7 +153,6 @@ function $fromList(_arg0)
     }
   }
 };
-exports.$fromList = $fromList;
 function $toString(_arg0)
 {
   return function (_arg1)
@@ -194,5 +182,16 @@ function $toString(_arg0)
     }
   }
 };
-exports.$toString = $toString
+;
+exports.$empty = $empty;
+exports.$fromList = $fromList;
+exports.$has = $has;
+exports.$filter = $filter;
+exports.$merge = $merge;
+exports.$reduce = $reduce;
+exports.$put = $put;
+exports.$toString = $toString;
+exports.$get = $get;
+;
+exports.$getOpt = $getOpt
 });

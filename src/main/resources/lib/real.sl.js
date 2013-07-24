@@ -1,5 +1,5 @@
 /***********************************/
-// included from: /home/ben/Dokumente/compilerbaupraxis/sl2/src/main/resources/lib/_prelude.js
+// included from: /home/fpz/code/sl2/src/main/resources/lib/_prelude.js
 /***********************************/
 /*
  * This basic module is necessary as an import to every SL
@@ -149,52 +149,31 @@ define(function(require, exports, module) {
     var $$prelude = require("prelude.sl")
 
 ;
-exports.$t = _mul;
-var $t = exports.$t;
-exports.$l$e = _leq;
-var $l$e = exports.$l$e;
-exports.$l = _lesser;
-var $l = exports.$l;
-exports.$g$e = _geq;
-var $g$e = exports.$g$e;
-exports.$cos = Math.cos;
-var $cos = exports.$cos;
-exports.$pow = function(a){return function(b){return Math.pow(a,b);}};
-var $pow = exports.$pow;
-exports.$m = _sub;
-var $m = exports.$m;
-exports.$sqrt = Math.sqrt;
-var $sqrt = exports.$sqrt;
-exports.$fromInt = function(i){return i;};
-var $fromInt = exports.$fromInt;
-exports.$isNaN = isNaN;
-var $isNaN = exports.$isNaN;
-exports.$toString = function(i){return i.toString();};
-var $toString = exports.$toString;
-exports.$round = Math.round;
-var $round = exports.$round;
-exports.$p = _add;
-var $p = exports.$p;
-exports.$tan = Math.tan;
-var $tan = exports.$tan;
-exports.$abs = Math.abs;
-var $abs = exports.$abs;
-exports.$sin = Math.sin;
-var $sin = exports.$sin;
-exports.$log = Math.log;
-var $log = exports.$log;
-exports.$iNaN = NaN;
-var $iNaN = exports.$iNaN;
-exports.$d = _div;
-var $d = exports.$d;
-exports.$g = _greater;
-var $g = exports.$g;
-exports.$eps = function ()
+var $t = _mul;
+var $l$e = _leq;
+var $l = _lesser;
+var $g$e = _geq;
+var $cos = Math.cos;
+var $pow = function(a){return function(b){return Math.pow(a,b);}};
+var $m = _sub;
+var $sqrt = Math.sqrt;
+var $fromInt = function(i){return i;};
+var $isNaN = isNaN;
+var $toString = function(i){return i.toString();};
+var $round = Math.round;
+var $p = _add;
+var $tan = Math.tan;
+var $abs = Math.abs;
+var $sin = Math.sin;
+var $log = Math.log;
+var $iNaN = NaN;
+var $d = _div;
+var $g = _greater;
+var $eps = function ()
 {
   var $eps = 1.0E-16;
   return $eps
 }();
-var $eps = exports.$eps;
 function $e$e(_arg0)
 {
   return function (_arg1)
@@ -222,7 +201,6 @@ function $e$e(_arg0)
     }
   }
 };
-exports.$e$e = $e$e;
 function $d$e(_arg0)
 {
   return function (_arg1)
@@ -246,5 +224,28 @@ function $d$e(_arg0)
     }
   }
 };
-exports.$d$e = $d$e
+;
+exports.$t = $t;
+exports.$l$e = $l$e;
+exports.$d$e = $d$e;
+exports.$l = $l;
+exports.$g$e = $g$e;
+exports.$cos = $cos;
+exports.$pow = $pow;
+exports.$m = $m;
+exports.$sqrt = $sqrt;
+exports.$e$e = $e$e;
+exports.$fromInt = $fromInt;
+exports.$eps = $eps;
+exports.$isNaN = $isNaN;
+exports.$toString = $toString;
+exports.$round = $round;
+exports.$p = $p;
+exports.$tan = $tan;
+exports.$abs = $abs;
+exports.$sin = $sin;
+exports.$log = $log;
+exports.$iNaN = $iNaN;
+exports.$d = $d;
+exports.$g = $g
 });

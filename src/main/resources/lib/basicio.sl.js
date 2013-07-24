@@ -5,15 +5,14 @@ define(function(require, exports, module) {
     var $$prelude = require("prelude.sl")
 
 ;
-exports.$andPrint = function(res){return function(printer){
+var $logAvailable = typeof console != "undefined";
+var $andPrint = function(res){return function(printer){
 	console && console.log(printer(res)); 
 	return res;
 }};
-var $andPrint = exports.$andPrint;
-exports.$anyToString = function(some){
+var $anyToString = function(some){
 	return some.toString();
 };
-var $anyToString = exports.$anyToString;
 function $print(_arg0)
 {
   if(true)
@@ -30,8 +29,7 @@ function $print(_arg0)
     throw "Pattern not exhaustive!"
   }
 };
-exports.$print = $print;
-function $andPrintDbg(_arg0)
+function $andPrintMessage(_arg0)
 {
   return function (_arg1)
   {
@@ -64,5 +62,10 @@ function $andPrintDbg(_arg0)
     }
   }
 };
-exports.$andPrintDbg = $andPrintDbg
+;
+exports.$andPrint = $andPrint;
+exports.$anyToString = $anyToString;
+exports.$print = $print;
+exports.$logAvailable = $logAvailable;
+exports.$andPrintMessage = $andPrintMessage
 });
