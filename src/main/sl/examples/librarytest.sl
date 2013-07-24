@@ -17,9 +17,9 @@ DEF listTest =
 -- covers:
 -- 	Dict.fromList, Dict.toString,
 --	List.length, List.fromString,
---  Prelude.#  (function composition), Prelude.intToStr
+--  Prelude.#  (function composition), Prelude.intToString
 DEF dictTest li =
 	IO.andPrint
 		(Dict.fromList
 			(List.length # List.fromString) li)
-		(Dict.toString intToStr)
+		(Dict.toString intToString)

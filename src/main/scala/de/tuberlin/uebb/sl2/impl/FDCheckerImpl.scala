@@ -52,11 +52,19 @@ trait FDCheckerImpl extends FDChecker {
       val funQualifiedDefs = funDefs.toList.map({case (name,body) => (Syntax.Var(name), body)}).toMap
       val funQualifiedSigs = funSigs.toList.map({case (name,sig) => (Syntax.Var(name), sig)}).toMap
       val funQualifiedDefsExt = funDefsExtern.toList.map({case (name,body) => (Syntax.Var(name), body)}).toMap
-      val externContext: Context = funDefsExtern.map(
-          {case (name, eDef) => (Syntax.Var(name).asInstanceOf[VarFirstClass] ->
-          							astToType(funSigs(name).typ))})
+      val undeclaredExterns = funDefsExtern.filter{case (name, eDef) => !funSigs.isDefinedAt(name)}
+      if (!undeclaredExterns.isEmpty) {
+        val undeclaredWittness = undeclaredExterns.head
+        Left(AttributedError("External definition of " + quote(undeclaredWittness._1) +
+            " lacks an explicit declaration.", undeclaredWittness._2.attribute))
+      } else {
+      val externContext: Context = funDefsExtern.map {
+          case (name, eDef) => (Syntax.Var(name).asInstanceOf[VarFirstClass] ->
+            astToType(funSigs(name).typ))
+        }
       for (_ <- checkFunctions(funQualifiedDefs, funQualifiedDefsExt, funQualifiedSigs).right)
         yield (funQualifiedSigs, funQualifiedDefs, externContext)
+      }
     }
   }
 

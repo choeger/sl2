@@ -40,8 +40,11 @@ trait SLExpressions {
   /*
    * Data type definitions
    */
-  val boolDT = DataDef("Bool", Nil, List(ConstructorDef("True", Nil), ConstructorDef("False", Nil)))
+  val boolDT = DataDef("Bool2", Nil, List(ConstructorDef("True2", Nil), ConstructorDef("False2", Nil)))
 
+  val boolNameClashDT = DataDef("Bool", Nil, List(ConstructorDef("True2", Nil), ConstructorDef("False2", Nil)))
+  val boolConstructorClashDT = DataDef("Bool2", Nil, List(ConstructorDef("True", Nil), ConstructorDef("False", Nil)))
+  
   val intAPairDT = DataDef("IntAPair", List("a"), List(ConstructorDef("IntAPair", List(TyExpr(Syntax.TConVar("Int"), Nil), TyVar("a")))))
 
   val pairDT = DataDef("Pair", List("a", "b"), List(ConstructorDef("Pair", List(TyVar("a"), TyVar("b")))))
@@ -176,4 +179,8 @@ trait SLExpressions {
   val prg13 = Program(List(), Map(), Map(), Map(), List(bintreeDT, undefTypeParamsDT))
 
   val prg14 = Program(List(), Map(), Map(), Map(), List(boolDT, wrongConsAppDT))
+    
+  val prg15 = Program(List(), Map(), Map(), Map(), List(boolNameClashDT))
+  
+  val prg16 = Program(List(), Map(), Map(), Map(), List(boolConstructorClashDT))
 }

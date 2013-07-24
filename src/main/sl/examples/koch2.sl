@@ -1,6 +1,16 @@
-DEF canvas = {| document.getElementById("canvas") |}
+IMPORT "real" AS R
+IMPORT "basicweb" AS Web
 
-DEF context = canvas &= \canvas.{| $canvas.getContext("2d") |} 
+DEF createCanvas = 
+	Web.document &= \ doc .
+	Web.getBody doc &= \ body .
+	Web.createElement doc "canvas" &= \ canvas .
+	{| $canvas.width = 600 |} &
+	{| $canvas.height = 600 |} &
+	Web.appendChild body canvas &
+	yield canvas 
+
+DEF context = createCanvas &= \canvas.{| $canvas.getContext("2d") |} 
 
 DEF save c = {| $c.save() |}
 
@@ -10,7 +20,7 @@ DEF rotate c deg =
 	LET rad = deg2rad deg
 	IN {| $c.rotate($rad) |}
 
-DEF deg2rad deg = deg *r pi /r 180.
+DEF deg2rad deg = deg R.* pi R./ 180.
 
 DEF pi = 3.1415926535897932384626433832795
 
@@ -28,21 +38,20 @@ DEF stroke c = {| $c.stroke() |}
 
 DEF snowflake c n x y len = 
     LET leg = \n . (save c) & 
-    	  (IF n == 0 THEN 
-	    lineTo c len 0 
+      (IF n == 0 THEN 
+	    	lineTo c len 0 
 	  ELSE
-    	    (scale c (1. /r 3.) (1. /r 3.)) &
-	    (leg (n-1)) &         -- Recurse for the first sub-leg
+    	    (scale c (1. R./ 3.) (1. R./ 3.)) &
+            (leg (n - 1)) &         -- Recurse for the first sub-leg
             (rotate c 60.) &       -- Turn 60 degrees clockwise
-            (leg (n-1)) &         -- Second sub-leg
+            (leg (n - 1)) &         -- Second sub-leg
             (rotate c (-120.)) &   -- Rotate 120 degrees back
-            (leg (n-1)) &         -- Third sub-leg
+            (leg (n - 1)) &         -- Third sub-leg
             (rotate c 60.) &       -- Rotate back to our original heading
-            (leg (n-1))           -- Final sub-leg
-	 ) &           
+            (leg (n - 1))           -- Final sub-leg
+	  ) &           
          (restore c) &            -- Restore the transformation
-         (translate c len 0)     -- But translate to make end of leg (0,0)
-	    
+         (translate c len 0)     -- But translate to make end of leg (0,0) 
     IN 
     (save c) &		-- Save current transformation
     (translate c x y) & -- Translate origin to starting point

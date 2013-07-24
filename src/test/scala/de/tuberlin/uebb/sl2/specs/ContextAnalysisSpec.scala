@@ -40,7 +40,7 @@ trait ContextAnalysisSpec extends FunSpec with ShouldMatchers {
   	with ModuleResolver with ModuleNormalizer with Errors with Configs =>
 
   def fail(err: Error) : Matcher[Either[Error, Unit]] = be(Left(err))
-
+ 
   def notFail: Matcher[Either[Error, Unit]] = be(Right())
   
   def checking(program: AST): Either[Error, Unit] = {
@@ -62,14 +62,15 @@ trait ContextAnalysisSpec extends FunSpec with ShouldMatchers {
       checking(prg02) should notFail
     }
 
-    it("Should not fail on a program with correct functions definitions and signatures") {
+    it("Should not fail on a program with correct functions definitions and signatures, which " +
+        "shadow prelude definitions.") {
       checking(prg07) should notFail
     }
   }
 
   describe("Context analysis: erroneous function definitions") {
   // the concept of 'predefined' functions was changed
-  // basic functions are now imported with by an implicit unqualified import of the prelude
+  // basic functions are now imported by an implicit unqualified import of the prelude
   // therefore duplicate functions rather complain about bad type or duplicate definitions
 //    it("Should fail on a program using an invalid function name") {
 //      checking(prg04) should fail(AttributedError("Function name `intToStr' clashes with predefined function.", EmptyAttribute))
@@ -90,7 +91,7 @@ trait ContextAnalysisSpec extends FunSpec with ShouldMatchers {
     }
 
     it("Should fail on a program with data type definitions with duplicate type names") {
-      checking(prg09) should fail(ErrorList(List(DuplicateError("type definition", "Bool", List(EmptyAttribute, EmptyAttribute)))))
+      checking(prg09) should fail(ErrorList(List(DuplicateError("type definition", "Bool2", List(EmptyAttribute, EmptyAttribute)))))
     }
 
     it("Should fail on a program with data type definitions where type parameters are not disjoint") {
@@ -111,6 +112,14 @@ trait ContextAnalysisSpec extends FunSpec with ShouldMatchers {
 
     it("Should fail on a program with data type definitions where a type constructor is applied to the wron number of arguments") {
       checking(prg14) should fail(AttributedError("Too many arguments to `Bool' in constructor `C'", EmptyAttribute))
+    }
+    it("Should fail on a program with data type definitions where the type name clashes with prelude type") {
+      checking(prg15) should fail(
+          DuplicateError("type definition", "Bool", List(EmptyAttribute, AttributeImpl(FileLocation("prelude.sl.signature", null, null)))))
+    }
+    it("Should fail on a program with data type definitions where a type constructor clashes with prelude constructor") {
+      checking(prg16) should fail(
+          DuplicateError("definitions of constructor", "False", List(EmptyAttribute, AttributeImpl(FileLocation("prelude.sl.signature", null, null)))))
     }
   }
 }

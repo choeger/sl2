@@ -143,147 +143,77 @@ function _bindnr(l) {
 }
 /***********************************/
 /***********************************/
-// generated from: prelude.sl
+// generated from: real.sl
 /***********************************/
 define(function(require, exports, module) {
-    
+    var $$prelude = require("prelude.sl")
 
 ;
-;
-exports._SUSPEND = 0;
-var _SUSPEND = exports._SUSPEND;
-function $SUSPEND(_arg0)
-{
-  return {_cid : 0, _var0 : _arg0
-  };
-  return f
-};
-exports.$SUSPEND = $SUSPEND;
-;
-;
-exports.$Void = 0;
-var $Void = exports.$Void;
-;
-;
-;
-;
-var $True = true;
-var $False = false;
-exports.$stringToInt = parseInt;
-var $stringToInt = exports.$stringToInt;
-exports.$charToInt = function(c){return c.charCodeAt(0);};
-var $charToInt = exports.$charToInt;
-exports.$stringGetChar = function(s){return function(i){
-	if (s.length < i) {
-		throw "stringGetChar failed: Char index out of bounds"
-	} else {
-		return s.charAt(i);
-	}
-}};
-var $stringGetChar = exports.$stringGetChar;
-exports.$charToString = function(c){return c;};
-var $charToString = exports.$charToString;
 exports.$t = _mul;
 var $t = exports.$t;
 exports.$l$e = _leq;
 var $l$e = exports.$l$e;
-exports.$r = function(a){return function(b){ return a%b; }};
-var $r = exports.$r;
 exports.$l = _lesser;
 var $l = exports.$l;
-exports.$a = _bindnr;
-var $a = exports.$a;
 exports.$g$e = _geq;
 var $g$e = exports.$g$e;
-exports.$yield = _yield;
-var $yield = exports.$yield;
-exports.$intToChar = String.fromCharCode;
-var $intToChar = exports.$intToChar;
+exports.$cos = Math.cos;
+var $cos = exports.$cos;
+exports.$pow = function(a){return function(b){return Math.pow(a,b);}};
+var $pow = exports.$pow;
 exports.$m = _sub;
 var $m = exports.$m;
-exports.$a$e = _bind;
-var $a$e = exports.$a$e;
-exports.$p$p = _adds;
-var $p$p = exports.$p$p;
-exports.$error = function(msg){throw msg};
-var $error = exports.$error;
-exports.$e$e = _eq;
-var $e$e = exports.$e$e;
+exports.$sqrt = Math.sqrt;
+var $sqrt = exports.$sqrt;
+exports.$fromInt = function(i){return i;};
+var $fromInt = exports.$fromInt;
 exports.$isNaN = isNaN;
 var $isNaN = exports.$isNaN;
-exports.$intToString = function(i){return i.toString();};
-var $intToString = exports.$intToString;
+exports.$toString = function(i){return i.toString();};
+var $toString = exports.$toString;
+exports.$round = Math.round;
+var $round = exports.$round;
 exports.$p = _add;
 var $p = exports.$p;
+exports.$tan = Math.tan;
+var $tan = exports.$tan;
+exports.$abs = Math.abs;
+var $abs = exports.$abs;
+exports.$sin = Math.sin;
+var $sin = exports.$sin;
+exports.$log = Math.log;
+var $log = exports.$log;
 exports.$iNaN = NaN;
 var $iNaN = exports.$iNaN;
 exports.$d = _div;
 var $d = exports.$d;
 exports.$g = _greater;
 var $g = exports.$g;
-function $force(_arg0)
+exports.$eps = function ()
 {
-  if(((_arg0["_cid"] === _SUSPEND) && true))
-  {
-    var $f = _arg0["_var0"];
-    var $31 = $f;
-    var $30 = $Void;
-    var _return = $31($30);
-    return _return
-  }
-  else 
-  {
-    throw "Pattern not exhaustive!"
-  }
-};
-exports.$force = $force;
-exports.$noop = function ()
-{
-  var $33 = $yield;
-  var $32 = $Void;
-  var $noop = $33($32);
-  return $noop
+  var $eps = 1.0E-16;
+  return $eps
 }();
-var $noop = exports.$noop;
-function $id(_arg0)
-{
-  if(true)
-  {
-    var $a = _arg0;
-    var _return = $a;
-    return _return
-  }
-  else 
-  {
-    throw "Pattern not exhaustive!"
-  }
-};
-exports.$id = $id;
-function $s(_arg0)
+var $eps = exports.$eps;
+function $e$e(_arg0)
 {
   return function (_arg1)
   {
     if((true && true))
     {
-      var $f = _arg0;
-      var $g = _arg1;
-      var _return = function (_arg0)
-      {
-        if(true)
-        {
-          var $x = _arg0;
-          var $38 = $f;
-          var $37 = $g;
-          var $36 = $x;
-          var $35 = $37($36);
-          var $34 = $38($35)
-        }
-        else 
-        {
-          throw "Pattern for lambda expression did not match arguments"
-        };
-        return $34
-      };
+      var $a = _arg0;
+      var $b = _arg1;
+      var $37 = $l;
+      var $36 = $abs;
+      var $35 = $m;
+      var $34 = $a;
+      var $33 = $35($34);
+      var $32 = $b;
+      var $31 = $33($32);
+      var $30 = $36($31);
+      var $29 = $37($30);
+      var $28 = $eps;
+      var _return = $29($28);
       return _return
     }
     else 
@@ -292,49 +222,7 @@ function $s(_arg0)
     }
   }
 };
-exports.$s = $s;
-function $not(_arg0)
-{
-  if((_arg0 === $True))
-  {
-    var _return = $False;
-    return _return
-  }
-  else 
-  {
-    if((_arg0 === $False))
-    {
-      var _return = $True;
-      return _return
-    }
-    else 
-    {
-      throw "Pattern not exhaustive!"
-    }
-  }
-};
-exports.$not = $not;
-function $boolToString(_arg0)
-{
-  if((_arg0 === $True))
-  {
-    var _return = "True";
-    return _return
-  }
-  else 
-  {
-    if((_arg0 === $False))
-    {
-      var _return = "False";
-      return _return
-    }
-    else 
-    {
-      throw "Pattern not exhaustive!"
-    }
-  }
-};
-exports.$boolToString = $boolToString;
+exports.$e$e = $e$e;
 function $d$e(_arg0)
 {
   return function (_arg1)
@@ -343,13 +231,13 @@ function $d$e(_arg0)
     {
       var $x = _arg0;
       var $y = _arg1;
-      var $44 = $not;
-      var $43 = $e$e;
-      var $42 = $x;
-      var $41 = $43($42);
-      var $40 = $y;
-      var $39 = $41($40);
-      var _return = $44($39);
+      var $43 = $$prelude.$not;
+      var $42 = $e$e;
+      var $41 = $x;
+      var $40 = $42($41);
+      var $39 = $y;
+      var $38 = $40($39);
+      var _return = $43($38);
       return _return
     }
     else 

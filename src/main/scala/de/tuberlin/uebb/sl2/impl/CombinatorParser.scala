@@ -229,7 +229,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
 
   private def cons: Parser[ASTType] = consRegex ^^@ { (a, s) => TyExpr(Syntax.TConVar(s), Nil, a) }
   private def qualCons: Parser[ASTType] = moduleRegex ~ "." ~ checkedConsIde ^^@ { case (a, m~_~s) => TyExpr(Syntax.TConVar(s,m), Nil, a) }
-  private def conElem: Parser[ASTType] = typeVar | cons | "(" ~> parseType <~ closeBracket(")")
+  private def conElem: Parser[ASTType] = typeVar | qualCons | cons | "(" ~> parseType <~ closeBracket(")")
   private def conDef: Parser[ConstructorDef] = consRegex ~ rep(conElem) ^^@ { case (a, c ~ ts) => ConstructorDef(c, ts, a) }
 
   //  //Parse Types

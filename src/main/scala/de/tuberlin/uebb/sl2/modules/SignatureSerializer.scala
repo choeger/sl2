@@ -5,6 +5,6 @@ trait SignatureSerializer {
 
   def serialize(in : AST) : String
   
-  def deserialize(in : String) : AST
+  def deserialize(in : String, location : Location = NoLocation) : AST
 
 }

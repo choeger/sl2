@@ -6,11 +6,7 @@ define(function(require, exports, module) {
 
 ;
 ;
-exports.$Document = 0;
-var $Document = exports.$Document;
 ;
-exports.$Node = 0;
-var $Node = exports.$Node;
 exports.$getChildNodes = function(node){return function(){
 	var list = List.$Nil;
 	for (var i=0; i<node.childNodes.length; i++) {
@@ -129,6 +125,27 @@ function $prompt(_arg0)
   }
 };
 exports.$prompt = $prompt;
+function $setValue(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && true))
+    {
+      var $node = _arg0;
+      var $value = _arg1;
+      var _return = function ()
+      {
+        return $node.value = $value
+      };
+      return _return
+    }
+    else 
+    {
+      throw "Pattern not exhaustive!"
+    }
+  }
+};
+exports.$setValue = $setValue;
 function $removeChild(_arg0)
 {
   return function (_arg1)
@@ -198,50 +215,50 @@ function $createInputElement(_arg0)
           var $type = _arg1;
           var $text = _arg2;
           var $callback = _arg3;
-          var $113 = $$prelude.$a$e;
-          var $112 = $createElement;
-          var $111 = $doc;
+          var $115 = $$prelude.$a$e;
+          var $114 = $createElement;
+          var $113 = $doc;
+          var $112 = $114($113);
+          var $111 = "input";
           var $110 = $112($111);
-          var $109 = "input";
-          var $108 = $110($109);
-          var $107 = $113($108);
-          var $91 = function (_arg0)
+          var $109 = $115($110);
+          var $93 = function (_arg0)
           {
             if(true)
             {
               var $node = _arg0;
+              var $108 = $$prelude.$a;
+              var $107 = $$prelude.$a;
               var $106 = $$prelude.$a;
-              var $105 = $$prelude.$a;
-              var $104 = $$prelude.$a;
-              var $103 = function ()
+              var $105 = function ()
               {
                 return $node.type = $type
               };
-              var $102 = $104($103);
-              var $101 = function ()
+              var $104 = $106($105);
+              var $103 = function ()
               {
                 return $node.value = $text
               };
-              var $100 = $102($101);
-              var $99 = $105($100);
-              var $98 = function ()
+              var $102 = $104($103);
+              var $101 = $107($102);
+              var $100 = function ()
               {
                 return $node.onclick = $callback
               };
-              var $97 = $99($98);
-              var $96 = $106($97);
-              var $95 = $$prelude.$yield;
-              var $94 = $node;
-              var $93 = $95($94);
-              var $92 = $96($93)
+              var $99 = $101($100);
+              var $98 = $108($99);
+              var $97 = $$prelude.$yield;
+              var $96 = $node;
+              var $95 = $97($96);
+              var $94 = $98($95)
             }
             else 
             {
               throw "Pattern for lambda expression did not match arguments"
             };
-            return $92
+            return $94
           };
-          var _return = $107($91);
+          var _return = $109($93);
           return _return
         }
         else 
@@ -264,15 +281,15 @@ function $createInput(_arg0)
         var $doc = _arg0;
         var $text = _arg1;
         var $callback = _arg2;
-        var $121 = $createInputElement;
-        var $120 = $doc;
+        var $123 = $createInputElement;
+        var $122 = $doc;
+        var $121 = $123($122);
+        var $120 = "text";
         var $119 = $121($120);
-        var $118 = "text";
+        var $118 = $text;
         var $117 = $119($118);
-        var $116 = $text;
-        var $115 = $117($116);
-        var $114 = $callback;
-        var _return = $115($114);
+        var $116 = $callback;
+        var _return = $117($116);
         return _return
       }
       else 
@@ -294,15 +311,15 @@ function $createButton(_arg0)
         var $doc = _arg0;
         var $text = _arg1;
         var $callback = _arg2;
-        var $129 = $createInputElement;
-        var $128 = $doc;
+        var $131 = $createInputElement;
+        var $130 = $doc;
+        var $129 = $131($130);
+        var $128 = "button";
         var $127 = $129($128);
-        var $126 = "button";
+        var $126 = $text;
         var $125 = $127($126);
-        var $124 = $text;
-        var $123 = $125($124);
-        var $122 = $callback;
-        var _return = $123($122);
+        var $124 = $callback;
+        var _return = $125($124);
         return _return
       }
       else 

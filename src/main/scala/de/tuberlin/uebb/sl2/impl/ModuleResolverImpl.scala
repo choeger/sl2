@@ -80,7 +80,7 @@ trait ModuleResolverImpl extends ModuleResolver {
     val source = scala.io.Source.fromFile(file.getCanonicalPath())
     val json = source.mkString
     source.close()
-    val signature = deserialize(json)
+    val signature = deserialize(json, FileLocation(file.getName(), null, null))
     if (null == signature) {
       Left(ImportError("Failed to load signature " + file, EmptyAttribute))
     } else {
