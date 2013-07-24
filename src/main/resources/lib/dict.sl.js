@@ -6,13 +6,6 @@ define(function(require, exports, module) {
 
 ;
 ;
-var _Dict = 0;
-function $Dict(_arg0)
-{
-  return {_cid : 0, _var0 : _arg0
-  };
-  return f
-};
 var $empty = {};
 var $has = function(dict){return function(k){
 	return (k in dict);
