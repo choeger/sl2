@@ -71,10 +71,9 @@ trait ModuleResolverImpl extends ModuleResolver {
   }
   
   private def checkUniqueIde(imports : List[Import]) : Either[Error, Unit] = {
-    if (imports.isEmpty)
-      return Right()
-    
     val qualified = imports.filter(_.isInstanceOf[QualifiedImport]).map(_.asInstanceOf[QualifiedImport])
+    if (qualified.isEmpty)
+      return Right()
     
     def checkUniqueness(imp : QualifiedImport) : Either[Error, Unit] = {
       if (qualified.count(_.name == imp.name) == 1)

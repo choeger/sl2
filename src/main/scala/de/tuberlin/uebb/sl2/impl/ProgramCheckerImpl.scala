@@ -54,7 +54,7 @@ trait ProgramCheckerImpl extends ProgramChecker {
       // may otherwise clash with local names. this way they are shadowed.)
       elc <- splitLetRecs(moduleContext.keySet
     		  -- funSigs.keySet.map(_.asInstanceOf[VarFirstClass])
-    		  ++ initialContext.keySet,
+    		  ++ initialContext.keySet ++ externContext.keySet,
         programToELC(moduleSigs ++ funSigs, funDefs)).right;
       mainType <- {
         checkTypes(moduleContext -- funSigs.keySet.map(_.asInstanceOf[VarFirstClass])
