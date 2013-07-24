@@ -1,5 +1,6 @@
 IMPORT "basicweb" AS Web
 IMPORT "list" AS List
+IMPORT "real" AS Real
 IMPORT "basicio" AS Dbg
 
 DEF main = 
@@ -9,16 +10,20 @@ DEF main =
 	Web.createInput doc "" {||} &= \ input .
 	Web.createButton doc "Add Number" (cbAddNumber doc numbers input) &= \ btnAddNumber .
 	Web.createButton doc "Sum" (cbSum doc numbers) &= \ btnSum .
+	Web.createButton doc "Average" (cbAvg doc numbers) &= \ btnAvg .
 	Web.createButton doc "Sort" (cbSort doc numbers) &= \ btnSort .
 	Web.appendChild body input &
 	Web.appendChild body btnAddNumber &
 	Web.appendChild body btnSum &
+	Web.appendChild body btnAvg &
 	Web.appendChild body btnSort &
 	Web.appendChild body numbers
 	
 DEF cbAddNumber doc numberNode inp =
 	Web.getValue inp &= \ val .
 	LET value = stringToInt val IN
+	Web.setValue inp "" &
+	{| $inp.select() |} &
 	IF isNaN value THEN
 	  Web.alert(val ++ " is not a number. Expected a number!")
 	ELSE
@@ -31,6 +36,12 @@ DEF cbSum doc numberNode =
 	List.mapDom (\node. Web.getValue node &= (yield # stringToInt)) numberNodes &= \ nums .
 	LET sum = List.reduce (\x.\y.x+y) 0 nums IN
 	Web.alert ("Sum: " ++ intToString sum)
+
+DEF cbAvg doc numberNode =
+	Web.getChildNodes numberNode &= \ numberNodes .
+	List.mapDom (\node. Web.getValue node &= (yield # stringToInt)) numberNodes &= \ nums .
+	LET avg = Real.fromInt (List.reduce (\x.\y.x+y) 0 nums) Real./ Real.fromInt (List.length nums) IN
+	Web.alert ("Average: " ++ Real.toString avg)
 	
 DATA NumNode = NodeWithNumber Web.Node Int
 DEF minNode (NodeWithNumber n1 i1) (NodeWithNumber n2 i2) =

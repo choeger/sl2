@@ -29,6 +29,8 @@ DEF setOnClick node cb = {| $node.onclick = $cb |}
 
 PUBLIC FUN getValue : Node -> DOM String
 DEF getValue node = {|$node.value|} : DOM String
+PUBLIC FUN setValue : Node -> String -> DOM Void
+DEF setValue node value = {| $node.value = $value |}
 
 PUBLIC FUN createElement : Document -> String -> DOM Node
 DEF createElement doc elemType =

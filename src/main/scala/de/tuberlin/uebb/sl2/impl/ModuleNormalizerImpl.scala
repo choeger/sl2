@@ -21,9 +21,9 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
   def getImportedUnqualifiedDeclarations(imports: List[ResolvedImport]) = {
     // TODO: need to distinguish between dataDefs and signatures?
     imports.filter(_.isInstanceOf[ResolvedUnqualifiedImport]).flatMap(imp =>
-      { val name = imp.asInstanceOf[ResolvedUnqualifiedImport].name;
-        imp.asInstanceOf[ResolvedUnqualifiedImport].signature.dataDefs.map( _.ide -> name) ++
-        imp.asInstanceOf[ResolvedUnqualifiedImport].signature.signatures.keySet.map(k => k -> name) } ).toMap
+      { val rimp = imp.asInstanceOf[ResolvedUnqualifiedImport]
+        rimp.signature.dataDefs.map(_.constructors).flatten.map( _.constructor -> rimp.name) ++
+        rimp.signature.signatures.keySet.map(k => k -> rimp.name) } ).toMap
   }
   
   /**

@@ -1,11 +1,13 @@
 IMPORT EXTERN "_prelude"
 
-
 PUBLIC FUN round : Real -> Int
 DEF EXTERN round = {| Math.round |}
 
 PUBLIC FUN fromInt : Int -> Real
 DEF EXTERN fromInt = {| function(i){return i;} |}
+
+PUBLIC FUN toString : Real -> String
+DEF EXTERN toString = {| function(i){return i.toString();} |}
 
 -------------------------------------
 -- Arithmetics on Reals
@@ -23,7 +25,7 @@ PUBLIC FUN / : Real -> Real -> Real
 DEF EXTERN / = {| _div |}
 
 PUBLIC FUN pow : Real -> Real -> Real
-DEF EXTERN pow = {| function(a){return function(b){return Math.pow(a,b)} |}
+DEF EXTERN pow = {| function(a){return function(b){return Math.pow(a,b);}} |}
 
 PUBLIC FUN < : Real -> Real -> Bool
 DEF EXTERN < = {| _lesser |}
@@ -45,6 +47,8 @@ DEF EXTERN >= = {| _geq |}
 
 PUBLIC FUN > : Real -> Real -> Bool
 DEF EXTERN > = {| _greater |}
+
+--- More Advanced Stuff 
 
 PUBLIC FUN iNaN : Real
 DEF EXTERN iNaN = {| NaN |}

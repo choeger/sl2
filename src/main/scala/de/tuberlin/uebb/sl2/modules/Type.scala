@@ -199,8 +199,9 @@ trait Type {
     def Dom(a: Type) = TypeConstructor(Syntax.TConVar("DOM", LocalMod), List(a))
     val Real = TypeConstructor(Syntax.TConVar("Real", LocalMod), Nil)
     val Bool = TypeConstructor(Syntax.TConVar("Bool", LocalMod), Nil)
+    def Lazy(a: Type) = TypeConstructor(Syntax.TConVar("LAZY", LocalMod), List(a))
 
-    val typeVars = List(Integer, String, Character, Void, Dom(Void), Real, Bool).map(_.con)
+    val typeVars = List(Integer, String, Character, Void, Dom(Void), Real, Bool, Lazy(Void)).map(_.con)
   }
 
 }

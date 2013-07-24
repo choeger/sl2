@@ -150,6 +150,16 @@ define(function(require, exports, module) {
 
 ;
 ;
+exports._SUSPEND = 0;
+var _SUSPEND = exports._SUSPEND;
+function $SUSPEND(_arg0)
+{
+  return {_cid : 0, _var0 : _arg0
+  };
+  return f
+};
+exports.$SUSPEND = $SUSPEND;
+;
 ;
 exports.$Void = 0;
 var $Void = exports.$Void;
@@ -177,6 +187,8 @@ exports.$t = _mul;
 var $t = exports.$t;
 exports.$l$e = _leq;
 var $l$e = exports.$l$e;
+exports.$r = function(a){return function(b){ return a%b; }};
+var $r = exports.$r;
 exports.$l = _lesser;
 var $l = exports.$l;
 exports.$a = _bindnr;
@@ -209,11 +221,27 @@ exports.$d = _div;
 var $d = exports.$d;
 exports.$g = _greater;
 var $g = exports.$g;
+function $force(_arg0)
+{
+  if(((_arg0["_cid"] === _SUSPEND) && true))
+  {
+    var $f = _arg0["_var0"];
+    var $31 = $f;
+    var $30 = $Void;
+    var _return = $31($30);
+    return _return
+  }
+  else 
+  {
+    throw "Pattern not exhaustive!"
+  }
+};
+exports.$force = $force;
 exports.$noop = function ()
 {
-  var $26 = $yield;
-  var $25 = $Void;
-  var $noop = $26($25);
+  var $33 = $yield;
+  var $32 = $Void;
+  var $noop = $33($32);
   return $noop
 }();
 var $noop = exports.$noop;
@@ -244,17 +272,17 @@ function $s(_arg0)
         if(true)
         {
           var $x = _arg0;
-          var $31 = $f;
-          var $30 = $g;
-          var $29 = $x;
-          var $28 = $30($29);
-          var $27 = $31($28)
+          var $38 = $f;
+          var $37 = $g;
+          var $36 = $x;
+          var $35 = $37($36);
+          var $34 = $38($35)
         }
         else 
         {
           throw "Pattern for lambda expression did not match arguments"
         };
-        return $27
+        return $34
       };
       return _return
     }
@@ -286,6 +314,27 @@ function $not(_arg0)
   }
 };
 exports.$not = $not;
+function $boolToString(_arg0)
+{
+  if((_arg0 === $True))
+  {
+    var _return = "True";
+    return _return
+  }
+  else 
+  {
+    if((_arg0 === $False))
+    {
+      var _return = "False";
+      return _return
+    }
+    else 
+    {
+      throw "Pattern not exhaustive!"
+    }
+  }
+};
+exports.$boolToString = $boolToString;
 function $d$e(_arg0)
 {
   return function (_arg1)
@@ -294,13 +343,13 @@ function $d$e(_arg0)
     {
       var $x = _arg0;
       var $y = _arg1;
-      var $37 = $not;
-      var $36 = $e$e;
-      var $35 = $x;
-      var $34 = $36($35);
-      var $33 = $y;
-      var $32 = $34($33);
-      var _return = $37($32);
+      var $44 = $not;
+      var $43 = $e$e;
+      var $42 = $x;
+      var $41 = $43($42);
+      var $40 = $y;
+      var $39 = $41($40);
+      var _return = $44($39);
       return _return
     }
     else 

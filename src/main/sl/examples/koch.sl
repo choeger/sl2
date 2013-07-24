@@ -1,11 +1,13 @@
 IMPORT "basicweb" AS Web
+IMPORT "timing" AS Time
+IMPORT "basicio" AS Dbg
 
 DEF createCanvas = 
 	Web.document &= \ doc .
 	Web.getBody doc &= \ body .
 	Web.createElement doc "canvas" &= \ canvas .
-	{| $canvas.width = 600 |} &
-	{| $canvas.height = 600 |} &
+	{| $canvas.width = 800 |} &
+	{| $canvas.height = 800 |} &
 	Web.appendChild body canvas &
 	yield canvas 
 
@@ -25,9 +27,12 @@ DEF lineTo c x y = {| $c.lineTo($x, $y) |}
 
 DEF restore c = {| $c.restore() |}
 
+DEF beginPath c = {| $c.beginPath() |}
 DEF closePath c = {| $c.closePath() |}
 
 DEF stroke c = {| $c.stroke() |}
+
+DEF clear c = {| $c.clearRect(0, 0, $c.canvas.width, $c.canvas.height) |}
 
 DEF snowflake c n x y len = 
     LET leg = \n . (save c) & 
@@ -47,6 +52,7 @@ DEF snowflake c n x y len =
          (translate c len 0)     -- But translate to make end of leg (0,0)
 	    
     IN 
+    (beginPath c) &
     (save c) &		-- Save current transformation
     (translate c x y) & -- Translate origin to starting point
     (moveTo c 0 0) &  	-- Begin a new subpath at the new origin
@@ -58,11 +64,23 @@ DEF snowflake c n x y len =
     (closePath c) &     -- Close the subpath
     (restore c)         -- And restore original transformation
 
+DEF mainLoop c i lazyness = 
+	LET size = pingpong i 27 IN
+	(IF (i % 19) == 0 THEN 
+	LET col = (IF (i%3) == 0 THEN "c" ELSE "f") ++ intToString(i%10)
+	    col3 = "#" ++ col ++ col ++ col
+	IN {|$c.fillStyle = $col3|} & {| $c.fillRect(-50,-50,500,500) |} ELSE noop) &
+	rotate c 10 &
+	snowflake c (pingpong i 4) (size*6) (size*6) (125+size*6) &
+	stroke c &
+	Time.timeout (SUSPEND (mainLoop c (i+1))) 150 &
+	noop
+
+DEF pingpong a b =
+	LET p = a%(2*b) IN
+	IF p <= b THEN p ELSE (2*b) - p
+
 DEF main = context &= ( \c.    	       	   -- bind the context element
-    	   (snowflake c 0 5 115 125) &     -- A level-0 snowflake is an equilateral triangle
-           (snowflake c 1 145 115 125) &   -- A level-1 snowflake is a 6-sided star
-           (snowflake c 2 285 115 125) &   -- etc.
-           (snowflake c 3 425 115 125) &
-           (snowflake c 4 565 115 125) &   -- A level-4 snowflake looks like a snowflake!
-           (stroke c) &	      	       	   -- Stroke this very complicated path
+		translate c 250 250 &
+       (mainLoop c 0 Void) &
 	   {| console.log("done.") |} )	                  

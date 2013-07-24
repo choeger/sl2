@@ -62,7 +62,7 @@ DATA EXTERN Real
 DATA EXTERN Char
 DATA EXTERN String
 
-DATA Void = Void
+PUBLIC DATA Void = Void
 DATA EXTERN DOM a
 
 -------------------------------------
@@ -98,6 +98,9 @@ DEF EXTERN * = {| _mul |}
 
 PUBLIC FUN / : Int -> Int -> Int
 DEF EXTERN / = {| _div |}
+
+PUBLIC FUN % : Int -> Int -> Int
+DEF EXTERN % = {| function(a){return function(b){ return a%b; }} |}
 
 PUBLIC FUN < : Int -> Int -> Bool
 DEF EXTERN < = {| _lesser |}
@@ -151,3 +154,11 @@ DEF EXTERN stringGetChar = {| function(s){return function(i){
 		return s.charAt(i);
 	}
 }} |}
+
+PUBLIC FUN boolToString : Bool -> String
+DEF boolToString True = "True"
+DEF boolToString False = "False"
+
+PUBLIC DATA LAZY a = SUSPEND (Void -> a)
+PUBLIC FUN force : LAZY a -> a
+DEF force (SUSPEND f) = f Void 
