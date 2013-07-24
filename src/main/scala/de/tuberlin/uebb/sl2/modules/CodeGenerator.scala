@@ -44,7 +44,8 @@ trait CodeGenerator {
     case Program(imports, signatures, functionDefs, functionDefsExtern, dataDefs, attribute) =>
       dataDefsToJs(dataDefs) &
       functionDefsExternToJs(functionDefsExtern) &
-      functionDefsToJs(functionDefs)
+      functionDefsToJs(functionDefs) &
+      functionSigsToJs(signatures)
   }
 
   def dataDefsToJs(ds: List[DataDef]): JsStmt = (ds map dataDefToJs).foldLeft(Noop:JsStmt)(_ & _)
@@ -54,14 +55,29 @@ trait CodeGenerator {
       /*
        * This is kind of a hack to allow reusage of js-booleans
        */
-      JsDef($("True"), JsBool(true)) &
-      JsDef($("False"), JsBool(false))
+      val privateDef = 
+        JsDef($("True"), JsBool(true)) &
+        JsDef($("False"), JsBool(false))
+      val publicDef = 
+        JsAssignment(JsQualifiedName(JsName("exports"), JsName($("True"))), JsBool(true)) &
+        JsAssignment(JsQualifiedName(JsName("exports"), JsName($("False"))), JsBool(false))
+      
+      if (d.modifier == PublicModifier)
+        privateDef & publicDef
+      else 
+        privateDef
+      
     } else {
       val stmts = for ((c,idx) <- d.constructors.zipWithIndex) yield {
         if (c.types.isEmpty) {
-          //JsDef($(c.constructor), JsNum(idx))
-          JsAssignment(JsQualifiedName(JsName("exports"), JsName($(c.constructor))), JsNum(idx)
-              ) & JsDef($(c.constructor), JsQualifiedName(JsName("exports"), JsName($(c.constructor))))
+          val privateDef = JsDef($(c.constructor), JsNum(idx))
+          val publicDef = JsAssignment(JsQualifiedName(JsName("exports"), JsName($(c.constructor))), JsName($(c.constructor)))
+
+          if (d.modifier == PublicModifier) 
+            privateDef & publicDef
+          else
+            privateDef
+
         } else {
           val k = c.types.size - 1
           //properties
@@ -75,11 +91,14 @@ trait CodeGenerator {
           val anchor:JsStmt = new JsReturn(obj)
           val body = (anchor /: args)((body, arg) => JsFunction("f", arg::Nil, body)) & JsReturn(Some("f"))
           
-          //JsDef("_" + c.constructor, JsNum(idx)) & JsFunction($(c.constructor), List("_arg0"), body)
-          JsAssignment(JsQualifiedName(JsName("exports"), JsName("_" + c.constructor)),JsNum(idx)) &
-          	JsDef("_" + c.constructor, JsQualifiedName(JsName("exports"), JsName("_" + c.constructor))) &
-          	JsFunction($(c.constructor), List("_arg0"), body) &
-          	JsAssignment(JsQualifiedName(JsName("exports"), JsName($(c.constructor))), JsName($(c.constructor)))
+          val privateDef = JsDef("_" + c.constructor, JsNum(idx)) & JsFunction($(c.constructor), List("_arg0"), body)
+          val publicDef = JsAssignment(JsQualifiedName(JsName("exports"), JsName("_" + c.constructor)), JsName("_" + c.constructor)) &
+            JsAssignment(JsQualifiedName(JsName("exports"), JsName($(c.constructor))), JsName($(c.constructor)))
+
+          if (d.modifier == PublicModifier)
+            privateDef & publicDef
+          else
+            privateDef
         }
       }
       stmts.foldLeft(Noop:JsStmt)(_ & _)
@@ -87,10 +106,7 @@ trait CodeGenerator {
   }
   
   def functionDefsExternToJs(exDefs: Map[VarName, FunctionDefExtern]) = {
-    //val defStmts = exDefs.toList.map{case (name, exDef) => JsDef($(name), JsRaw(exDef.externName))}
-	val defStmts = exDefs.toList.map{ case (name, exDef) =>
-	  JsAssignment(JsQualifiedName(JsName("exports"), JsName($(name))), JsRaw(exDef.externName)
-	  ) & JsDef($(name), JsQualifiedName(JsName("exports"), JsName($(name)))) }
+    val defStmts = exDefs.toList.map{case (name, exDef) => JsDef($(name), JsRaw(exDef.externName))}
     JsStmtConcat(defStmts)
   }
 
@@ -109,18 +125,26 @@ trait CodeGenerator {
         val funs = functionDefs(v.ide)
         val args = (for (i <- 0 to (funs(0).patterns.length - 1)) yield (JsName("_arg" + i))).toList
         if (args.length != 0) {
-          JsFunction($(v.ide), args(0)::Nil, functionBodyToJs(args.tail, args, v.asInstanceOf[Var], funs)) &
-          JsAssignment(JsQualifiedName(JsName("exports"), JsName($(v.ide))),JsName($(v.ide)))
+          JsFunction($(v.ide), args(0)::Nil, functionBodyToJs(args.tail, args, v.asInstanceOf[Var], funs))
         } else {
-          //JsDef($(v.ide), JsFunctionCall(JsAnonymousFunction(Nil, expToJs(funs(0).expr, $(v.ide)) & JsReturn(Some($(v.ide))))))
-          JsAssignment(JsQualifiedName(JsName("exports"), JsName($(v.ide))),
-              JsFunctionCall(JsAnonymousFunction(Nil, expToJs(funs(0).expr, $(v.ide)) & JsReturn(Some($(v.ide)))))
-          ) & JsDef($(v.ide), JsQualifiedName(JsName("exports"), JsName($(v.ide))))
+          JsDef($(v.ide), JsFunctionCall(JsAnonymousFunction(Nil, expToJs(funs(0).expr, $(v.ide)) & JsReturn(Some($(v.ide))))))
         }
       })
     }
 
     JsStmtConcat(l.toList)
+  }
+
+  def functionSigsToJs(functionSigs: Map[VarName, FunctionSig]): JsStmt = {
+    (functionSigs map functionSigToJs).foldLeft(Noop:JsStmt)(_ & _)
+  }
+
+  def functionSigToJs(arg: (VarName, FunctionSig)): JsStmt = arg match { 
+    case (name: VarName, sig: FunctionSig) =>
+      if (sig.modifier == PublicModifier) {
+        JsAssignment(JsQualifiedName(JsName("exports"), JsName($(name))), JsName($(name)))
+      } else
+        Noop:JsStmt
   }
   
   def functionBodyToJs(args : List[JsName], allArgs : List[JsName], v : Var, funs : List[FunctionDef]) : JsStmt = args match {

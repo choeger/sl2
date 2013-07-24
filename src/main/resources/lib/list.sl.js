@@ -6,10 +6,9 @@ define(function(require, exports, module) {
 
 ;
 ;
-exports.$Nil = 0;
-var $Nil = exports.$Nil;
-exports._Cons = 1;
-var _Cons = exports._Cons;
+var $Nil = 0;
+exports.$Nil = $Nil;
+var _Cons = 1;
 function $Cons(_arg0)
 {
   function f(_arg1)
@@ -19,15 +18,15 @@ function $Cons(_arg0)
   };
   return f
 };
+exports._Cons = _Cons;
 exports.$Cons = $Cons;
-exports.$fromString = function(str) {
+var $fromString = function(str) {
 	var list = $Nil;
 	for (var i = str.length-1; i >= 0 ; i--) {
 		list = $Cons(str.charAt(i))(list);
 	}
 	return list;
 };
-var $fromString = exports.$fromString;
 function $conc(_arg0)
 {
   return function (_arg1)
@@ -45,15 +44,15 @@ function $conc(_arg0)
         var $ft = _arg0["_var0"];
         var $rt = _arg0["_var1"];
         var $list = _arg1;
-        var $210 = $Cons;
-        var $209 = $ft;
-        var $208 = $210($209);
-        var $207 = $conc;
-        var $206 = $rt;
-        var $205 = $207($206);
-        var $204 = $list;
-        var $203 = $205($204);
-        var _return = $208($203);
+        var $318 = $Cons;
+        var $317 = $ft;
+        var $316 = $318($317);
+        var $315 = $conc;
+        var $314 = $rt;
+        var $313 = $315($314);
+        var $312 = $list;
+        var $311 = $313($312);
+        var _return = $316($311);
         return _return
       }
       else 
@@ -63,7 +62,6 @@ function $conc(_arg0)
     }
   }
 };
-exports.$conc = $conc;
 function $map(_arg0)
 {
   return function (_arg1)
@@ -81,17 +79,17 @@ function $map(_arg0)
         var $f = _arg0;
         var $ft = _arg1["_var0"];
         var $rt = _arg1["_var1"];
-        var $220 = $Cons;
-        var $219 = $f;
-        var $218 = $ft;
-        var $217 = $219($218);
-        var $216 = $220($217);
-        var $215 = $map;
-        var $214 = $f;
-        var $213 = $215($214);
-        var $212 = $rt;
-        var $211 = $213($212);
-        var _return = $216($211);
+        var $328 = $Cons;
+        var $327 = $f;
+        var $326 = $ft;
+        var $325 = $327($326);
+        var $324 = $328($325);
+        var $323 = $map;
+        var $322 = $f;
+        var $321 = $323($322);
+        var $320 = $rt;
+        var $319 = $321($320);
+        var _return = $324($319);
         return _return
       }
       else 
@@ -101,7 +99,6 @@ function $map(_arg0)
     }
   }
 };
-exports.$map = $map;
 function $head(_arg0)
 {
   if((((_arg0["_cid"] === _Cons) && true) && true))
@@ -115,9 +112,9 @@ function $head(_arg0)
   {
     if((_arg0 === $Nil))
     {
-      var $222 = $$prelude.$error;
-      var $221 = "Cannot select head from empty list.";
-      var _return = $222($221);
+      var $330 = $$prelude.$error;
+      var $329 = "Cannot select head from empty list.";
+      var _return = $330($329);
       return _return
     }
     else 
@@ -126,17 +123,16 @@ function $head(_arg0)
     }
   }
 };
-exports.$head = $head;
 function $fromOption(_arg0)
 {
   if(((_arg0["_cid"] === Option._Some) && true))
   {
     var $a = _arg0["_var0"];
-    var $226 = $Cons;
-    var $225 = $a;
-    var $224 = $226($225);
-    var $223 = $Nil;
-    var _return = $224($223);
+    var $334 = $Cons;
+    var $333 = $a;
+    var $332 = $334($333);
+    var $331 = $Nil;
+    var _return = $332($331);
     return _return
   }
   else 
@@ -152,7 +148,6 @@ function $fromOption(_arg0)
     }
   }
 };
-exports.$fromOption = $fromOption;
 function $tail(_arg0)
 {
   if((((_arg0["_cid"] === _Cons) && true) && true))
@@ -175,7 +170,6 @@ function $tail(_arg0)
     }
   }
 };
-exports.$tail = $tail;
 function $filter(_arg0)
 {
   return function (_arg1)
@@ -193,28 +187,28 @@ function $filter(_arg0)
         var $p = _arg0;
         var $ft = _arg1["_var0"];
         var $rt = _arg1["_var1"];
-        var $229 = $p;
-        var $228 = $ft;
-        var $227 = $229($228);
-        if($227)
+        var $337 = $p;
+        var $336 = $ft;
+        var $335 = $337($336);
+        if($335)
         {
-          var $237 = $Cons;
-          var $236 = $ft;
-          var $235 = $237($236);
-          var $234 = $filter;
-          var $233 = $p;
-          var $232 = $234($233);
-          var $231 = $rt;
-          var $230 = $232($231);
-          var _return = $235($230)
+          var $345 = $Cons;
+          var $344 = $ft;
+          var $343 = $345($344);
+          var $342 = $filter;
+          var $341 = $p;
+          var $340 = $342($341);
+          var $339 = $rt;
+          var $338 = $340($339);
+          var _return = $343($338)
         }
         else 
         {
-          var $241 = $filter;
-          var $240 = $p;
-          var $239 = $241($240);
-          var $238 = $rt;
-          var _return = $239($238)
+          var $349 = $filter;
+          var $348 = $p;
+          var $347 = $349($348);
+          var $346 = $rt;
+          var _return = $347($346)
         };
         return _return
       }
@@ -225,7 +219,109 @@ function $filter(_arg0)
     }
   }
 };
-exports.$filter = $filter;
+function $removeFirst(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && (_arg1 === $Nil)))
+    {
+      var $p = _arg0;
+      var _return = $Nil;
+      return _return
+    }
+    else 
+    {
+      if((true && (((_arg1["_cid"] === _Cons) && true) && true)))
+      {
+        var $p = _arg0;
+        var $ft = _arg1["_var0"];
+        var $rt = _arg1["_var1"];
+        var $352 = $p;
+        var $351 = $ft;
+        var $350 = $352($351);
+        if($350)
+        {
+          var _return = $rt
+        }
+        else 
+        {
+          var $360 = $Cons;
+          var $359 = $ft;
+          var $358 = $360($359);
+          var $357 = $removeFirst;
+          var $356 = $p;
+          var $355 = $357($356);
+          var $354 = $rt;
+          var $353 = $355($354);
+          var _return = $358($353)
+        };
+        return _return
+      }
+      else 
+      {
+        throw "Pattern not exhaustive!"
+      }
+    }
+  }
+};
+function $reduceDom(_arg0)
+{
+  return function (_arg1)
+  {
+    return function (_arg2)
+    {
+      if(((true && true) && (_arg2 === $Nil)))
+      {
+        var $f = _arg0;
+        var $n = _arg1;
+        var _return = $n;
+        return _return
+      }
+      else 
+      {
+        if(((true && true) && (((_arg2["_cid"] === _Cons) && true) && true)))
+        {
+          var $f = _arg0;
+          var $n = _arg1;
+          var $ft = _arg2["_var0"];
+          var $rt = _arg2["_var1"];
+          var $375 = $$prelude.$a$e;
+          var $374 = $reduceDom;
+          var $373 = $f;
+          var $372 = $374($373);
+          var $371 = $n;
+          var $370 = $372($371);
+          var $369 = $rt;
+          var $368 = $370($369);
+          var $367 = $375($368);
+          var $361 = function (_arg0)
+          {
+            if(true)
+            {
+              var $res = _arg0;
+              var $366 = $f;
+              var $365 = $ft;
+              var $364 = $366($365);
+              var $363 = $res;
+              var $362 = $364($363)
+            }
+            else 
+            {
+              throw "Pattern for lambda expression did not match arguments"
+            };
+            return $362
+          };
+          var _return = $367($361);
+          return _return
+        }
+        else 
+        {
+          throw "Pattern not exhaustive!"
+        }
+      }
+    }
+  }
+};
 function $reduce(_arg0)
 {
   return function (_arg1)
@@ -247,17 +343,17 @@ function $reduce(_arg0)
           var $n = _arg1;
           var $ft = _arg2["_var0"];
           var $rt = _arg2["_var1"];
-          var $251 = $f;
-          var $250 = $ft;
-          var $249 = $251($250);
-          var $248 = $reduce;
-          var $247 = $f;
-          var $246 = $248($247);
-          var $245 = $n;
-          var $244 = $246($245);
-          var $243 = $rt;
-          var $242 = $244($243);
-          var _return = $249($242);
+          var $385 = $f;
+          var $384 = $ft;
+          var $383 = $385($384);
+          var $382 = $reduce;
+          var $381 = $f;
+          var $380 = $382($381);
+          var $379 = $n;
+          var $378 = $380($379);
+          var $377 = $rt;
+          var $376 = $378($377);
+          var _return = $383($376);
           return _return
         }
         else 
@@ -268,7 +364,79 @@ function $reduce(_arg0)
     }
   }
 };
-exports.$reduce = $reduce;
+function $mapDom(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && (_arg1 === $Nil)))
+    {
+      var $f = _arg0;
+      var $409 = $$prelude.$yield;
+      var $408 = $Nil;
+      var _return = $409($408);
+      return _return
+    }
+    else 
+    {
+      if((true && (((_arg1["_cid"] === _Cons) && true) && true)))
+      {
+        var $f = _arg0;
+        var $ft = _arg1["_var0"];
+        var $rt = _arg1["_var1"];
+        var $407 = $$prelude.$a$e;
+        var $406 = $f;
+        var $405 = $ft;
+        var $404 = $406($405);
+        var $403 = $407($404);
+        var $386 = function (_arg0)
+        {
+          if(true)
+          {
+            var $newFt = _arg0;
+            var $402 = $$prelude.$a$e;
+            var $401 = $mapDom;
+            var $400 = $f;
+            var $399 = $401($400);
+            var $398 = $rt;
+            var $397 = $399($398);
+            var $396 = $402($397);
+            var $388 = function (_arg0)
+            {
+              if(true)
+              {
+                var $newRt = _arg0;
+                var $395 = $$prelude.$yield;
+                var $394 = $Cons;
+                var $393 = $newFt;
+                var $392 = $394($393);
+                var $391 = $newRt;
+                var $390 = $392($391);
+                var $389 = $395($390)
+              }
+              else 
+              {
+                throw "Pattern for lambda expression did not match arguments"
+              };
+              return $389
+            };
+            var $387 = $396($388)
+          }
+          else 
+          {
+            throw "Pattern for lambda expression did not match arguments"
+          };
+          return $387
+        };
+        var _return = $403($386);
+        return _return
+      }
+      else 
+      {
+        throw "Pattern not exhaustive!"
+      }
+    }
+  }
+};
 function $length(_arg0)
 {
   if((_arg0 === $Nil))
@@ -282,13 +450,13 @@ function $length(_arg0)
     {
       var $ft = _arg0["_var0"];
       var $rt = _arg0["_var1"];
-      var $257 = $$prelude.$p;
-      var $256 = 1;
-      var $255 = $257($256);
-      var $254 = $length;
-      var $253 = $rt;
-      var $252 = $254($253);
-      var _return = $255($252);
+      var $415 = $$prelude.$p;
+      var $414 = 1;
+      var $413 = $415($414);
+      var $412 = $length;
+      var $411 = $rt;
+      var $410 = $412($411);
+      var _return = $413($410);
       return _return
     }
     else 
@@ -297,7 +465,6 @@ function $length(_arg0)
     }
   }
 };
-exports.$length = $length;
 function $toStringI(_arg0)
 {
   return function (_arg1)
@@ -314,9 +481,9 @@ function $toStringI(_arg0)
       {
         var $ft = _arg0["_var0"];
         var $tS = _arg1;
-        var $273 = $tS;
-        var $272 = $ft;
-        var _return = $273($272);
+        var $431 = $tS;
+        var $430 = $ft;
+        var _return = $431($430);
         return _return
       }
       else 
@@ -326,21 +493,21 @@ function $toStringI(_arg0)
           var $ft = _arg0["_var0"];
           var $rt = _arg0["_var1"];
           var $tS = _arg1;
-          var $271 = $$prelude.$p$p;
-          var $270 = $$prelude.$p$p;
-          var $269 = $tS;
-          var $268 = $ft;
-          var $267 = $269($268);
-          var $266 = $270($267);
-          var $265 = ",";
-          var $264 = $266($265);
-          var $263 = $271($264);
-          var $262 = $toStringI;
-          var $261 = $rt;
-          var $260 = $262($261);
-          var $259 = $tS;
-          var $258 = $260($259);
-          var _return = $263($258);
+          var $429 = $$prelude.$p$p;
+          var $428 = $$prelude.$p$p;
+          var $427 = $tS;
+          var $426 = $ft;
+          var $425 = $427($426);
+          var $424 = $428($425);
+          var $423 = ",";
+          var $422 = $424($423);
+          var $421 = $429($422);
+          var $420 = $toStringI;
+          var $419 = $rt;
+          var $418 = $420($419);
+          var $417 = $tS;
+          var $416 = $418($417);
+          var _return = $421($416);
           return _return
         }
         else 
@@ -351,19 +518,18 @@ function $toStringI(_arg0)
     }
   }
 };
-exports.$toStringI = $toStringI;
 function $flatten(_arg0)
 {
   if(true)
   {
     var $list = _arg0;
-    var $279 = $reduce;
-    var $278 = $conc;
-    var $277 = $279($278);
-    var $276 = $Nil;
-    var $275 = $277($276);
-    var $274 = $list;
-    var _return = $275($274);
+    var $437 = $reduce;
+    var $436 = $conc;
+    var $435 = $437($436);
+    var $434 = $Nil;
+    var $433 = $435($434);
+    var $432 = $list;
+    var _return = $433($432);
     return _return
   }
   else 
@@ -371,7 +537,6 @@ function $flatten(_arg0)
     throw "Pattern not exhaustive!"
   }
 };
-exports.$flatten = $flatten;
 function $toString(_arg0)
 {
   return function (_arg1)
@@ -380,19 +545,19 @@ function $toString(_arg0)
     {
       var $tS = _arg0;
       var $list = _arg1;
-      var $291 = $$prelude.$p$p;
-      var $290 = $$prelude.$p$p;
-      var $289 = "<";
-      var $288 = $290($289);
-      var $287 = $toStringI;
-      var $286 = $list;
-      var $285 = $287($286);
-      var $284 = $tS;
-      var $283 = $285($284);
-      var $282 = $288($283);
-      var $281 = $291($282);
-      var $280 = ">";
-      var _return = $281($280);
+      var $449 = $$prelude.$p$p;
+      var $448 = $$prelude.$p$p;
+      var $447 = "<";
+      var $446 = $448($447);
+      var $445 = $toStringI;
+      var $444 = $list;
+      var $443 = $445($444);
+      var $442 = $tS;
+      var $441 = $443($442);
+      var $440 = $446($441);
+      var $439 = $449($440);
+      var $438 = ">";
+      var _return = $439($438);
       return _return
     }
     else 
@@ -401,5 +566,19 @@ function $toString(_arg0)
     }
   }
 };
-exports.$toString = $toString
+;
+exports.$flatten = $flatten;
+exports.$conc = $conc;
+exports.$fromString = $fromString;
+exports.$map = $map;
+exports.$head = $head;
+exports.$fromOption = $fromOption;
+exports.$tail = $tail;
+exports.$filter = $filter;
+exports.$removeFirst = $removeFirst;
+exports.$reduceDom = $reduceDom;
+exports.$reduce = $reduce;
+exports.$mapDom = $mapDom;
+exports.$toString = $toString;
+exports.$length = $length
 });

@@ -7,12 +7,83 @@ import scala.io.Source
 trait ModuleResolverImpl extends ModuleResolver {
   this: Syntax with Errors with Configs with SignatureSerializer =>
 
-  def inferDependencies(program: AST, config: Config) = program match {
+  case class ImportError(what: String, where: Attribute) extends Error
+
+  def inferDependencies(program: AST, config: Config) : Either[Error, List[ResolvedImport]] = program match {
     case Program(imports, _, _, _, _, attribute) =>
+      checkImports(imports) match {
+        case Left(err) => return Left(err)
+        case _ =>
+      }
+      
+      //TODO: really deal with transitive imports and the like...
       val preludeImp = if (config.mainUnit.getName() != "prelude.sl")
         UnqualifiedImport("prelude") :: imports else imports
       errorMap(preludeImp, resolveImport(config))
     case _ => throw new RuntimeException("")
+  }
+  
+  def checkImports(imports : List[Import]) : Either[Error, Unit] = {
+    for (
+      _ <- checkPathSyntax(imports).right;
+      _ <- checkUniquePath(imports).right;
+      _ <- checkUniqueIde(imports).right
+    ) yield ()
+  }
+  
+  private def checkPathSyntax(imports : List[Import]) : Either[Error, Unit] = {
+    if (imports.isEmpty)
+      return Right()
+    
+    /** Checks the syntax of the path
+     *
+     * The underscore indicates terminal symbols.
+     * Within '[' ']' only terminal symbols are enumerated.
+     *
+     * The syntax is defined as follows:
+     *
+     *   path   ::= _/?(dir _/) module
+     *   dir    ::= [:alnum:-_.]+
+     *   module ::= [:alnum:-_]+
+     */
+    def validatePath(imp : Import) : Either[Error, Unit] = {
+      if (imp.path.matches("/?([a-zA-Z0-9-_.]+/)*[a-zA-Z0-9-_]+"))
+        return Right()
+      else
+        return Left(InvalidPathError(imp.path, imp.attribute))
+    }
+    
+    imports.map(validatePath).reduce(collectErrors)
+  }
+  
+  private def checkUniquePath(imports : List[Import]) : Either[Error, Unit] = {
+    if (imports.isEmpty)
+      return Right()
+    
+    def checkUniqueness(imp : Import) : Either[Error, Unit] = {
+      if (imports.count(_.path == imp.path) == 1)
+        return Right()
+      else
+        return Left(DuplicatePathError(imp.path, imp.attribute))
+    }
+    
+    imports.map(checkUniqueness).reduce(collectErrors)
+  }
+  
+  private def checkUniqueIde(imports : List[Import]) : Either[Error, Unit] = {
+    if (imports.isEmpty)
+      return Right()
+    
+    val qualified = imports.filter(_.isInstanceOf[QualifiedImport]).map(_.asInstanceOf[QualifiedImport])
+    
+    def checkUniqueness(imp : QualifiedImport) : Either[Error, Unit] = {
+      if (qualified.count(_.name == imp.name) == 1)
+        return Right()
+      else
+        return Left(DuplicateModuleError(imp.name, imp.attribute))
+    }
+    
+    qualified.map(checkUniqueness).reduce(collectErrors)
   }
   
   /**
@@ -68,7 +139,7 @@ trait ModuleResolverImpl extends ModuleResolver {
     val source = scala.io.Source.fromFile(file.getCanonicalPath())
     val json = source.mkString
     source.close()
-    val signature = deserialize(json)
+    val signature = deserialize(json, FileLocation(file.getName(), null, null))
     if (null == signature) {
       Left(ImportError("Failed to load signature " + file, EmptyAttribute))
     } else {

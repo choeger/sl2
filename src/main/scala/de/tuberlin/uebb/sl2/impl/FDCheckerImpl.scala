@@ -51,16 +51,25 @@ trait FDCheckerImpl extends FDChecker {
     case Program(imports, funSigs, funDefs, funDefsExtern, _, _) => {
       val funQualifiedDefs = funDefs.toList.map({case (name,body) => (Syntax.Var(name), body)}).toMap
       val funQualifiedSigs = funSigs.toList.map({case (name,sig) => (Syntax.Var(name), sig)}).toMap
-      val externContext: Context = funDefsExtern.map(
-          {case (name, eDef) => (Syntax.Var(name).asInstanceOf[VarFirstClass] ->
-          							astToType(funSigs(name).typ))})
-      for (_ <- checkFunctions(funQualifiedDefs, funQualifiedSigs).right)
+      val funQualifiedDefsExt = funDefsExtern.toList.map({case (name,body) => (Syntax.Var(name), body)}).toMap
+      val undeclaredExterns = funDefsExtern.filter{case (name, eDef) => !funSigs.isDefinedAt(name)}
+      if (!undeclaredExterns.isEmpty) {
+        val undeclaredWittness = undeclaredExterns.head
+        Left(AttributedError("External definition of " + quote(undeclaredWittness._1) +
+            " lacks an explicit declaration.", undeclaredWittness._2.attribute))
+      } else {
+      val externContext: Context = funDefsExtern.map {
+          case (name, eDef) => (Syntax.Var(name).asInstanceOf[VarFirstClass] ->
+            astToType(funSigs(name).typ))
+        }
+      for (_ <- checkFunctions(funQualifiedDefs, funQualifiedDefsExt, funQualifiedSigs).right)
         yield (funQualifiedSigs, funQualifiedDefs, externContext)
+      }
     }
   }
 
-  def checkCompleteImplementation(funDefs: Map[Var, List[FunctionDef]], funSigs: Map[Var, FunctionSig]): Either[Error, Unit] = {
-    val unimplemented = funSigs -- funDefs.keySet
+  def checkCompleteImplementation(funDefs: Map[Var, List[FunctionDef]], funDefsExt: Map[Var, FunctionDefExtern], funSigs: Map[Var, FunctionSig]): Either[Error, Unit] = {
+    val unimplemented = funSigs -- funDefs.keySet -- funDefsExt.keySet
     def mkErrors(funSigs: Map[Var, FunctionSig]): List[Error] =
       for ( sig <- funSigs.toList ) yield (sig match {
         case (name, FunctionSig(_, _, attr)) =>
@@ -76,11 +85,11 @@ trait FDCheckerImpl extends FDChecker {
   /**
    * Check a program's top-level function definitions.
    */
-  def checkFunctions(funDefs: Map[Var, List[FunctionDef]], funSigs: Map[Var, FunctionSig]): Either[Error, Unit] = {
+  def checkFunctions(funDefs: Map[Var, List[FunctionDef]], funDefsExt: Map[Var, FunctionDefExtern], funSigs: Map[Var, FunctionSig]): Either[Error, Unit] = {
     for (
       _ <- checkArities(funDefs, funSigs).right;
       _ <- checkDuplicatePatVars(funDefs).right;
-      _ <- checkCompleteImplementation(funDefs, funSigs).right
+      _ <- checkCompleteImplementation(funDefs, funDefsExt, funSigs).right
     ) yield ()
   }
 
@@ -108,9 +117,7 @@ trait FDCheckerImpl extends FDChecker {
 		 * first function definition.
 		 */
         val attribute = funSigs.get(funName).map(_.attribute).getOrElse(defs.head.attribute)
-        val message = "Signature and definition of "+ quote(funName.toString) +" have different arities." + 
-        			" Signature arity: " + funSigs.get(funName).map(_.typ.arity.toString) +
-        			" Arguments: "+arguments.toString
+        val message = "Signature and definition of "+ quote(funName.toString) +" have different arities."
         Left(AttributedError(message, attribute))
       } else Right()
     }

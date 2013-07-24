@@ -365,10 +365,28 @@ trait ParserSpec extends FunSpec with Inside with ShouldMatchers {
   }
 
   describe(testedImplementationName() + " Test case 9: Data type definitions") {
-    it("Should parse simple data type definition") {
+    it("Should parse very simple wrapper data type definition") {
+      "DATA IntWrapper = IntWrapper Int".as.ast should parse(dataDef2Modul(DataDef("IntWrapper",
+        List(),
+        List(ConstructorDef("IntWrapper", List(TyExpr(Syntax.TConVar("Int"), List())))))))
+    }
+    
+    it("Should parse very simple wrapper data type definition with qualified names") {
+      "DATA IntWrapper = IntWrapper Pre.Int".as.ast should parse(dataDef2Modul(DataDef("IntWrapper",
+        List(),
+        List(ConstructorDef("IntWrapper", List(TyExpr(Syntax.TConVar("Int", "Pre"), List())))))))
+    }
+    
+    it("Should parse simple generic data type definition") {
       "DATA Product x y = Product x y".as.ast should parse(dataDef2Modul(DataDef(strProduct,
         List(strX, strY),
         List(ConstructorDef(strProduct, List(TyVar(strX), TyVar(strY)))))))
+    }
+    
+    it("Should parse wrapper data type definition with qualified names") {
+      "DATA ListWrapper x = ListWrapper (List.List x)".as.ast should parse(dataDef2Modul(DataDef("ListWrapper",
+        List(strX),
+        List(ConstructorDef("ListWrapper", List(TyExpr(Syntax.TConVar("List", "List"), List(TyVar(strX)))))))))
     }
     
     it("Should parse simple public data type definition") {

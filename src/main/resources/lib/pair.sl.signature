@@ -1,0 +1,1 @@
+{"imports" : [], "signatures" : {"fst" : [{"type" : ".Pair", "params" : ["a", "b"]}, "a"], "snd" : [{"type" : ".Pair", "params" : ["a", "b"]}, "b"]}, "dataDefs" : [{"ide" : "Pair", "tvars" : ["a", "b"], "constructors" : [{"constructor" : "Pair", "types" : ["a", "b"]}]}]}

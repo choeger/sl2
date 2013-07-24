@@ -17,7 +17,7 @@ trait ModuleNormalizerSpec extends FunSpec with ShouldMatchers {
       
   implicit class SignatureString(str: String) {
     def parsed = {
-      parseAst(str).right.get
+      parseAst(str).right.get.asInstanceOf[Program]
     }
   }
   
@@ -30,55 +30,164 @@ trait ModuleNormalizerSpec extends FunSpec with ShouldMatchers {
       }).toMap.get(name).get
     }
   }
+  
+  // helper class to manage multiple modules
+  // simulates the resolution of imports
+  private class ModuleSet {
+    var modules : Map[String, Program] = Map()
+  
+    def add(path : String, code : String) : Unit = {
+      modules += (path -> code.parsed)
+    }
+    
+    def normalize(path : String) : Map[String, Program] = {
+      val module = modules.get(path).get
+      
+      val namedImports = module.imports.map { imp =>
+        val qimp = imp.asInstanceOf[QualifiedImport]
+        val resolved = modules.get(qimp.path).get
+        val rimp = ResolvedQualifiedImport(qimp.name, qimp.path, null, null, resolved, qimp)
+        
+        (qimp.path, rimp)
+      }
+      
+      val (paths, imports) = namedImports.unzip
+      
+      val normalized = normalizeModules(imports).map(_.asInstanceOf[ResolvedQualifiedImport].signature.asInstanceOf[Program])
+      
+      paths.zip(normalized).toMap
+    }
+  }
 
-  describe(testedImplementationName() + " this is just debugging println") {
-    it("Should do sth") {
-      val astA = """
+  describe(testedImplementationName() + ": substitution tests") {
+    it("Should substitute foreign data types in function declarations") {
+      val modules = new ModuleSet()
+      
+      modules.add("a", """
         DATA DataA = ConsA
-        
         FUN funA : DataA
-      """.parsed.asInstanceOf[Program]
+      """)
       
-      val astB1 = """
-        IMPORT "a" AS A1
-        DATA DataB1 = ConsB1a A1.DataA | ConsB1b
-        FUN funB1a : A1.DataA
-        FUN funB1b : DataB1 -> A1.DataA
-      """.parsed.asInstanceOf[Program]
-      
-      val astB2 = """
-        IMPORT "a" AS A2
-        DATA DataB2 = ConsB2a A2.DataA | ConsB2b
-        FUN funB2a : A2.DataA -> DataB2
-        FUN funB2b : DataB2
-      """.parsed.asInstanceOf[Program]
-      
-      val astC = """
-        IMPORT "b1" AS B1
-        IMPORT "b2" AS B2
-        
-        FUN funC : B1.DataB1 -> B2.DataB2
-        DEF funC x = b2funB2a(B1.funB1b(x))
-      """.parsed.asInstanceOf[Program]
-      
-      val importCB1 = ResolvedQualifiedImport("B1", "b1", null, null, astB1, astC.getImport("B1"))
-      val importCB2 = ResolvedQualifiedImport("B2", "b2", null, null, astB2, astC.getImport("B2"))
-      
-      val astX = """
+      modules.add("b", """
         IMPORT "a" AS A
-        IMPORT "b1" AS B1
-        IMPORT "b2" AS B2
+      """)
+      
+      modules.normalize("b") should be(Map(
+        "a" -> """
+          DATA DataA = ConsA
+          FUN funA : A.DataA
+        """.parsed
+      ))
+    }
+    
+    it("Should substitute imported data types of imports in function declarations") {
+      val modules = new ModuleSet()
+      
+      // module A
+      modules.add("a", """
+        DATA DataA = ConsA
+        FUN funA : DataA
+      """)
+      
+      // module B
+      modules.add("b", """
+        IMPORT "a" AS A1
         
-        FUN funX : A.DataA -> B2.DataB2
-        DEF funX = B2.funB2a
-      """.parsed.asInstanceOf[Program]
+        FUN funB : A1.DataA
+      """)
       
-      val importXA  = ResolvedQualifiedImport("A" , "a" , null, null, astA , astX.getImport("A" ))
-      val importXB1 = ResolvedQualifiedImport("B1", "b1", null, null, astB1, astX.getImport("B1"))
-      val importXB2 = ResolvedQualifiedImport("B2", "b2", null, null, astB2, astX.getImport("B2"))
+      // module C
+      modules.add("c", """
+        IMPORT "a" AS A2
+        IMPORT "b" AS B2
+      """)
       
-//      println(normalizeModules(List(importCB1, importCB2)))
-//      println(normalizeModules(List(importXA, importXB1, importXB2)))
+      modules.normalize("c") should be(Map(
+        ("a" -> """
+          DATA DataA = ConsA
+          FUN funA : A2.DataA
+        """.parsed),
+        ("b" -> """
+          IMPORT "a" AS A2
+          
+          FUN funB : A2.DataA
+        """.parsed)
+      ))
+    }
+    
+    it("Should substitude imported data types of imports in constructors") {
+      val modules = new ModuleSet()
+      
+      // module A
+      modules.add("a", """
+        DATA DataA = ConsA
+        FUN funA : DataA
+      """)
+      
+      // module B
+      modules.add("b", """
+        IMPORT "a" AS A1
+        
+        DATA DataB = ConsB A1.DataA
+      """)
+      
+      // module C
+      modules.add("c", """
+        IMPORT "a" AS A2
+        IMPORT "b" AS B2
+      """)
+      
+      modules.normalize("c") should be(Map(
+        ("a" -> """
+          DATA DataA = ConsA
+          FUN funA : A2.DataA
+        """.parsed),
+        ("b" -> """
+          IMPORT "a" AS A2
+          
+          DATA DataB = ConsB A2.DataA
+        """.parsed)
+      ))
+    }
+    
+    it("Should substitude unknown data types") {
+      val modules = new ModuleSet()
+      
+      // module A
+      modules.add("a", """
+        DATA DataA = ConsA
+        FUN funA : DataA
+      """)
+      
+      // module B
+      modules.add("b", """
+        IMPORT "a" AS A1
+        
+        DATA DataB = ConsB A1.DataA
+      """)
+      
+      // module C
+      modules.add("c", """
+        IMPORT "b" AS B2
+      """)
+      
+      modules.normalize("c") should be(Map(
+        ("b" -> Program(
+          List(QualifiedImport("a", "#1")),
+          Map(),
+          Map(),
+          Map(),
+          List(
+            DataDef("DataB", List(), List(
+              ConstructorDef("ConsB", 
+                List(
+                  TyExpr(Syntax.TConVar("DataA", "#1"), List())
+                )
+              )
+            ))
+          )
+        ))
+      ))
     }
   }
   

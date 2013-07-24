@@ -204,45 +204,73 @@ gespeichert sind}
 
 \section{Prelude und Bibliotheken}
 
-\TODO{Ben: Beispiele, Schwierigkeiten, Designentscheidungen}
+Einerseits zur Erweiterung des ursprünglichen Funktionsumfangs, andererseits
+vor allem zum Testen des neuen Modulsystems, haben wir eine Reihe grundlegender
+Bibliotheken für SL entwickelt. Im Folgenden wollen wir Ausschnitte aus den
+Bibliothekssignaturen vorstellen, ihre Funktionen angerissen und
+Besonderheiten bei ihrer Verwendung des Modulsystems und neuer Sprachfeatures
+ansprechen. Die vollständigen Module inklusive Implementierung finden sich
+in \verb|/src/main/resources/lib/|.
 
+\subsection{Prelude und Libraries}
 
-\subsection{Prelude}
-
-Alle vormals fest in den Compiler eingebauten Funktionen und Konstruktoren
+Fast alle vormals fest in den Compiler eingebauten Funktionen und Konstruktoren
 werden jetzt durch ein eigenes, umfangreicheres Prelude-Modul definiert.
 Dieses wird implizit durch jedes SL-Programm unqualifiziert importiert.
-Im Prelude werden auch alle Basistypen deklariert. (Allerdings sind diese
-gleichzeitig noch in den Compiler integriert, damit die Literale einen Typ
-unabhängig vom Prelude-Import erhalten können.)
 
-Unter anderem sind \verb|#| für Funktionskomposition und \verb|id| als
-Identitätsfunktion im Prelude hinzugekommen.
-
-\begin{lstlisting}{caption={Prelude},label=lst:prelude}
-PUBLIC DATA Bool = True | False
-PUBLIC FUN not : Bool -> Bool
-
--- Function composition
-PUBLIC FUN # : (b -> c) -> (a -> b) -> (a -> c)
-PUBLIC FUN id : a -> a
-
--- String functions
-
-PUBLIC FUN ++ : (String -> String -> String)
-
--------------------------------------
-
-PUBLIC FUN intToStr : Int -> String
-PUBLIC FUN strToInt : String -> Int
-
-\end{lstlisting}
-
-\subsection{Error}
+Im Prelude werden unter anderem alle Basistypen deklariert. Zugleich sind
+diese allerdings noch in den Compiler integriert, damit die Literale einen
+Typ erhalten können unabhängig vom Prelude-Import. Die meisten dieser
+Datentypen kommen ohne Konstruktorendefinition daher, sind deshalb aber noch
+lange nicht leer, was wir durch \verb|DATA EXTERN| anzeigen.
 
 \begin{verbatim}
-PUBLIC FUN error : String -> a
-DEF EXTERN error = {| function(msg){throw msg} |} 
+DATA EXTERN Int
+DATA EXTERN Real
+DATA EXTERN Char
+DATA EXTERN String
+
+PUBLIC DATA Void = Void
+DATA EXTERN DOM a
+\end{verbatim}
+
+Stärker als andere Module bildet das Prelude Funktionen auf handgeschriebenen
+JavaScript-Code ab. Diese Abbildung wurde bisher durch eine hardcodierte
+Umwandlung im SL-Compiler realisiert. Dank \verb|IMPORT EXTERN| und
+\verb|DEF EXTERN| \textbf{VERWEIS EINBAUEN} kann das Prelude selbst
+spezifizieren, dass \verb|+| auf das JavaScript-Objekt \verb|_add|
+aus \verb|_prelude.js| abgebildet werden soll.
+
+\begin{verbatim}
+IMPORT EXTERN "_prelude" 
+[...]
+PUBLIC FUN + : Int -> Int -> Int
+DEF EXTERN + = {| _add |}
+\end{verbatim}
+
+So sind weite Teile der Preludes umgesetzt. Andere grundlegende Aspekte
+sind hingegen völlig in SL definiert, zum Beispiel der Datentyp \verb|BOOL|.
+
+\begin{verbatim}
+PUBLIC DATA Bool = True | False
+
+PUBLIC FUN not : Bool -> Bool
+DEF not True = False
+DEF not False = True
+\end{verbatim}
+
+Es sind auch einige neue Funktionen hinzugekommen, zum Beispiel \verb|#|
+für Funktionskomposition\footnote{Das ungewöhnliche Zeichen rührt daher,
+dass ,,\texttt{o}`` in SL kein Operator sein kann und ,,\texttt{.}`` für die
+Lambda-Abstraktion und Namensqualifizierung reserviert ist.} und
+\verb|id| als Identitätsfunktion.
+
+\begin{verbatim}
+PUBLIC FUN # : (b -> c) -> (a -> b) -> (a -> c)
+DEF f # g = \ x . f (g x)
+
+PUBLIC FUN id : a -> a
+DEF id a = a
 \end{verbatim}
 
 Eine spannende neue Funktion im Prelude ist \verb|error|. Diese hat einen
@@ -250,21 +278,99 @@ beliebigen Rückgabetyp, kann also an beliebigen Stellen in den Code
 geschrieben werden. Allerdings wird \verb|error| niemals einen Wert
 zurückgeben, sondern schlicht das Programm mit einer Fehlermeldung enden
 lassen.\footnote{Diese Funktion ist also keine echte, wohldefinierte Funktion,
-sondern hat dasselbe ``Ergebnis'' wie eine Endlosrekursion.} Das ist sehr
-praktisch, wenn man im Implementierungsprozess schon teile Testen möchte,
-aber noch nicht überall sinnvollen Code eintragen kann.
+sondern hat dasselbe ,,Ergebnis'' wie eine Endlosrekursion.} Man kann sich
+das \verb|error| auch als eine Möglichkeit vorstellen, in der Abwesenheit von
+Subtyping, eine Art Bottom-Type einzuführen. Vor allem ist es aber praktisch:
+Häufig möchte man im Implementierungsprozess schon teile Testen, aber noch
+nicht überall sinnvollen Code eintragen. Manchmal lässt sich für einen
+Fall auch einfach kein sinnvolles Programmverhalten angeben.
 
-\subsection{println-Debugging}
+\begin{verbatim}
+-- The representation of the undefined.
+PUBLIC FUN error : String -> a
+DEF EXTERN error = {| function(msg){throw msg} |} 
+\end{verbatim}
+
+\subsection{List, Option, Either}
+
+Unsere mitgelieferten Module enthalten die klassischen algebraischen,
+generischen Datentypen \verb|List| (aka Sequence), \verb|Option| (aka Maybe),
+\verb|Either| (aka Union) und \verb|Pair| (aka Product2).
+Bis auf \verb|List.fromString| sind diese Module komplett in SL geschrieben
+ohne Rückgriff auf JavaScript. Wir haben auch ein paar der grundlegenden
+Funktionen wie \verb|map| und \verb|reduce| implementiert. Vorrangig ging
+es uns aber darum, komplexere importierte Konstruktoren beim Pattern Matching
+anhand dieser Typen auszuprobieren.
+
+\begin{verbatim}
+PUBLIC DATA List a     = Nil | Cons a (List a)
+PUBLIC DATA Option a   = None | Some a
+PUBLIC DATA Either a b = Left a | Right b
+PUBLIC DATA Pair a b   = Pair a b
+\end{verbatim}
+
+\subsection{Reele Zahlen --- \texttt{real.sl}}
+
+Am Anfang des Projekts hatten wir reele Zahlen in SL integriert. Diese und
+noch mehr Funktionen auf Reals werden jetzt in \verb|real.sl| definiert
+durch Abbildung auf entsprechende Funktionen auf JavaScripts \verb|num|.
+Bei der ursprünglichen Umsetzung erwies sich als ausgesprochen
+unhandlich, dass die Operatoren wie \verb|+| und \verb|/| schon durch ihre
+Verwendeung für Integer belegt waren. \verb|real.sl| überschreibt für sich
+die Operatoren. Zum Beispiel enthält es folgende Definitionen:
+
+\begin{verbatim}
+PUBLIC FUN +  : Real -> Real -> Real
+PUBLIC FUN /  : Real -> Real -> Real
+PUBLIC FUN == : Real -> Real -> Bool
+PUBLIC FUN round   : Real -> Int
+PUBLIC FUN fromInt : Int -> Real
+\end{verbatim}
+
+In einem anderen Modul kann somit also \verb|(R.fromInt x) R.* 0.333|
+geschrieben werden. \verb|real.sl| ist also für uns auch eine gute
+Möglichkeit, um das Zusammenspiel von aus dem Prelude importierten
+unqualifizierten Bezeichnern und Modulinternen deklarationen auszutesten.
+
+\subsection{Dictionaries --- \texttt{dict.sl}}
+
+Anders als zum Beispiel \verb|List| ist der abstrakte Datentyp \verb|Dict|
+komplett ohne SLs algebraische Datentypen umgesetzt. Stattdessen arbeiten
+die Implementierungen der einzelnen Funktionen ausschließlich mit JavaScripts
+\verb|Object|, also den in JavaScript grundlegenden Wörterbuchobjekten.
+
+\begin{verbatim}
+DATA EXTERN Dict a
+PUBLIC FUN empty : Dict a
+PUBLIC FUN put : Dict a -> String -> a -> Dict a
+PUBLIC FUN has : Dict a -> String -> Bool
+PUBLIC FUN get : Dict a -> String -> a
+PUBLIC FUN getOpt : Dict a -> String -> Opt.Option a
+PUBLIC FUN fromList : (String -> a) -> List.List String -> Dict a
+\end{verbatim}
+
+\verb|dict.sl| zeigt, wie man auch außerhalb des durch den SL-Compiler
+vorgesehenen besonderen Fleckchens \verb|prelude.sl|, sinnvoll Strukturen
+durch Rückgriff auf JavaScript definieren kann, die auch mit rein
+SL-definierten Strukturen wie List und Option interagieren können.
+
+\subsection{println-Debugging --- \texttt{debuglog.sl}}
+
+Das neue Modul \verb|debuglog| erlaubt, normale Programme mit Konsolenausgaben
+zu versehen, die neben der Programmausführung ausgegeben werden.
 
 \begin{verbatim}
 PUBLIC FUN print : String -> DOM Void
 PUBLIC FUN andPrint : a -> (a -> String) -> a
-PUBLIC FUN andPrintDbg : a -> String -> a
+PUBLIC FUN andPrintMessage : a -> String -> a
 \end{verbatim}
 
-Mit einem ähnlichen Trick arbeitet das neue Modul \verb|basicio|. Dieses
-erlaubt, normale Programme mit Konsolenausgaben zu versehen, die neben
-der Programmausführung ausgegeben werden.
+Im Hintergrund bilden die Funktionen auf \verb|console.log| ab, das unter
+node.js sowie neueren Versionen von Firefox (bzw. Firebug), Internet Expolorer
+(ab IE8, Developer Tools) unauffällige Programmausgaben ermöglicht.
+
+Allerdings bewegen sich \verb|andPrint| sowie \verb|andPrintMessage| und die
+Hilfsfunktion \verb|logAvailable : Bool| am Rand des funktionalen Paradigmas.
 
 \begin{verbatim}
 IO.andPrint (L.Cons 1 (L.Cons 2 L.Nil)) (L.toString intToStr)
@@ -273,44 +379,65 @@ IO.andPrint (L.Cons 1 (L.Cons 2 L.Nil)) (L.toString intToStr)
 Dieser Ausdruck hat als Rückgabewert die Liste $\langle1,2\rangle$,
 während als (fürs Programm hoffentlich unsichtbarer) Seiteneffekt,
 noch \verb|"<1,2>"| auf die Konsole geschrieben wird. Semantisch sollten
-\verb|andPrint| sowie \verb|andPrintDbg| äquivalent zur Identitätsfunktion
-mit ein paar unnötigen Parametern sein.
+\verb|andPrint| sowie \verb|andPrintMessage| äquivalent zur Identitätsfunktion
+mit ein paar unnötigen Parametern sein. Solange man es wie
+\verb|Debug.Trace.trace| in Haskell nur vorsichtig für Debugging-Zwecke
+einsetzt, sollte alles klar gehen.
 
-\subsection{List, Option, Either}
+\subsection{Browseranbindung --- \texttt{basicweb.sl}}
 
-\begin{verbatim}
-PUBLIC DATA List a     = Nil | Cons a (List a)
-PUBLIC DATA Option a   = None | Some a
-PUBLIC DATA Either a b = Left a | Right b
-\end{verbatim}
-
-Unsere mitgelieferten Module enthalten die klassischen algebraischen,
-generischen Datentypen \verb|List| (aka Sequence), \verb|Option| (aka Maybe)
-und \verb|Either| (aka Union). Bis auf \verb|List.fromString| sind diese
-Module komplett in SL geschrieben ohne Rückgriff auf JavaScript. Wir
-haben auch ein paar der grundlegenden Funktionen wie \verb|map| und
-\verb|reduce| implementiert. Vorrangig ging es uns aber darum, komplexere
-importierte Konstruktoren beim Pattern Matching anhand dieser Typen
-auszuprobieren.
-
-\subsection{Dictionarys}
-
-Der abstrakte Datentyp \verb|Dict| hingegen ist komplett ohne SLs
-algebraische Datentypen umgesetzt. Stattdessen arbeiten die Implementierungen
-der einzelnen Funktionen ausschließlich mit JavaScripts \verb|Object|,
-also den in JavaScript grundlegenden Wörterbuchobjekten.
+Wir schrieben auch eine kleine Bibliothek \verb|basicweb|, die einige der
+Input/Output-Möglichkeiten von Websites bereitstellt. Diese Bibliothek ergibt
+natürlich nur sinn, wenn das mit SL erzeugte JS-Script im Browser ausgeführt
+wird.
 
 \begin{verbatim}
-DATA Dict a
-PUBLIC FUN empty : Dict a
-PUBLIC FUN put : Dict a -> String -> a -> Dict a
-PUBLIC FUN get : Dict a -> String -> a
-PUBLIC FUN has : Dict a -> String -> Bool
+DATA EXTERN Node
+DATA EXTERN Document
+
+PUBLIC FUN document : DOM Document
+PUBLIC FUN getBody : Document -> DOM Node
+
+PUBLIC FUN appendChild : Node -> Node -> DOM Void
+PUBLIC FUN removeChild : Node -> Node -> DOM Void
+PUBLIC FUN getChildNodes : Node -> DOM (List.List Node)
+
+PUBLIC FUN setOnClick : Node -> DOM Void -> DOM Void
+PUBLIC FUN getValue : Node -> DOM String
+PUBLIC FUN setValue : Node -> String -> DOM Void
+
+PUBLIC FUN createElement : Document -> String -> DOM Node
+PUBLIC FUN createButton : Document -> String -> DOM Void -> DOM Node
+PUBLIC FUN createInput : Document -> String -> DOM Void -> DOM Node
+
+PUBLIC FUN alert : String -> DOM Void
+PUBLIC FUN prompt : String -> String -> DOM String 
 \end{verbatim}
 
-\subsection{Browseranbindung}
+Wir haben nur einen sehr kleinen Teil der Standard-JavaScript-Befehle
+abgebildet. Mit diesem Teil lässt sich schon eine überschaubare Webanwendung
+wie in \verb|boxsort.sl| gezeigt umsetzen, die in gängigen modernen Browsern
+läuft.
 
-\subsection{Floats}
+\subsection{Zusammenfassung}
+
+Die entwickelten Bibliotheken sind weit davon entfernt, durchdacht und
+ausgewachsen zu sein. Sie zeigen jedoch schon gut, wie unsere neuen Features
+es erlauben, verschiedene Funktionen in Modulen zu sammeln und diese Module
+aufeinander aufbauen zu lassen.
+
+Es wird deutlich, dass die vorgeschlagenen \verb|EXTERN|-Konstrukte es
+erlauben, auch funktionale Bibliotheken wie \verb|dict.sl| ohne eingriffe
+in den Compiler zu entwickeln. Die monadischen JavaScript-Literale sind
+mächtig genug, um Aspekte wie die Interaktion mit dem Browser in Modulen
+wie \verb|basicweb.sl| zusammenzufassen.
+
+Das Prelude als echtes Modul umzusetzen, gestaltet auch den Compiler
+übersichtlicher. Die Prelude-Funkionen sind jetzt gleichberechtigte
+Funktionen innerhalb der Sprache und führen kein Eigenleben in Checks und
+Codegenerierung mehr.
+
+\section{Beispielprogramme}
 
 \section{Fehlermeldungen}
 \TODO{Fritz}

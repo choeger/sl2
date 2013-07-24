@@ -14,7 +14,7 @@ trait ModuleResolver {
       val file:File,
       val ast:Import)
   
-  sealed abstract class ResolvedNamedImport(
+  sealed abstract class ResolvedModuleImport(
       val name:String,
       override val path:String,
       override val file:File,
@@ -27,7 +27,7 @@ trait ModuleResolver {
       override val file: File,
       override val jsFile: File,
       override val signature: Program,
-      override val ast: UnqualifiedImport) extends ResolvedNamedImport(
+      override val ast: UnqualifiedImport) extends ResolvedModuleImport(
           "$$"+path.replace('/', '$'), path, file, jsFile, signature, ast)
   
   case class ResolvedQualifiedImport(
@@ -37,7 +37,7 @@ trait ModuleResolver {
       override val jsFile: File,
       override val signature: Program,
       override val ast: QualifiedImport)
-    extends ResolvedNamedImport(name, path, file, jsFile, signature, ast)
+    extends ResolvedModuleImport(name, path, file, jsFile, signature, ast)
     
   case class ResolvedExternImport(
       override val path: String,
@@ -47,5 +47,7 @@ trait ModuleResolver {
     
   def inferDependencies(program: AST, config: Config): Either[Error, List[ResolvedImport]]
   def resolveDependencies(program: AST, config: Config): Either[Error, Set[String]]
+  
+  def checkImports(imports : List[Import]) : Either[Error, Unit]
 
 }

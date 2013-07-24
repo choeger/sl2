@@ -79,13 +79,9 @@ object Syntax {
     override def nameToString = ide
   }
 
-  case class Var(override val ide: VarName, override val module: ModuleVar = LocalMod) extends VarFirstClass(ide, module) 
-  //type TypeVar = Syntax.TypeVar // Should not exist...
-//  case class TypeVar(ide: TypeVarName, module: ModuleVar = LocalMod) extends QualifiedVar(module) {
-//    override def nameToString = ide
-//  }
-  case class ConVar(override val ide: ConVarName, override val module: ModuleVar = LocalMod) extends VarFirstClass(ide, module)
-  
+  case class Var(override val ide: VarName, override val module: ModuleVar = LocalMod) extends VarFirstClass(ide, module)
+  // Even though there is TypeVarName, TypeVar does not exist.
+  case class ConVar(override val ide: ConVarName, override val module: ModuleVar = LocalMod) extends VarFirstClass(ide, module)  
   case class TConVar(ide: TConVarName, override val module: ModuleVar = LocalMod) extends QualifiedVar(module) {
     override def nameToString = ide
   }
@@ -109,13 +105,17 @@ trait Syntax {
   sealed abstract class Location
   case class FileLocation(file: String, from: Position, to: Position) extends Location {
     override def toString(): String = 
-      if (from.line == to.line) {
+      if (from == null || to == null) {
+        // for imported names, no line is given.
+        file
+      } else if (from.line == to.line) {
         if (from.col == to.col)
           file + ":" + from.line.toString + ":" + from.col.toString
         else
           file + ":" + from.line.toString + ":" + from.col.toString + "-" + to.col.toString
-      } else
+      } else {
         file + ":" + from.line.toString + "-" + to.line.toString
+      }
   }
   case object NoLocation extends Location
 
@@ -138,9 +138,19 @@ trait Syntax {
   }
   case class AttributeImpl(location: Location) extends Attribute {
     override def toString() = location.toString
+    override def hashCode(): Int = { classOf[Attribute].hashCode() }
+    override def equals(other: Any) = other match {
+      case a: Attribute => true
+      case _ => false
+    }
   }
   case object EmptyAttribute extends Attribute {
     override def toString() = "Unknown location"
+    override def hashCode(): Int = { classOf[Attribute].hashCode() }
+    override def equals(other: Any) = other match {
+      case a: Attribute => true
+      case _ => false
+    }
   }
 
   type VarName = Syntax.VarName
@@ -256,8 +266,8 @@ trait Syntax {
   /**
    * All type constructors of a program.
    */ 
-  def allTypeCons(dataDefs: List[DataDef]): List[TConVar] =
-    dataDefs.map(_.ide).map(Syntax.TConVar(_))
+  def allTypeCons(dataDefs: List[DataDef], module : ModuleVar = LocalMod): List[TConVar] =
+    dataDefs.map(_.ide).map(Syntax.TConVar(_, module))
 
   /**
    * All data constrcutor of a program.
@@ -373,6 +383,7 @@ trait Syntax {
     def pretty(t: Any): String = t match {
       case e: Expr => super.pretty(showExpr(e))
       case m: Program => super.pretty(showProgram(m))
+      case i: Import => super.pretty(showImport(i))
       case e => pretty_any(e)
     }
 

@@ -27,6 +27,14 @@ PUBLIC FUN reduce : (a -> b -> b) -> b -> List a -> b
 DEF reduce f n Nil = n
 DEF reduce f n (Cons ft rt) = f ft (reduce f n rt)
 
+-- special function to reduce a list using a monadic function.
+-- (last element will be treated first!)
+PUBLIC FUN reduceDom : (a -> b -> DOM b) -> DOM b -> List a -> DOM b
+DEF reduceDom f n Nil = n
+DEF reduceDom f n (Cons ft rt) =
+	reduceDom f n rt &= \ res .
+	f ft res
+
 PUBLIC FUN filter : (a -> Bool) -> List a -> List a
 DEF filter p Nil = Nil
 DEF filter p (Cons ft rt) =
@@ -34,11 +42,25 @@ DEF filter p (Cons ft rt) =
 		Cons ft (filter p rt) 
 	ELSE
 		filter p rt
+
+PUBLIC FUN removeFirst : (a -> Bool) -> List a -> List a
+DEF removeFirst p Nil = Nil
+DEF removeFirst p (Cons ft rt) =
+	IF p ft THEN rt ELSE Cons ft (removeFirst p rt)
 		
 PUBLIC FUN map : (a -> b) -> List a -> List b
 DEF map f Nil = Nil
 DEF map f (Cons ft rt) =
 	Cons (f ft) (map f rt)
+
+-- special function to map a monadic function on a list.
+-- (first element will be evaluated first!)
+PUBLIC FUN mapDom : (a -> DOM b) -> List a -> DOM List b
+DEF mapDom f Nil = yield Nil
+DEF mapDom f (Cons ft rt) =
+	f ft &= \newFt.
+	mapDom f rt &= \newRt.
+	yield (Cons newFt newRt)
 	
 PUBLIC FUN toString : (a -> String) -> List a -> String
 DEF toString tS list = "<" ++ toStringI list tS ++ ">"
@@ -58,4 +80,3 @@ DEF EXTERN fromString = {| function(str) {
 PUBLIC FUN fromOption : Option.Option a -> List a
 DEF fromOption (Option.Some a) = Cons a Nil
 DEF fromOption Option.None = Nil
- 

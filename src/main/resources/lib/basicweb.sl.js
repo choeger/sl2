@@ -2,26 +2,29 @@
 // generated from: basicweb.sl
 /***********************************/
 define(function(require, exports, module) {
-    var $$prelude = require("prelude.sl")
+    var $$prelude = require("prelude.sl"); var List = require("list.sl")
 
 ;
 ;
-exports.$Document = 0;
-var $Document = exports.$Document;
 ;
-exports.$Node = 0;
-var $Node = exports.$Node;
-function $appendChild(_arg0)
+var $getChildNodes = function(node){return function(){
+	var list = List.$Nil;
+	for (var i=0; i<node.childNodes.length; i++) {
+		list = List.$Cons(node.childNodes[i])(list);
+	}
+	return list;
+}};
+function $createElement(_arg0)
 {
   return function (_arg1)
   {
     if((true && true))
     {
       var $doc = _arg0;
-      var $child = _arg1;
+      var $elemType = _arg1;
       var _return = function ()
       {
-        return $doc.body.appendChild($child)
+        return $doc.createElement($elemType)
       };
       return _return
     }
@@ -31,8 +34,27 @@ function $appendChild(_arg0)
     }
   }
 };
-exports.$appendChild = $appendChild;
-exports.$document = function ()
+function $appendChild(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && true))
+    {
+      var $node = _arg0;
+      var $child = _arg1;
+      var _return = function ()
+      {
+        return $node.appendChild($child)
+      };
+      return _return
+    }
+    else 
+    {
+      throw "Pattern not exhaustive!"
+    }
+  }
+};
+var $document = function ()
 {
   var $document = function ()
   {
@@ -40,7 +62,6 @@ exports.$document = function ()
   };
   return $document
 }();
-var $document = exports.$document;
 function $alert(_arg0)
 {
   if(true)
@@ -57,7 +78,186 @@ function $alert(_arg0)
     throw "Pattern not exhaustive!"
   }
 };
-exports.$alert = $alert;
+function $setOnClick(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && true))
+    {
+      var $node = _arg0;
+      var $cb = _arg1;
+      var _return = function ()
+      {
+        return $node.onclick = $cb
+      };
+      return _return
+    }
+    else 
+    {
+      throw "Pattern not exhaustive!"
+    }
+  }
+};
+function $prompt(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && true))
+    {
+      var $msg = _arg0;
+      var $pre = _arg1;
+      var _return = function ()
+      {
+        return prompt($msg, $pre)
+      };
+      return _return
+    }
+    else 
+    {
+      throw "Pattern not exhaustive!"
+    }
+  }
+};
+function $setValue(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && true))
+    {
+      var $node = _arg0;
+      var $value = _arg1;
+      var _return = function ()
+      {
+        return $node.value = $value
+      };
+      return _return
+    }
+    else 
+    {
+      throw "Pattern not exhaustive!"
+    }
+  }
+};
+function $removeChild(_arg0)
+{
+  return function (_arg1)
+  {
+    if((true && true))
+    {
+      var $node = _arg0;
+      var $child = _arg1;
+      var _return = function ()
+      {
+        return $node.removeChild($child)
+      };
+      return _return
+    }
+    else 
+    {
+      throw "Pattern not exhaustive!"
+    }
+  }
+};
+function $getValue(_arg0)
+{
+  if(true)
+  {
+    var $node = _arg0;
+    var _return = function ()
+    {
+      return $node.value
+    };
+    return _return
+  }
+  else 
+  {
+    throw "Pattern not exhaustive!"
+  }
+};
+function $getBody(_arg0)
+{
+  if(true)
+  {
+    var $doc = _arg0;
+    var _return = function ()
+    {
+      return $doc.body
+    };
+    return _return
+  }
+  else 
+  {
+    throw "Pattern not exhaustive!"
+  }
+};
+function $createInputElement(_arg0)
+{
+  return function (_arg1)
+  {
+    return function (_arg2)
+    {
+      return function (_arg3)
+      {
+        if((((true && true) && true) && true))
+        {
+          var $doc = _arg0;
+          var $type = _arg1;
+          var $text = _arg2;
+          var $callback = _arg3;
+          var $115 = $$prelude.$a$e;
+          var $114 = $createElement;
+          var $113 = $doc;
+          var $112 = $114($113);
+          var $111 = "input";
+          var $110 = $112($111);
+          var $109 = $115($110);
+          var $93 = function (_arg0)
+          {
+            if(true)
+            {
+              var $node = _arg0;
+              var $108 = $$prelude.$a;
+              var $107 = $$prelude.$a;
+              var $106 = $$prelude.$a;
+              var $105 = function ()
+              {
+                return $node.type = $type
+              };
+              var $104 = $106($105);
+              var $103 = function ()
+              {
+                return $node.value = $text
+              };
+              var $102 = $104($103);
+              var $101 = $107($102);
+              var $100 = function ()
+              {
+                return $node.onclick = $callback
+              };
+              var $99 = $101($100);
+              var $98 = $108($99);
+              var $97 = $$prelude.$yield;
+              var $96 = $node;
+              var $95 = $97($96);
+              var $94 = $98($95)
+            }
+            else 
+            {
+              throw "Pattern for lambda expression did not match arguments"
+            };
+            return $94
+          };
+          var _return = $109($93);
+          return _return
+        }
+        else 
+        {
+          throw "Pattern not exhaustive!"
+        }
+      }
+    }
+  }
+};
 function $createInput(_arg0)
 {
   return function (_arg1)
@@ -69,49 +269,15 @@ function $createInput(_arg0)
         var $doc = _arg0;
         var $text = _arg1;
         var $callback = _arg2;
-        var $103 = $$prelude.$a$e;
-        var $102 = function ()
-        {
-          return $doc.createElement('input')
-        };
-        var $101 = $103($102);
-        var $85 = function (_arg0)
-        {
-          if(true)
-          {
-            var $node = _arg0;
-            var $100 = $$prelude.$a;
-            var $99 = $$prelude.$a;
-            var $98 = $$prelude.$a;
-            var $97 = function ()
-            {
-              return $node.type = "text"
-            };
-            var $96 = $98($97);
-            var $95 = function ()
-            {
-              return $node.value = $text
-            };
-            var $94 = $96($95);
-            var $93 = $99($94);
-            var $92 = function ()
-            {
-              return $node.onclick = $callback
-            };
-            var $91 = $93($92);
-            var $90 = $100($91);
-            var $89 = $$prelude.$yield;
-            var $88 = $node;
-            var $87 = $89($88);
-            var $86 = $90($87)
-          }
-          else 
-          {
-            throw "Pattern for lambda expression did not match arguments"
-          };
-          return $86
-        };
-        var _return = $101($85);
+        var $123 = $createInputElement;
+        var $122 = $doc;
+        var $121 = $123($122);
+        var $120 = "text";
+        var $119 = $121($120);
+        var $118 = $text;
+        var $117 = $119($118);
+        var $116 = $callback;
+        var _return = $117($116);
         return _return
       }
       else 
@@ -121,7 +287,6 @@ function $createInput(_arg0)
     }
   }
 };
-exports.$createInput = $createInput;
 function $createButton(_arg0)
 {
   return function (_arg1)
@@ -133,49 +298,15 @@ function $createButton(_arg0)
         var $doc = _arg0;
         var $text = _arg1;
         var $callback = _arg2;
-        var $122 = $$prelude.$a$e;
-        var $121 = function ()
-        {
-          return $doc.createElement('input')
-        };
-        var $120 = $122($121);
-        var $104 = function (_arg0)
-        {
-          if(true)
-          {
-            var $button = _arg0;
-            var $119 = $$prelude.$a;
-            var $118 = $$prelude.$a;
-            var $117 = $$prelude.$a;
-            var $116 = function ()
-            {
-              return $button.type = "button"
-            };
-            var $115 = $117($116);
-            var $114 = function ()
-            {
-              return $button.value = $text
-            };
-            var $113 = $115($114);
-            var $112 = $118($113);
-            var $111 = function ()
-            {
-              return $button.onclick = $callback
-            };
-            var $110 = $112($111);
-            var $109 = $119($110);
-            var $108 = $$prelude.$yield;
-            var $107 = $button;
-            var $106 = $108($107);
-            var $105 = $109($106)
-          }
-          else 
-          {
-            throw "Pattern for lambda expression did not match arguments"
-          };
-          return $105
-        };
-        var _return = $120($104);
+        var $131 = $createInputElement;
+        var $130 = $doc;
+        var $129 = $131($130);
+        var $128 = "button";
+        var $127 = $129($128);
+        var $126 = $text;
+        var $125 = $127($126);
+        var $124 = $callback;
+        var _return = $125($124);
         return _return
       }
       else 
@@ -185,5 +316,19 @@ function $createButton(_arg0)
     }
   }
 };
+;
+exports.$createElement = $createElement;
+exports.$appendChild = $appendChild;
+exports.$document = $document;
+exports.$createInputElement = $createInputElement;
+exports.$alert = $alert;
+exports.$setOnClick = $setOnClick;
+exports.$prompt = $prompt;
+exports.$createInput = $createInput;
+exports.$setValue = $setValue;
+exports.$getChildNodes = $getChildNodes;
+exports.$removeChild = $removeChild;
+exports.$getValue = $getValue;
+exports.$getBody = $getBody;
 exports.$createButton = $createButton
 });

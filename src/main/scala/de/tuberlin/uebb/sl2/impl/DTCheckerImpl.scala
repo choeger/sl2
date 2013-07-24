@@ -44,6 +44,8 @@ trait DTCheckerImpl extends DTChecker
 	with Substitution
 	with Unification
 	with Errors {
+  
+  this: ModuleResolverImpl =>
 
   /**
    * Check all data type definitions in a program.
@@ -61,22 +63,26 @@ trait DTCheckerImpl extends DTChecker
    *
    * @return The initial context containing all data constructors
    */
-  def checkDataTypes(in: AST): Either[Error, Context] = in match {
-    case Program(imports, _, _, _, dataDefs, _) => checkDataTypes(dataDefs)
+  def checkDataTypes(in: AST, imports : List[ResolvedImport]): Either[Error, Context] = in match {
+    case Program(_, _, _, _, dataDefs, _) => checkDataTypes(dataDefs, imports)
   }
 
   /**
    * Check data type definitions and return initial
    * context containing all data constructors.
    */
-  def checkDataTypes(dataDefs: List[DataDef]): Either[Error, Context] = {
+  def checkDataTypes(dataDefs: List[DataDef], imports : List[ResolvedImport]): Either[Error, Context] = {
+    val unqualifiedImportedDataDefs = imports.map{
+      case rimp:ResolvedUnqualifiedImport => rimp.signature.dataDefs
+      case _ => List()
+    }.flatten
     for (
-      _ <- checkTypeConsDisjoint(dataDefs).right;
-      _ <- checkDataConsDisjoint(dataDefs).right;
+      _ <- checkTypeConsDisjoint(dataDefs ++ unqualifiedImportedDataDefs).right;
+      _ <- checkDataConsDisjoint(dataDefs ++ unqualifiedImportedDataDefs).right;
       _ <- checkTypeParamsDisjoint(dataDefs).right;
-      _ <- checkNoUndefinedTypeCons(dataDefs).right;
+      _ <- checkNoUndefinedTypeCons(dataDefs, imports).right;
       _ <- checkTypeVarUsage(dataDefs).right;
-      _ <- checkTypeConsApp(dataDefs).right
+      _ <- checkTypeConsApp(dataDefs, imports).right
     ) yield dataConTypes(dataDefs)
   }
 
@@ -142,8 +148,15 @@ trait DTCheckerImpl extends DTChecker
   /**
    * Check that no undefined type constructors are used in any right-hand side.
    */
-  def checkNoUndefinedTypeCons(dataDefs: List[DataDef]): Either[Error, Unit] = {
-    val typeConstructors = (allTypeCons(dataDefs)).toSet
+  def checkNoUndefinedTypeCons(dataDefs: List[DataDef], imports : List[ResolvedImport]): Either[Error, Unit] = {
+    val localTypeConstructors = (allTypeCons(dataDefs)).toSet
+    val importedTypeConstructors = imports.map(_ match {
+      case rimp : ResolvedQualifiedImport => allTypeCons(rimp.signature.dataDefs, rimp.name).toSet
+      case rimp : ResolvedUnqualifiedImport => allTypeCons(rimp.signature.dataDefs).toSet
+      case _ => Set()
+    }).reduce(_ ++ _)
+    
+    val typeConstructors = localTypeConstructors ++ importedTypeConstructors
 
     def checkType(dataDef: DataDef): Either[Error, Unit] = {
       val rhsConstructors = allAppTypeCons(dataDef.constructors).toSet
@@ -175,8 +188,9 @@ trait DTCheckerImpl extends DTChecker
       val rhsTypeVars = dataDef.constructors.flatMap(_.types).flatMap(selectTypeVars).toSet
       var message = ""
 
-      if (lhsTypeVars == rhsTypeVars) Right()
-      else {
+      if (dataDef.constructors.isEmpty || lhsTypeVars == rhsTypeVars) {
+        Right()
+      } else {
         // Undefined type variables in the constructor definitions
         if (lhsTypeVars subsetOf rhsTypeVars) {
           val undefinedTypeVars = rhsTypeVars diff lhsTypeVars
@@ -185,6 +199,8 @@ trait DTCheckerImpl extends DTChecker
         else {
           val unusedTypeVars = lhsTypeVars diff rhsTypeVars
           message = "Unused type variable(s) in type " + quote(dataDef.ide) + ": " + quote(unusedTypeVars)
+          // Note that for data defs with no constructors it is acceptable to have unused type vars,
+          // as these types are constrcuted using EXTERN features.
         }
         Left(AttributedError(message, dataDef.attribute))
       }
@@ -197,10 +213,18 @@ trait DTCheckerImpl extends DTChecker
   /**
    * Check if all type constructors are applied to enough arguments.
    */
-  def checkTypeConsApp(dataDefs: List[DataDef]): Either[Error, Unit] = {
+  def checkTypeConsApp(dataDefs: List[DataDef], imports : List[ResolvedImport]): Either[Error, Unit] = {
+    val importedConArities: List[(TConVar, Int)] = imports.map{
+      case rimp : ResolvedQualifiedImport =>
+        rimp.signature.dataDefs.map{dataDef => ((Syntax.TConVar(dataDef.ide, rimp.name), dataDef.tvars.length))}
+      case rimp : ResolvedUnqualifiedImport =>
+        rimp.signature.dataDefs.map{dataDef => ((Syntax.TConVar(dataDef.ide), dataDef.tvars.length))}
+      case _ => List()
+    }.flatten
+    
     val constructorArities: Map[TConVar, Int] = {
       val constructorArity = (dataDef: DataDef) => (Syntax.TConVar(dataDef.ide), dataDef.tvars.length)
-      (dataDefs.map(constructorArity)).toMap
+      (dataDefs.map(constructorArity) ++ importedConArities).toMap
     }
 
     def checkTypeConsApp(dataDef: DataDef) = {

@@ -81,7 +81,7 @@ trait SimpleDriver extends Driver {
     val compiled = astToJs(program)
     
     // Create modules directory, if necessary
-    val modulesDir = config.destination;//new File(config.destination, "modules")
+    val modulesDir = config.destination; // new File(config.destination, "modules")
     if(!modulesDir.exists()) {
       if(modulesDir.mkdirs()) {
         println("Created directory "+modulesDir)
@@ -93,8 +93,8 @@ trait SimpleDriver extends Driver {
     }
     
     // copy .js and .signature of imported modules from classpath to modules/ directory
-    for(i <- imports.filter(_.isInstanceOf[ResolvedNamedImport])) {
-      val imp = i.asInstanceOf[ResolvedNamedImport]
+    for(i <- imports.filter(_.isInstanceOf[ResolvedModuleImport])) {
+      val imp = i.asInstanceOf[ResolvedModuleImport]
       copy(Paths.get(imp.file.toURI),   Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.signature"))
       copy(Paths.get(imp.jsFile.toURI), Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.js"))
     }
@@ -117,14 +117,15 @@ trait SimpleDriver extends Driver {
     moduleWriter.println("// generated from: "+name)
     moduleWriter.println("/***********************************/") 
 
-    val requires = imports.filter(_.isInstanceOf[ResolvedNamedImport]).map(
-        x => JsDef(x.asInstanceOf[ResolvedNamedImport].name,
-            JsFunctionCall(JsName("require"),JsStr(x.asInstanceOf[ResolvedNamedImport].path+".sl"))
+    val requires = imports.filter(_.isInstanceOf[ResolvedModuleImport]).map(
+        x => JsDef(x.asInstanceOf[ResolvedModuleImport].name,
+            JsFunctionCall(JsName("require"),JsStr(x.asInstanceOf[ResolvedModuleImport].path+".sl"))
         	))
     moduleWriter.write(moduleTemplate.replace("%%MODULE_BODY%%", JsPrettyPrinter.pretty(requires)+"\n\n"
         +JsPrettyPrinter.pretty(dataDefsToJs(program.dataDefs)
             & functionDefsExternToJs(program.functionDefsExtern)
-            & functionDefsToJs(program.functionDefs))));
+            & functionDefsToJs(program.functionDefs)
+            & functionSigsToJs(program.signatures))));
     moduleWriter.close();
     
     val signatureFile = new File(modulesDir, name + ".signature")
