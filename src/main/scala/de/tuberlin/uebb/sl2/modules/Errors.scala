@@ -64,12 +64,14 @@ trait Errors {
   /* Perser: parse error */
   case class ParseError(what: String, where: Attribute) extends Error
   
-  // TODO
-  case object InvalidPathError extends Error
-  // TODO
-  case object DuplicatePathError extends Error
-  // TODO
-  case object DuplicateModuleError extends Error
+  /* Import Checker: path not well formed */
+  case class InvalidPathError(what : String, where : Attribute) extends Error
+
+  /* Import Checker: multiple imports from the same source */
+  case class DuplicatePathError(what : String, where : Attribute) extends Error
+
+  /* Import Checker: clashing module identifiers */
+  case class DuplicateModuleError(what : String, where : Attribute) extends Error
 
   /* Type checker: undefined element error */
   case class UndefinedError(what: String, name: String, where: Attribute) extends Error
@@ -87,16 +89,19 @@ trait Errors {
   case class NotImplementedError(what: String, name: String, where: Attribute) extends Error
 
   def errorMessage(e: Error): String = e match {
-    case GenericError(what) => "Error: " + what + "\n"
-    case CouldNotRun(what, why) => "Could not run " + what + ", for the following reason:\n" + why.toString + "\n"
-    case NotYetImplemented => "Error: Unimplemented feature"
-    case ParseError(what, where) => where.toString + ": " + what + "\n"
-    case UndefinedError(what, name, where) => where.toString + ": " + what + ": " + quote(name) + "\n"
-    case TypeError(what, where, cause) => where.toString + ": " + what + ", for the following reason:\n" + cause.toString  + "\n"
-    case DuplicateError(what, name, where) => "Duplicate definition of " + quote(name) + ": " + what + ". Locations:\n" + where.map(_.toString).mkString("\n") + "\n"
-    case AttributedError(what, where) => where.toString + ": " + what + "\n"
-    case NotImplementedError(what, name, where) => where.toString + ": " + quote(name) + " declared but not implemented. " + what + "\n"
-    case ErrorList(errors) => errors.map(_.toString).mkString("")
+    case GenericError        (what)               => "Error: " + what + "\n"
+    case CouldNotRun         (what, why)          => "Could not run " + what + ", for the following reason:\n" + why.toString + "\n"
+    case NotYetImplemented                        => "Error: Unimplemented feature"
+    case InvalidPathError    (what, where)        => where.toString + ": invalid path " + quote(what) + "\n"
+    case DuplicatePathError  (what, where)        => where.toString + ": duplicate path " + quote(what) + "\n"
+    case DuplicateModuleError(what, where)        => where.toString + ": duplicate module name " + quote(what) + "\n"
+    case ParseError          (what, where)        => where.toString + ": " + what + "\n"
+    case UndefinedError      (what, name, where)  => where.toString + ": " + what + ": " + quote(name) + "\n"
+    case TypeError           (what, where, cause) => where.toString + ": " + what + ", for the following reason:\n" + cause.toString  + "\n"
+    case DuplicateError      (what, name, where)  => "Duplicate definition of " + quote(name) + ": " + what + ". Locations:\n" + where.map(_.toString).mkString("\n") + "\n"
+    case AttributedError     (what, where)        => where.toString + ": " + what + "\n"
+    case NotImplementedError (what, name, where)  => where.toString + ": " + quote(name) + " declared but not implemented. " + what + "\n"
+    case ErrorList           (errors)             => errors.map(_.toString).mkString("")
     case _ => "Unknown error\n"
   }
 
@@ -109,13 +114,13 @@ trait Errors {
 
     def combine[T](e1: Either[Error, T], e2: Either[Error, List[T]]) = e1 match {
       case Left(error1) => e2 match {
-	case Left(ErrorList(errors)) => Left(ErrorList(error1 :: errors))
-	case Left(error2)            => Left(error1 <+> error2)
-	case _                       => Left(error1)
+        case Left(ErrorList(errors)) => Left(ErrorList(error1 :: errors))
+        case Left(error2)            => Left(error1 <+> error2)
+        case _                       => Left(error1)
       }
       case Right(s) => e2 match {
-	case Right(t)    => Right(s :: t)
-	case Left(error) => Left(error)
+        case Right(t)    => Right(s :: t)
+        case Left(error) => Left(error)
       }
     }
 
@@ -123,14 +128,13 @@ trait Errors {
     (ts.map(f) :\ z)(combine)
   }
 
-
   /**
     * Collect errors over two computations.
     */
   def collectErrors(e1: Either[Error, Unit], e2: Either[Error, Unit]) = e1 match {
     case Left(error1) => e2 match {
       case Left(error2) => Left(error1 <+> error2)
-      case Right(_)     => Right()
+      case Right(_)     => Left(error1) // changed by Rico 7/24/2013 before "Right()"
     }
 
     case Right(_) => e2 match {

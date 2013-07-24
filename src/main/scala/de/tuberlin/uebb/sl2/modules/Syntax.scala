@@ -383,6 +383,7 @@ trait Syntax {
     def pretty(t: Any): String = t match {
       case e: Expr => super.pretty(showExpr(e))
       case m: Program => super.pretty(showProgram(m))
+      case i: Import => super.pretty(showImport(i))
       case e => pretty_any(e)
     }
 
