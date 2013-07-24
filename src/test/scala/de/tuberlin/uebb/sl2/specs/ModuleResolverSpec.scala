@@ -13,7 +13,81 @@ trait ModuleResolverSpec extends FunSpec with ShouldMatchers {
   
   def fail(err: Error) : Matcher[Either[Error, Unit]] = be(Left(err))
 
-  describe(testedImplementationName() + ": import statement") {
+  describe(testedImplementationName() + ": path checking") {
+    it("Should refuse empty paths") {
+      val imports = List(
+        QualifiedImport("", "Empty")
+      )
+      
+      checkImports(imports) should fail(InvalidPathError("", EmptyAttribute))
+    }
+    
+    it("Should refuse dots") {
+      val imports = List(
+        QualifiedImport("..", "Parent")
+      )
+      
+      checkImports(imports) should fail(InvalidPathError("..", EmptyAttribute))
+    }
+    
+    it("Should refuse directoy") {
+      val imports = List(
+        QualifiedImport("dir/", "Directory")
+      )
+      
+      checkImports(imports) should fail(InvalidPathError("dir/", EmptyAttribute))
+    }
+    
+    it("Should accept alphabetic path") {
+      val imports = List(
+        QualifiedImport("my/path", "Ordinary")
+      )
+      
+      checkImports(imports) should notFail
+    }
+    
+    it("Should accept path with underscors ") {
+      val imports = List(
+        QualifiedImport("my/path/_underscore_", "Underscores")
+      )
+      
+      checkImports(imports) should notFail
+    }
+
+    it("Should accept path with numbers ") {
+      val imports = List(
+        QualifiedImport("my/p4th/num83r5", "Numbers")
+      )
+      
+      checkImports(imports) should notFail
+    }
+    
+    it("Should accept path with dashes") {
+      val imports = List(
+        QualifiedImport("my/pa-th/-", "Dash")
+      )
+      
+      checkImports(imports) should notFail
+    }
+    
+    it("Should accept directories with dots") {
+      val imports = List(
+        QualifiedImport("my/.hidden/path", "Dot")
+      )
+      
+      checkImports(imports) should notFail
+    }
+    
+    it("Should accept dot-only directory") {
+      val imports = List(
+        QualifiedImport("my/.../path", "Dots")
+      )
+      
+      checkImports(imports) should notFail
+    }
+  }
+
+  describe(testedImplementationName() + ": import uniqueness") {
     it("Should accept unique paths") {
       val imports = List(
         QualifiedImport("my/path", "MyModule"),
@@ -22,18 +96,18 @@ trait ModuleResolverSpec extends FunSpec with ShouldMatchers {
       
       checkImports(imports) should notFail
     }
-        
-    it("Should accept correct paths") {
+    
+    it("Should refuse duplicate paths") {
       val imports = List(
-        QualifiedImport("my/path", "Ordinary"),
-        QualifiedImport("my/path/_underscore_", "Underscores"),
-        QualifiedImport("my/path/num83r5", "Numbers"),
-        QualifiedImport("my/path/-", "Dash"),
-        QualifiedImport("my/.hidden/path", "Dot"),
-        QualifiedImport("my/.../path", "Dots")
+        QualifiedImport("identical/path", "MyModule"),
+        QualifiedImport("identical/path", "OtherModule"),
+        QualifiedImport("other/path", "InnocentModule")
       )
       
-      checkImports(imports) should notFail
+      checkImports(imports) should fail(ErrorList(List(
+        DuplicatePathError("identical/path", EmptyAttribute),
+        DuplicatePathError("identical/path", EmptyAttribute)
+      )))
     }
 
     it("Should accept unique module identifiers") {
@@ -45,47 +119,30 @@ trait ModuleResolverSpec extends FunSpec with ShouldMatchers {
       checkImports(imports) should notFail
     }
     
-    it("Should refuse incorrect paths") {
-      val imports = List(
-        QualifiedImport("", "Empty"),
-        QualifiedImport(".", "Current"),
-        QualifiedImport("..", "Parent"),
-        QualifiedImport("/module", "Root"),
-        QualifiedImport("dir/", "Directory")
-      )
-      
-      checkImports(imports) should fail(InvalidPathError)
-    }
-    
-    it("Should refuse duplicate paths") {
-      val imports = List(
-        QualifiedImport("identical/path", "MyModule"),
-        QualifiedImport("identical/path", "OtherModule")
-      )
-      
-      checkImports(imports) should fail(DuplicatePathError)
-    }
-    
     it("Should refuse duplicate module identifiers") {
       val imports = List(
         QualifiedImport("my/path", "Duplicate"),
-        QualifiedImport("other/path", "Duplicate")
+        QualifiedImport("other/path", "Duplicate"),
+        QualifiedImport("innocent", "Innocent")
       )
       
-      checkImports(imports) should fail(DuplicateModuleError)
+      checkImports(imports) should fail(ErrorList(List(
+        DuplicateModuleError("Duplicate", EmptyAttribute),
+        DuplicateModuleError("Duplicate", EmptyAttribute)
+      )))
     }
   }
   
   describe(testedImplementationName() + ": import resolution") {
-    it("Should resolve a qualified import") {
+    it("Should resolve a qualified import (nyi)") {
       // TODO
     }
     
-    it("Should resolve an unqualified import") {
+    it("Should resolve an unqualified import (nyi)") {
       // TODO
     }
     
-    it("Should resolve an external import") {
+    it("Should resolve an external import (nyi)") {
       // TODO
     }
     
