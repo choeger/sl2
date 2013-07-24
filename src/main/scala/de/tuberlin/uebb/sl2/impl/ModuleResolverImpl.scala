@@ -7,7 +7,7 @@ import scala.io.Source
 trait ModuleResolverImpl extends ModuleResolver {
   this: Syntax with Errors with Configs with SignatureSerializer =>
 
-  case class ImportError(what: String, where: Attribute) extends Error
+  //case class ImportError(what: String, where: Attribute) extends Error
 
   def inferDependencies(program: AST, config: Config) : Either[Error, List[ResolvedImport]] = program match {
     case Program(imports, _, _, _, _, attribute) =>
@@ -83,18 +83,31 @@ trait ModuleResolverImpl extends ModuleResolver {
         return Left(DuplicateModuleError(imp.name, imp.attribute))
     }
     
-    qualified.map(checkUniqueness).reduce(collectErrors)
+    if(!qualified.isEmpty)
+    	qualified.map(checkUniqueness).reduce(collectErrors)
+    else
+    	Right(Unit) // avoids UnsupportedOperationException: empty.reduce
   }
   
   /**
    * Returns the names of modules imported in the given AST. This does not include
-   * the implicitly imported prelude.
+   * the implicitly imported prelude and imported externs, because both do not
+   * need to be compiled.
    */
-  def resolveDependencies(program: AST, config: Config) = program match {
+  def resolveDependencies(program: AST, config: Config) : Either[Error, Set[String]] = program match {
     case Program(imports, _, _, _, _, attribute) =>
+      println("imports="+imports)
+      checkImports(imports) match {
+        case Left(err) => return Left(err)
+        case _ =>
+      }
       var paths = Set[String]()
-      for(resolvedImports <- errorMap(imports, collectImport(config)).right;
-          resolvedImport  <- resolvedImports) { paths = paths + resolvedImport }
+      // ignore extern imports
+      for(resolvedImports <- errorMap(imports.filter( x => (x.isInstanceOf[UnqualifiedImport]) || (x.isInstanceOf[QualifiedImport])), collectImport(config)).right;
+          resolvedImport  <- resolvedImports) {
+    	  paths = paths + resolvedImport
+    	  println("paths="+paths)
+    	  }
       Right(paths)
     case _ => throw new RuntimeException("")
   }

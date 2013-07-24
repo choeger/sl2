@@ -83,7 +83,7 @@ trait Errors {
   
   /* Multi driver: file not found */
   case class FileNotFoundError(file: File) extends Error
-  case class FilesNotFoundError(file1: File, file2: File) extends Error
+  case class FilesNotFoundError(details: String, file1: File, file2: File) extends Error
   
   /* Type checker: undefined element error */
   case class UndefinedError(what: String, name: String, where: Attribute) extends Error
@@ -111,7 +111,7 @@ trait Errors {
     case ImportError		 (what, where) 		  => where.toString + ": " + what + "\n"
     case CircularDependencyError(what) 			  => what + "\n"
     case FileNotFoundError	 (file) 			  => "File not found:" + file.getAbsolutePath + "\n"
-    case FilesNotFoundError  (_1, _2)			  => "Neither of the files exists:" + _1.getAbsolutePath +", " + _2.getAbsolutePath + "\n"
+    case FilesNotFoundError  (details, f1, f2)	  => details + "Neither of the files exists:" + f1.getAbsolutePath +", " + f2.getAbsolutePath + "\n"
     case UndefinedError      (what, name, where)  => where.toString + ": " + what + ": " + quote(name) + "\n"
     case TypeError           (what, where, cause) => where.toString + ": " + what + ", for the following reason:\n" + cause.toString  + "\n"
     case DuplicateError      (what, name, where)  => "Duplicate definition of " + quote(name) + ": " + what + ". Locations:\n" + where.map(_.toString).mkString("\n") + "\n"

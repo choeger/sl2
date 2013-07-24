@@ -76,6 +76,9 @@ object Main
       if(config.sourcepath == null || config.sources == null || config.sources.isEmpty) {
         println(usage)
       } else {
+          if(config.classpath == null) {
+            config.classpath = config.sourcepath
+          }
 	      val res = run(config)
 	      if (res.isLeft)
 	        res.left.map(x => println("Errors:\n" + x))
@@ -96,5 +99,5 @@ object Main
     case Nil => defaultConfig
   }
   
-  val defaultConfig: Config = Config(null, List(), new File(""), new File(""), null)
+  val defaultConfig: Config = Config(null, List(), null, new File(""), null)
 }

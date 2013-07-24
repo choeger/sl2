@@ -71,6 +71,8 @@ trait MultiDriver extends Driver {
     } else {
     	// sort topologically
 	    val sortedModules = topoSort(dependencies.right.get)
+	    println("sortedModules="+sortedModules)
+	    prepareCompilation(config)
 	    // compile in topological order
 	    val result =(for(modules <- sortedModules.right;
 	    		     results <- errorMap(modules.toSeq.toList, handleModuleSource(config)).right) yield "")
@@ -90,6 +92,21 @@ trait MultiDriver extends Driver {
     }
   }
   
+  def findModules(importedBy: Module, names: Set[String], config:Config):Either[Error,Set[Module]] = {
+    var modules:Either[Error,Set[Module]] = Right(Set[Module]())
+    for (name <- names) {
+	      if(modules.isRight) {
+	    	  val module = findModule(importedBy, name, config)
+	    	  if(module.isLeft) {
+	    	    modules = Left(module.left.get)
+	    	  } else {
+	    	    modules = Right(modules.right.get + module.right.get)
+	    	  }
+	      }
+      }
+    modules
+  }
+  
   /**
    * Create an appropriate module object, based on available files:
    * 
@@ -103,7 +120,7 @@ trait MultiDriver extends Driver {
    *     file.</li>
    * <li>Otherwise create a module that is not to be compiled.</li>    
    */
-  def findModule(name: String, config: Config):Either[Error,Module] = {
+  def findModule(importedBy: Module, name: String, config: Config):Either[Error,Module] = {
     val module = new Module(name, config)
     if(!module.signatureFile.canRead()) {
     	// no signature file exists
@@ -111,7 +128,8 @@ trait MultiDriver extends Driver {
     		module.compile = true
     	    Right(module)
     	} else {
-    		Left(FilesNotFoundError(module.sourceFile, module.signatureFile))
+    		Left(FilesNotFoundError("Module "+name+" imported by "+importedBy.name+" not found: ",
+    				module.sourceFile, module.signatureFile))
     	}
     } else if(module.sourceFile.canRead() &&
               module.sourceFile.lastModified() >= module.signatureFile.lastModified()) {
@@ -133,7 +151,7 @@ trait MultiDriver extends Driver {
 	    module.compile = true
 	    Right(module)
 	} else {
-		Left(FilesNotFoundError(module.sourceFile, module.signatureFile))
+		Left(FileNotFoundError(module.sourceFile))
 	}
   }
   
@@ -165,11 +183,12 @@ trait MultiDriver extends Driver {
       if(deps.isLeft) {
         Left(deps.left.get)
       } else {
-    	  val depsR = deps.right.get
+    	  val depsR = deps.right.get.filter(_.compile) // ignore dependencies that need no compilation
 	      var newDeps = dependencies + (module -> depsR)
-	      // TODO: What happens to the errors found in here?
-	      for (dep <- depsR;
-	    	   d <- loadDependencies(dep, config, newDeps).right.toSeq) { newDeps=d }
+	      for (dep <- Right(depsR).right;
+	    	   de <- dep) {
+	        val result = loadDependencies(de, config, newDeps)
+	        if(result.isLeft) return result else newDeps=result.right.get }
 	      Right(newDeps)
       } 
     }
@@ -186,13 +205,13 @@ trait MultiDriver extends Driver {
     val ast = parseAst(code)
     
     // resolve dependencies
-    for (
-      module <- ast.right;
-      imports <- resolveDependencies(module, config).right
-    ) yield for (
-        imp <- imports;
-        m <- findModule(imp, config).right.toSeq)
-      yield m
+    val r = (for (
+      mod <- ast.right;
+      imports <- resolveDependencies(mod, config).right;
+      x <- findModules(module, imports, config).right
+    ) yield x)
+    println("dependencies of "+module.name+": "+r)
+    r
   }
   
   def handleModuleSource(config: Config)(module: Module) = {
@@ -215,20 +234,28 @@ trait MultiDriver extends Driver {
     val ast = parseAst(code)
     debugPrint(ast.toString());
 
-    for (
+    val checkResults = for (
       mo <- ast.right;
       // check and load dependencies
       imports <- inferDependencies(mo, config).right;
       // type check the program
-      _ <- checkProgram(mo, normalizeModules(imports)).right;
-      // qualify references to unqualified module and synthesize
-      res <- compile(qualifyUnqualifiedModules(mo.asInstanceOf[Program], imports), name, imports, config).right
-    ) yield res
+      _ <- checkProgram(mo, normalizeModules(imports)).right) yield imports
+    
+    if(checkResults.isLeft) {
+      checkResults
+    } else {
+    	// generate code, if checks were successful
+	    for (
+	      mo <- ast.right;
+	      // check and load dependencies
+	      imports <- checkResults.right;
+	      // qualify references to unqualified module and synthesize
+	      res <- compile(qualifyUnqualifiedModules(mo.asInstanceOf[Program], imports), name, imports, config).right
+	    ) yield res
+    }
   }
   
-  def compile(program: Program, name: String, imports: List[ResolvedImport], config: Config): Either[Error, String] = {    
-    val compiled = astToJs(program)
-    
+  def prepareCompilation(config: Config) = {
     // Create modules directory, if necessary
     val modulesDir = config.destination;//new File(config.destination, "modules")
     if(!modulesDir.exists()) {
@@ -240,10 +267,17 @@ trait MultiDriver extends Driver {
     } else if(!modulesDir.isDirectory()) {
       println(modulesDir+" is not a directory")
     }
+  }
+  
+  def compile(program: Program, name: String, imports: List[ResolvedImport], config: Config): Either[Error, String] = {    
+    val compiled = astToJs(program)
+    val modulesDir = config.destination
     
     // copy .js and .signature of imported modules from classpath to modules/ directory
-    for(i <- imports.filter(_.isInstanceOf[ResolvedNamedImport])) {
-      val imp = i.asInstanceOf[ResolvedNamedImport]
+    // TODO: should not copy prelude on every compiled module
+    // TODO: should not copy modules that have just been compiled
+    for(i <- imports.filter(_.isInstanceOf[ResolvedModuleImport])) {
+      val imp = i.asInstanceOf[ResolvedModuleImport]
       copy(Paths.get(imp.file.toURI),   Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.signature"))
       copy(Paths.get(imp.jsFile.toURI), Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.js"))
     }
@@ -266,9 +300,9 @@ trait MultiDriver extends Driver {
     moduleWriter.println("// generated from: "+name)
     moduleWriter.println("/***********************************/") 
 
-    val requires = imports.filter(_.isInstanceOf[ResolvedNamedImport]).map(
-        x => JsDef(x.asInstanceOf[ResolvedNamedImport].name,
-            JsFunctionCall(JsName("require"),JsStr(x.asInstanceOf[ResolvedNamedImport].path+".sl"))
+    val requires = imports.filter(_.isInstanceOf[ResolvedModuleImport]).map(
+        x => JsDef(x.asInstanceOf[ResolvedModuleImport].name,
+            JsFunctionCall(JsName("require"),JsStr(x.asInstanceOf[ResolvedModuleImport].path+".sl"))
         	))
     moduleWriter.write(moduleTemplate.replace("%%MODULE_BODY%%", JsPrettyPrinter.pretty(requires)+"\n\n"
         +JsPrettyPrinter.pretty(dataDefsToJs(program.dataDefs)

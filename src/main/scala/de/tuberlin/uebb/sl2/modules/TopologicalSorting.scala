@@ -29,10 +29,10 @@ trait TopologicalSorting
     }
     
     override def toString() = {
-      "Module "+quote(name)+" (compile="+compile+")"+
+      "(Module "+quote(name)+" (compile="+compile+")"+/*
       	" sourceFile="+quote(sourceFile.getCanonicalPath())+
       	" signatureFile="+quote(signatureFile.getCanonicalPath())+
-      	" jsFile="+quote(jsFile.getCanonicalPath())
+      	" jsFile="+quote(jsFile.getCanonicalPath())+*/")\n"
     }
   }
   
