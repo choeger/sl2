@@ -9,13 +9,38 @@ trait ModuleResolverImpl extends ModuleResolver {
 
   case class ImportError(what: String, where: Attribute) extends Error
 
-  def inferDependencies(program: AST, config: Config) = program match {
+  def inferDependencies(program: AST, config: Config) : Either[Error, List[ResolvedImport]] = program match {
     case Program(imports, _, _, _, _, attribute) =>
+      checkImports(imports) match {
+        case Left(err) => return Left(err)
+        case _ =>
+      }
+      
       //TODO: really deal with transitive imports and the like...
       val preludeImp = if (config.mainUnit.getName() != "prelude.sl")
         UnqualifiedImport("prelude") :: imports else imports
       errorMap(preludeImp, resolveImport(config))
     case _ => throw new RuntimeException("")
+  }
+  
+  private def checkImports(imports : List[Import]) : Either[Error, Unit] = {
+    for (
+      _ <- checkUniquePath(imports).right;
+      _ <- checkUniqueIde(imports).right
+    ) yield ()
+  }
+  
+  private def checkUniquePath(imports : List[Import]) : Either[Error, Unit] = {
+    val duplicates = imports.filter {imp => imports.count(_.path == imp.path) > 1}
+    
+    if (duplicates.isEmpty)
+      return Right()
+    else
+      return Left(DuplicatePathError(duplicates))
+  }
+  
+  private def checkUniqueIde(imports : List[Import]) : Either[Error, Unit] = {
+    Right()
   }
 
   def resolveImport(config: Config)(imp: Import): Either[Error, ResolvedImport] = imp match {
