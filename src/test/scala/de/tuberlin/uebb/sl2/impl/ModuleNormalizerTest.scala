@@ -5,20 +5,20 @@ import de.tuberlin.uebb.sl2.impl._
 import de.tuberlin.uebb.sl2.tests.specs.ModuleNormalizerSpec
 
 class ModuleNormalizerTest
-    extends ModuleNormalizerSpec
-    with ModuleNormalizerImpl
-    with ParboiledParser 
-    with Syntax
-    with SyntaxTraversal
-    with Type
-    with EnrichedLambdaCalculus
-    with Context
-    with Substitution
-    with Unification
-    with NameSupply
-    with Errors
-    with Configs
-    with ModuleResolverImpl
+  extends ModuleNormalizerSpec
+  with ModuleNormalizerImpl
+  with ParboiledParser 
+  with Syntax
+  with SyntaxTraversal
+  with Type
+  with EnrichedLambdaCalculus
+  with Context
+  with Substitution
+  with Unification
+  with NameSupply
+  with Errors
+  with Configs
+  with ModuleResolverImpl
   with SignatureJsonSerializer
 {
   

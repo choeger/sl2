@@ -9,13 +9,67 @@ trait ModuleResolverImpl extends ModuleResolver {
 
   case class ImportError(what: String, where: Attribute) extends Error
 
-  def inferDependencies(program: AST, config: Config) = program match {
+  def inferDependencies(program: AST, config: Config) : Either[Error, List[ResolvedImport]] = program match {
     case Program(imports, _, _, _, _, attribute) =>
+      checkImports(imports) match {
+        case Left(err) => return Left(err)
+        case _ =>
+      }
+      
       //TODO: really deal with transitive imports and the like...
       val preludeImp = if (config.mainUnit.getName() != "prelude.sl")
         UnqualifiedImport("prelude") :: imports else imports
       errorMap(preludeImp, resolveImport(config))
     case _ => throw new RuntimeException("")
+  }
+  
+  def checkImports(imports : List[Import]) : Either[Error, Unit] = {
+    for (
+      _ <- checkPathSyntax(imports).right;
+      _ <- checkUniquePath(imports).right;
+      _ <- checkUniqueIde(imports).right
+    ) yield ()
+  }
+  
+  private def checkPathSyntax(imports : List[Import]) : Either[Error, Unit] = {
+    /** Checks the syntax of the path
+     *
+     * The underscore indicates terminal symbols.
+     * Within '[' ']' only terminal symbols and regex are enumerated.
+     *
+     * The syntax is defined as follows:
+     *
+     *   path   ::= _/?(dir _/) module
+     *   dir    ::= [:alnum:-_.]+
+     *   module ::= [:alnum:-_]+
+     */
+    def validatePath(path : String) : Boolean = path.matches("/?([a-zA-Z0-9-_.]+/)*[a-zA-Z0-9-_]+")
+    
+    val invalidPaths = imports.filter {imp => !validatePath(imp.path)}
+    
+    if (invalidPaths.isEmpty)
+      return Right()
+    else
+      return Left(InvalidPathError)
+  }
+  
+  private def checkUniquePath(imports : List[Import]) : Either[Error, Unit] = {
+    val duplicates = imports.filter {imp => imports.count(_.path == imp.path) > 1}
+    
+    if (duplicates.isEmpty)
+      return Right()
+    else
+      return Left(DuplicatePathError)
+  }
+  
+  private def checkUniqueIde(imports : List[Import]) : Either[Error, Unit] = {
+    val qualified = imports.filter(_.isInstanceOf[QualifiedImport]).map(_.asInstanceOf[QualifiedImport])
+    val duplicates = qualified.filter {imp => qualified.count(_.name == imp.name) > 1}
+    
+    if (duplicates.isEmpty)
+      return Right()
+    else
+      return Left(DuplicateModuleError)
   }
 
   def resolveImport(config: Config)(imp: Import): Either[Error, ResolvedImport] = imp match {

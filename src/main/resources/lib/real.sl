@@ -9,6 +9,9 @@ DEF EXTERN fromInt = {| function(i){return i;} |}
 PUBLIC FUN toString : Real -> String
 DEF EXTERN toString = {| function(i){return i.toString();} |}
 
+PUBLIC FUN fromString : String -> Real
+DEF EXTERN fromString = {| parseFloat |}
+
 -------------------------------------
 -- Arithmetics on Reals
 
@@ -22,7 +25,7 @@ PUBLIC FUN * : Real -> Real -> Real
 DEF EXTERN * = {| _mul |}
 
 PUBLIC FUN / : Real -> Real -> Real
-DEF EXTERN / = {| _div |}
+DEF EXTERN / = {| _divr |}  -- !!!!!!!
 
 PUBLIC FUN pow : Real -> Real -> Real
 DEF EXTERN pow = {| function(a){return function(b){return Math.pow(a,b);}} |}
