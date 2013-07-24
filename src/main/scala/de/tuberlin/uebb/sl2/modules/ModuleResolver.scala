@@ -44,5 +44,7 @@ trait ModuleResolver {
     extends ResolvedImport(file, ast)
     
   def inferDependencies(program: AST, config: Config): Either[Error, List[ResolvedImport]]
+  
+  def checkImports(imports : List[Import]) : Either[Error, Unit]
 
 }
