@@ -120,9 +120,12 @@ trait ModuleResolverImpl extends ModuleResolver {
   
   def resolveImport(config: Config)(imp: Import): Either[Error, ResolvedImport] = imp match {
     case ui @ UnqualifiedImport(path, attr) => 
+      val stdPrefix = "std/" // TODO: Do this less rigidly
+      if (stdPrefix != path.substring(0, stdPrefix.length))
+        return Left(GenericError("unqualified import " + path + " doesn't start with " + stdPrefix))
       for (
-        file <- findImport(config, imp.path + ".sl.signature", attr).right;
-        jsFile <- findImport(config, imp.path + ".sl.js", attr).right;
+        file <- findImportResource(imp.path.substring(stdPrefix.length) + ".sl.signature", attr).right;
+        jsFile <- findImportResource(imp.path.substring(stdPrefix.length) + ".sl.js", attr).right;
         signature <- importSignature(file).right
       ) yield ResolvedUnqualifiedImport(path, file, jsFile, signature, ui)
     case qi @ QualifiedImport(path, name, attr) =>
@@ -137,7 +140,6 @@ trait ModuleResolverImpl extends ModuleResolver {
       ) yield ResolvedExternImport(path, file, ei)
   }
 
-  // unused
   def findImportResource(path: String, attr: Attribute): Either[Error, File] = {
     val files = List(new File(getClass().getResource("/lib/"+path).toURI()))
     files.find(_.canRead()).toRight(
@@ -146,15 +148,16 @@ trait ModuleResolverImpl extends ModuleResolver {
   
   def findImport(config: Config, path: String, attr: Attribute): Either[Error, File] = {
     val stdPrefix = "std/" // TODO: Do this less rigidly
-    val files = if (stdPrefix == path.substring(0, stdPrefix.length))
-      List(new File(config.classpath, path.substring(stdPrefix.length)))
-    else
-      List(new File(config.classpath, path),
+    if (stdPrefix == path.substring(0, stdPrefix.length)) {
+      findImportResource(path.substring(stdPrefix.length), attr)
+    } else {
+      val files = List(new File(config.classpath, path),
         new File(config.destination, path),
         new File(config.mainUnit.getParentFile(), path),
         new File(path))
-    files.find(_.canRead()).toRight(
-      ImportError("Could not find " + quote(path) + " at " + files.map(_.getCanonicalPath()).mkString("\n\t\t\t\tor "), attr))
+      files.find(_.canRead()).toRight(
+        ImportError("Could not find " + quote(path) + " at " + files.map(_.getCanonicalPath()).mkString("\n\t\t\t\tor "), attr))
+    }
   }
 
   def importSignature(file: File): Either[Error, Program] = {

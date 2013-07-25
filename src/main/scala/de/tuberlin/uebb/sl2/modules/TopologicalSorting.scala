@@ -23,9 +23,18 @@ trait TopologicalSorting
     def this(name: String, config: Config) = {
       this()
       this.name = name
-      this.sourceFile = new File(config.sourcepath, name+".sl")
-      this.signatureFile = new File(config.classpath, name+".sl.signature")
-      this.jsFile = new File(config.classpath, name+".sl.js")
+      if(name.startsWith("std/")) {
+          // load std/ library from resources directory
+          name = name.replace("std/", "")
+          this.sourceFile = new File(getClass().getResource("/lib/"+name+".sl").toURI())
+          this.signatureFile = new File(getClass().getResource("/lib/"+name+".sl.signature").toURI())
+          this.jsFile = new File(getClass().getResource("/lib/"+name+".sl.js").toURI())
+      } else {
+          // load ordinary files relative to source- and classpath
+          this.sourceFile = new File(config.sourcepath, name+".sl")
+          this.signatureFile = new File(config.classpath, name+".sl.signature")
+          this.jsFile = new File(config.classpath, name+".sl.js")
+      }
     }
     
     override def toString() = {
