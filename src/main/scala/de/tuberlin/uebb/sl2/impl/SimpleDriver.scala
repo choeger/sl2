@@ -138,7 +138,7 @@ trait SimpleDriver extends Driver {
     // create main.js only if a main function is declared
     if(program.isInstanceOf[Program] && program.asInstanceOf[Program].functionDefs.contains("main")) {
       val mainWriter = new PrintWriter(new File(config.destination, "main.js"))
-      val paths = JsObject(List((JsName("std"), JsStr(config.classpath.toString))))
+      val paths = JsObject(List((JsName("std"), JsStr(getClass().getResource("/lib/").toString))))
       for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
 	val imp = i.asInstanceOf[ResolvedExternImport]
 	val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
