@@ -170,9 +170,85 @@ Darüber hinaus widmeten wir uns auch noch weiteren Themen:
 
 \section{Semantische Analyse}\label{sec:semantics}
 
-\TODO{Rico: Methode, Schwierigkeiten, Designentscheidungen}
+Aufgabe der semantischen Analyse ist es, den Kontext des vom Parser eingelesenen Syntaxbaums zu überprüfen. Durch die Erweiterung der Sprache SL um ein Modulsystem musste die Analyse angepasst und ausgebaut werden. Ohne das Modulsystem war der Kontext auf eine Quelldatei sowie fest einprogrammierte Konstrukte (z.B. Operatoren für ganze Zahlen) beschränkt.
+
+Da nun ein Modul auch andere Module importieren kann, erweitert sich der zu analysierende Kontext. Zum einen wurde die Grammatik um die \verb|IMPORT|-Anweisung ergänzt. Einem Modul ist es beispielsweise nicht erlaubt ein anderes Modul mehrfach zu importieren. Zum anderen können Datentypen und Funktionen aus dem importierten Modul verwendet werden. Für das Type-Checking muss daher die sogenannte Signatur des Imports bekannt sein. Diese umfasst Datendefinitionen und Funktionssignaturen.
 
 \subsection{Auflösung von Importen}
+
+Nachdem die abstrakte Syntax vom Parser eingelesen wurde, müssen die Importe aufgelöst werden. Andernfalls ist Type-Checking nicht möglich, welches vor der Spracherweiterung direkt im Anschluss des Parsings stattfand. Die Auflösung von Importen bezeichnet das Suchen und Laden von Signaturen von externen Modulen. Zuvor müssen die Import-Anweisungen allerdings selbst auf Korrektheit überprüft werden.
+
+\subsubsection{Import-Überprüfung}
+
+\TODO{Modulbezeichner richtiger Begriff?}
+\TODO{redundant?}
+\TODO{IMPORT EXTERN, Unqualifizierter Import?}
+
+Die Import-Anweisung ist im Grunde ein Paar aus Modulpfad und Modulbezeichner:
+
+\begin{verbatim}
+IMPORT "my/path/to/module-file" AS ModuleIde
+\end{verbatim}
+
+Der Pfad gibt dabei an, wo das Modul zu finden ist. Der Modulbezeichner ermöglicht die Verwendung von Datentypen und Funktionen des Importierten Moduls.
+
+Wir möchten verbieten, dass ein Modul mehrfach vom lokalen Modul importiert wird. Wir gehen dabei davon aus, dass ein Modul eineindeutig einem Pfad zugeordnet ist. Also überprüfen wir, ob jeder Pfad nur genau einmal vorkommt. Ebenso möchten wir nicht zulassen, dass ein Modulbezeichner für mehrere verschiedene Module verwendet wird.
+
+Zum Beispiel ist folgende Importliste nicht erlaubt, da hier zwei Mal derselbe Modulbezeichner ,,\verb|Duplicate|`` verwendet wird:
+
+\begin{verbatim}
+IMPORT "my/path/moduleA"    AS Duplicate
+IMPORT "other/path/moduleB" AS Duplicate
+IMPORT "my/path/moduleC"    AS Innocent
+\end{verbatim}
+
+Unsere Annahme, dass Module eindeutig über den Pfad identifiziert werden, kann in einigen Fällen jedoch unzureichend sein:
+
+\begin{verbatim}
+IMPORT "my/path/moduleA"         AS A1
+IMPORT "my/path/../path/moduleA" AS A2
+\end{verbatim}
+
+Laut unserer Grammatik \TODO{tolle grammatik oder verweis zur grammatik} wird der Pfad zu einem externen Modul als String definiert. Der Parser akzeptiert daher jede Art von gültigen Strings. Deshalb muss an dieser Stelle die Pfadsyntax überprüft werden. Grammatik \ref{grm:importpath} zeigt die Produktionsregeln für Pfade. Erlaubt sind relative Pfade bestehend aus beliebig vielen Verzeichnissen und dem Moduldateinamen am Ende. Als Trennungssymbol dient das Schrägstrichsymbol ,/`. Verzeichnisse dürfen Buchstaben, Zahlen, Minussymbole, Unterstriche und Punkte enthalten. Dies gilt auch für das Modul mit Ausnahme von Punkten. Der Modulname entspricht dem Dateinamen der Quelldatei ohne Endung ,,.sl``.
+
+\begin{grammarfigure}[grm:importpath]{Gültige Importpfade}
+  <Path>     ::= (<Dir> '/')* <Module>
+  <Dir>      ::= (<alphanum> | '-' | '\_' | '.')+
+  <Module>   ::= (<alphanum> | '-' | '\_')+
+  <alphanum> ::= 'a' | \cdots | 'z'
+            \alt 'A' | \cdots | 'Z'
+            \alt '0' | \cdots | '9'
+\end{grammarfigure}
+
+Dies sind Beispiele für korrekte Pfade:
+
+\begin{verbatim}
+IMPORT "moduleA"             AS A
+IMPORT "dir/moduleB"         AS B
+IMPORT ".hidden/dir/moduleC" AS C
+IMPORT "../module_D"         AS D
+IMPORT "123/moduleE"         AS E
+IMPORT "./module-6"          AS F
+\end{verbatim}
+
+Inkorrekt sind dagegen die folgenden:
+
+\begin{verbatim}
+IMPORT "moduleA.sl"             AS A
+IMPORT "dir/."                  AS B
+IMPORT "/absolute/path/moduleC" AS C
+IMPORT "../m.o.d.u.l.e.D"       AS D
+IMPORT "my//moduleE"            AS E
+\end{verbatim}
+
+\subsubsection{Laden der Signatur}
+
+Falls die Importe korrekt sind, werden die dazugehörigen Module-Dateien geladen. Ein Modul liegt dabei immer in zwei Dateien vor: Die Signatur (,,*.signatur``) und die in JavaScript übersetzte Implementierung  (,,*.js``). Können nicht alle benötigten Dateien gefunden werden, so kann der Kompiliervorgang nicht fortgesetzt werden.
+
+\TODO{Suchpfade}
+\TODO{std resource}
+
+Die Signatur-Datei enthält einen Teil des abstrakten Syntaxbaums des zu importierenden Moduls. Datentypdefinitionen und Funktionssignaturen sind hier in einer serialisierten Form abgespeichert. Das Format dieser Datei wird in Abschnitt \ref{sec:compSig} beschrieben.
 
 \subsection{Type-Checking}
 
