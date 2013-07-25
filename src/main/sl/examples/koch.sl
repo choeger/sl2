@@ -1,6 +1,6 @@
-IMPORT "basicweb" AS Web
-IMPORT "timing" AS Time
-IMPORT "debuglog" AS Dbg
+IMPORT "std/basicweb" AS Web
+IMPORT "std/timing" AS Time
+IMPORT "std/debuglog" AS Dbg
 
 DEF createCanvas = 
 	Web.document &= \ doc .
@@ -80,6 +80,7 @@ DEF pingpong a b =
 	LET p = a%(2*b) IN
 	IF p <= b THEN p ELSE (2*b) - p
 
+PUBLIC FUN main : DOM Void
 DEF main = context &= ( \c.    	       	   -- bind the context element
 		translate c 250 250 &
        (mainLoop c 0 Void) &

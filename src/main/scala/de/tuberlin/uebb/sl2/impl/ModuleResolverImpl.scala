@@ -18,7 +18,6 @@ trait ModuleResolverImpl extends ModuleResolver {
         case _ =>
       }
       
-      //TODO: really deal with transitive imports and the like...
       val preludeImp = if (config.mainUnit.getName() != "prelude.sl")
          UnqualifiedImport("std/prelude") :: imports 
       else
@@ -65,10 +64,10 @@ trait ModuleResolverImpl extends ModuleResolver {
       return Right()
     
     def checkUniqueness(imp : Import) : Either[Error, Unit] = {
-      if (imports.count(_.path == imp.path) == 1)
-        return Right()
-      else
+      if (imports.count(_.path == imp.path) != 1)
         return Left(DuplicatePathError(imp.path, imp.attribute))
+      else 
+        return Right()
     }
     
     imports.map(checkUniqueness).reduce(collectErrors)
@@ -107,7 +106,9 @@ trait ModuleResolverImpl extends ModuleResolver {
       }
       var paths = Set[String]()
       // ignore extern imports
-      for(resolvedImports <- errorMap(imports.filter( x => (x.isInstanceOf[UnqualifiedImport]) || (x.isInstanceOf[QualifiedImport])), collectImport(config)).right;
+      for(resolvedImports <- errorMap(imports.filter( x =>
+        	(x.isInstanceOf[UnqualifiedImport]) ||
+        	(x.isInstanceOf[QualifiedImport])), collectImport(config)).right;
           resolvedImport  <- resolvedImports) {
     	  paths = paths + resolvedImport
     	  println("paths="+paths)
