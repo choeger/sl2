@@ -44,7 +44,7 @@ trait ContextAnalysisSpec extends FunSpec with ShouldMatchers {
   def notFail: Matcher[Either[Error, Unit]] = be(Right())
   
   def checking(program: AST): Either[Error, Unit] = {
-    val emptyConfig = Config(null, List(), null, new File(""), new File(""))
+    val emptyConfig = Config(null, List(), new File("src/main/resources/lib"), new File(""), new File(""))
     
     for (
       imports <- inferDependencies(program, emptyConfig).right;
@@ -115,11 +115,15 @@ trait ContextAnalysisSpec extends FunSpec with ShouldMatchers {
     }
     it("Should fail on a program with data type definitions where the type name clashes with prelude type") {
       checking(prg15) should fail(
-          DuplicateError("type definition", "Bool", List(EmptyAttribute, AttributeImpl(FileLocation("prelude.sl.signature", null, null)))))
+        ErrorList(List(DuplicateError("type definition", "Bool", List(EmptyAttribute, AttributeImpl(FileLocation("prelude.sl.signature", null, null)))))))
     }
     it("Should fail on a program with data type definitions where a type constructor clashes with prelude constructor") {
       checking(prg16) should fail(
-          DuplicateError("definitions of constructor", "False", List(EmptyAttribute, AttributeImpl(FileLocation("prelude.sl.signature", null, null)))))
+        ErrorList(List(
+          DuplicateError("definitions of constructor", "True", List(EmptyAttribute, AttributeImpl(FileLocation("prelude.sl.signature", null, null)))),
+          DuplicateError("definitions of constructor", "False", List(EmptyAttribute, AttributeImpl(FileLocation("prelude.sl.signature", null, null))))
+        ))
+      )
     }
   }
 }
