@@ -204,8 +204,8 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Error
 
   private def data2Json(data : DataDef) : JsonExportDataDef = {
     var map : Map[String, Any] = Map()
-    map += ("ide"          -> tConVarName2Json (data.ide         ))
-    map += ("tvars"        -> typeVarNames2Json(data.tvars       ))
+    map += ("ide"   -> tConVarName2Json (data.ide         ))
+    map += ("tvars" -> typeVarNames2Json(data.tvars       ))
     // the constructors of private types are not exported.
     if (data.modifier == PublicModifier) {
       map += ("constructors" -> ctors2Json       (data.constructors))
