@@ -1,5 +1,5 @@
 /***********************************/
-// generated from: librarytest.sl
+// generated from: HelloWorld.sl
 /***********************************/
 if (typeof window === 'undefined') {
     /* in node.js */
@@ -10,19 +10,19 @@ if (typeof window === 'undefined') {
         //function to requirejs so that node modules
         //are loaded relative to the top-level JS file.
         nodeRequire: require,
-	paths: {std : "/home/fpz/code/sl2/src/main/resources/lib" }
+	paths: {std : "file:/home/fpz/code/sl2/target/scala-2.10/classes/lib/" }
     });
     
-    requirejs(["librarytest.sl"], function($$$librarytest) {
-        $$$librarytest.$main()
+    requirejs(["HelloWorld.sl"], function($$$HelloWorld) {
+        $$$HelloWorld.$main()
     });
 } else {
     require.config({
-	paths: {std : "/home/fpz/code/sl2/src/main/resources/lib" }
+	paths: {std : "file:/home/fpz/code/sl2/target/scala-2.10/classes/lib/" }
     });
 
     /* in browsers*/ 
-    require(["librarytest.sl"], function($$$librarytest) {
-        $$$librarytest.$main()
+    require(["HelloWorld.sl"], function($$$HelloWorld) {
+        $$$HelloWorld.$main()
     });
 }
