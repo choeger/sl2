@@ -10,8 +10,6 @@ DEF a !! b = List.Cons a b
 
 DEF lines = LET rest = "World" !! empty IN "Hello" !! rest
 
-PUBLIC FUN main : DOM Void
-
 FUN print : String -> DOM Void
 DEF print str = (yield str) &= (\h.{|
   console.log($h);
@@ -26,6 +24,7 @@ DEF printOpt Opt.None = print "Nope!"
 DEF x = Opt.Some "Yes"
 DEF y = Opt.None
 
+PUBLIC FUN main : DOM Void
 DEF main = 
 	printList lines & 
 	printOpt x & 

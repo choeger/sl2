@@ -8,7 +8,7 @@ DEF main =
 		(Dict.put "fourtytwo" 42 (Dict.put "twentythree" 23 Dict.empty))
 		(Dict.toString intToString) IN
 	-- sel is of type Option (Option.Option in list.sl and Opt.option in dict.sl)
-	-- still it should work!
+	-- Option is not imported directly. still it should work!
 	LET sel = Dict.getOpt dict "twentythree" IN
 	LET list = IO.andPrint (List.fromOption sel) (List.toString intToString) IN
-	IO.print "did it work?"
+	IO.print "Did it output <23>?"
