@@ -255,6 +255,33 @@ trait MultiDriver extends Driver {
     }
   }
   
+  def compileSL(src: String) = {
+    // parse the syntax
+    fileName = name
+    val ast = parseAst(code)
+    //debugPrint(ast.toString());
+
+    val checkResults = for (
+      mo <- ast.right;
+      // check and load dependencies
+      imports <- inferDependencies(mo, config).right;
+      // type check the program
+      _ <- checkProgram(mo, normalizeModules(imports)).right) yield imports
+    
+    if(checkResults.isLeft) {
+      checkResults
+    } else {
+    	// generate code, if checks were successful
+	    for (
+	      mo <- ast.right;
+	      // check and load dependencies
+	      imports <- checkResults.right;
+	      // qualify references to unqualified module and synthesize
+	      res <- compileToString(qualifyUnqualifiedModules(mo.asInstanceOf[Program], imports), name, imports, config).right
+	    ) yield res
+    }
+  }
+  
   def prepareCompilation(config: Config) = {
     // Create modules directory, if necessary
     val modulesDir = config.destination;//new File(config.destination, "modules")
@@ -267,6 +294,35 @@ trait MultiDriver extends Driver {
     } else if(!modulesDir.isDirectory()) {
       println(modulesDir+" is not a directory")
     }
+  }
+  
+  def compileToString(program: Program, imports: List[ResolvedImport]) = {
+    // TODO: maybe CombinatorParser does not yet parse qualified imports correctly, like ParboiledParser did before?
+    val moduleTemplate = Source.fromURL(getClass().getResource("/js/module_template.js")).getLines.mkString("\n")
+    val moduleWriter = new StringWriter()
+    for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
+      val imp = i.asInstanceOf[ResolvedExternImport]
+      val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
+      moduleWriter.println("/***********************************/")
+      moduleWriter.println("// included from: "+imp.file.getCanonicalPath())
+      moduleWriter.println("/***********************************/")
+      moduleWriter.println(includedCode)
+      moduleWriter.println("/***********************************/")
+    }
+    moduleWriter.println("/***********************************/")
+    moduleWriter.println("// generated from: "+name)
+    moduleWriter.println("/***********************************/") 
+
+    val requires = imports.filter(_.isInstanceOf[ResolvedModuleImport]).map(
+        x => JsDef(x.asInstanceOf[ResolvedModuleImport].name,
+            JsFunctionCall(JsName("require"),JsStr(x.asInstanceOf[ResolvedModuleImport].path+".sl"))
+        	))
+    moduleWriter.write(moduleTemplate.replace("%%MODULE_BODY%%", JsPrettyPrinter.pretty(requires)+"\n\n"
+        +JsPrettyPrinter.pretty(dataDefsToJs(program.dataDefs)
+            & functionDefsExternToJs(program.functionDefsExtern)
+            & functionDefsToJs(program.functionDefs)
+            & functionSigsToJs(program.signatures))));
+    moduleWriter.toString
   }
   
   def compile(program: Program, name: String, imports: List[ResolvedImport], config: Config): Either[Error, String] = {    
