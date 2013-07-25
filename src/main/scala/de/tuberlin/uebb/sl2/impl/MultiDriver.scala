@@ -232,7 +232,7 @@ trait MultiDriver extends Driver {
     // parse the syntax
     fileName = name
     val ast = parseAst(code)
-    debugPrint(ast.toString());
+    //debugPrint(ast.toString());
 
     val checkResults = for (
       mo <- ast.right;
@@ -308,7 +308,8 @@ trait MultiDriver extends Driver {
     moduleWriter.write(moduleTemplate.replace("%%MODULE_BODY%%", JsPrettyPrinter.pretty(requires)+"\n\n"
         +JsPrettyPrinter.pretty(dataDefsToJs(program.dataDefs)
             & functionDefsExternToJs(program.functionDefsExtern)
-            & functionDefsToJs(program.functionDefs))));
+            & functionDefsToJs(program.functionDefs)
+            & functionSigsToJs(program.signatures))));
     moduleWriter.close();
     
     val signatureFile = new File(modulesDir, name + ".signature")

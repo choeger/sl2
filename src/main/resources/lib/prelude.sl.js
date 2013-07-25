@@ -1,5 +1,5 @@
 /***********************************/
-// included from: C:\Users\Rico\Documents\GitHub\sl2\src\main\resources\lib\_prelude.js
+// included from: /home/fpz/code/sl2/target/scala-2.10/classes/lib/_prelude.js
 /***********************************/
 /*
  * This basic module is necessary as an import to every SL
@@ -173,6 +173,13 @@ exports.$True = true;
 exports.$False = false;
 var $stringToInt = parseInt;
 var $charToInt = function(c){return c.charCodeAt(0);};
+var $stringGetChar = function(s){return function(i){
+	if (s.length < i) {
+		throw "stringGetChar failed: Char index out of bounds"
+	} else {
+		return s.charAt(i);
+	}
+}};
 var $charToString = function(c){return c;};
 var $t = _mul;
 var $l$e = _leq;
@@ -323,5 +330,36 @@ function $d$e(_arg0)
       throw "Pattern not exhaustive!"
     }
   }
-}
+};
+;
+exports.$stringToInt = $stringToInt;
+exports.$charToInt = $charToInt;
+exports.$stringGetChar = $stringGetChar;
+exports.$charToString = $charToString;
+exports.$t = $t;
+exports.$force = $force;
+exports.$l$e = $l$e;
+exports.$r = $r;
+exports.$d$e = $d$e;
+exports.$l = $l;
+exports.$a = $a;
+exports.$g$e = $g$e;
+exports.$yield = $yield;
+exports.$intToChar = $intToChar;
+exports.$m = $m;
+exports.$noop = $noop;
+exports.$a$e = $a$e;
+exports.$id = $id;
+exports.$p$p = $p$p;
+exports.$error = $error;
+exports.$e$e = $e$e;
+exports.$s = $s;
+exports.$not = $not;
+exports.$isNaN = $isNaN;
+exports.$boolToString = $boolToString;
+exports.$intToString = $intToString;
+exports.$p = $p;
+exports.$iNaN = $iNaN;
+exports.$d = $d;
+exports.$g = $g
 });

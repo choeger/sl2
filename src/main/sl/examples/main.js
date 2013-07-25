@@ -1,5 +1,5 @@
 /***********************************/
-// generated from: HelloWorld.sl
+// generated from: boxsort.sl
 /***********************************/
 if (typeof window === 'undefined') {
     /* in node.js */
@@ -13,8 +13,8 @@ if (typeof window === 'undefined') {
 	paths: {std : "file:/home/fpz/code/sl2/target/scala-2.10/classes/lib/" }
     });
     
-    requirejs(["HelloWorld.sl"], function($$$HelloWorld) {
-        $$$HelloWorld.$main()
+    requirejs(["boxsort.sl"], function($$$boxsort) {
+        $$$boxsort.$main()
     });
 } else {
     require.config({
@@ -22,7 +22,7 @@ if (typeof window === 'undefined') {
     });
 
     /* in browsers*/ 
-    require(["HelloWorld.sl"], function($$$HelloWorld) {
-        $$$HelloWorld.$main()
+    require(["boxsort.sl"], function($$$boxsort) {
+        $$$boxsort.$main()
     });
 }
