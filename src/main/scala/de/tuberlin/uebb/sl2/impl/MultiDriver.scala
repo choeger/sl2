@@ -34,6 +34,7 @@ import scala.text.DocText
 import de.tuberlin.uebb.sl2.modules._
 import java.io.File
 import java.io.PrintWriter
+import java.io.StringWriter
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -255,10 +256,10 @@ trait MultiDriver extends Driver {
     }
   }
   
-  def compileSL(src: String) = {
+  def compileSL(src: String, config: Config) = {
     // parse the syntax
-    fileName = name
-    val ast = parseAst(code)
+    fileName = ""
+    val ast = parseAst(src)
     //debugPrint(ast.toString());
 
     val checkResults = for (
@@ -275,10 +276,11 @@ trait MultiDriver extends Driver {
 	    for (
 	      mo <- ast.right;
 	      // check and load dependencies
-	      imports <- checkResults.right;
+	      imports <- checkResults.right
+	    ) yield (
 	      // qualify references to unqualified module and synthesize
-	      res <- compileToString(qualifyUnqualifiedModules(mo.asInstanceOf[Program], imports), name, imports, config).right
-	    ) yield res
+        compileToString(qualifyUnqualifiedModules(mo.asInstanceOf[Program], imports), imports)
+      )
     }
   }
   
@@ -299,7 +301,7 @@ trait MultiDriver extends Driver {
   def compileToString(program: Program, imports: List[ResolvedImport]) = {
     // TODO: maybe CombinatorParser does not yet parse qualified imports correctly, like ParboiledParser did before?
     val moduleTemplate = Source.fromURL(getClass().getResource("/js/module_template.js")).getLines.mkString("\n")
-    val moduleWriter = new StringWriter()
+    val moduleWriter = new PrintWriter(new StringWriter())
     for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
       val imp = i.asInstanceOf[ResolvedExternImport]
       val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
@@ -309,9 +311,6 @@ trait MultiDriver extends Driver {
       moduleWriter.println(includedCode)
       moduleWriter.println("/***********************************/")
     }
-    moduleWriter.println("/***********************************/")
-    moduleWriter.println("// generated from: "+name)
-    moduleWriter.println("/***********************************/") 
 
     val requires = imports.filter(_.isInstanceOf[ResolvedModuleImport]).map(
         x => JsDef(x.asInstanceOf[ResolvedModuleImport].name,
