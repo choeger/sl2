@@ -25,10 +25,10 @@ trait TopologicalSorting
       this.name = name
       if(name.startsWith("std/")) {
           // load std/ library from resources directory
-          name = name.replace("std/", "")
-          this.sourceFile = new File(getClass().getResource("/lib/"+name+".sl").toURI())
-          this.signatureFile = new File(getClass().getResource("/lib/"+name+".sl.signature").toURI())
-          this.jsFile = new File(getClass().getResource("/lib/"+name+".sl.js").toURI())
+          this.name = name.replace("std/", "")
+          this.sourceFile = new File(getClass().getResource("/lib/"+this.name+".sl").toURI())
+          this.signatureFile = new File(getClass().getResource("/lib/"+this.name+".sl.signature").toURI())
+          this.jsFile = new File(getClass().getResource("/lib/"+this.name+".sl.js").toURI())
       } else {
           // load ordinary files relative to source- and classpath
           this.sourceFile = new File(config.sourcepath, name+".sl")

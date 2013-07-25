@@ -57,8 +57,8 @@ object Main
     with FDCheckerImpl
     with TypeCheckerImpl
     with ProgramCheckerImpl
-    with SimpleDriver
-    //with MultiDriver
+    //with SimpleDriver
+    with MultiDriver
     with DebugOutput
     with SignatureJsonSerializer
     with ModuleResolverImpl
@@ -79,6 +79,8 @@ object Main
           if(config.classpath == null) {
             config.classpath = config.sourcepath
           }
+        if(config.destination == null)
+          config.destination = config.sourcepath
 	      val res = run(config)
 	      if (res.isLeft)
 	        res.left.map(x => println("Errors:\n" + x))

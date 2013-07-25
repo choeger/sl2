@@ -8,5 +8,5 @@ trait Configs {
     val sources: List[String],
     var classpath: File,
     val mainUnit: File,
-    val destination: File)
+    var destination: File)
 }
