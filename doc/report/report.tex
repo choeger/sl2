@@ -8,6 +8,7 @@
 \usepackage{listings}
 \usepackage{url}
 \usepackage{color}
+\usepackage{amssymb}
 
 % Declare the backslash from cmtt to use as terminal symbol in
 % grammar.
@@ -287,7 +288,28 @@ in JavaScript?}
 gespeichert sind}
 
 \subsection{Externe Definitionen}
-\TODO{Das ist wohl eher für Ben...}
+Besonders beim Schreiben von Funktionsbibliotheken muss man häufig auf
+Java\-Script-Funktionen zugreifen, ohne dass man dabei in eine
+\verb|DOM|-Monade geraten will. Das ursprüngliche SL erlaubte nur
+JS-Code-Literale vom Typ \verb|DOM x|. Da es kein \verb|return| für
+\verb|DOM| gibt und auch keins geben soll, ist es damit nicht möglich,
+neue Funktionen in SL zu schreiben, die einen anderen Rückgabetyp als
+\verb|DOM| besitzen.
+
+Um dennoch das Prelude von SL und weitere Bibliotheken (Abschnitt~\ref{sec:libs})
+in SL verfassen zu können, haben wir durch \verb|DEF EXTERN| einen sehr
+definierten Platz geschaffen, an dem ein Java\-Script-Literal
+\verb.{|someJsCode()|}. ausgepackt werden darf. Die Übersetzung dazu ist
+vergleichsweise simpel:\\
+\verb.   DEF EXTERN bla = {| js |}.
+\quad $\leadsto$ \quad \verb|var bla = js;|
+
+Um auf auf der rechten Seite dieser Definition bequem selbstdefinierte
+Java\-Script-Funktionen anzugeben, bietete es sich an, diese in einem
+weiteren Modul zusammenzufassen und sie dann per \verb|IMPORT EXTERN|
+einzubinden. Die Übersetzung zu \verb|IMPORT EXTERN "<datei>"| ist dabei
+schlicht, dass an den Anfang des Kompilats der Inhalt der Datei
+\verb|"datei.js"| gesetzt wird.
 
 \section{Fehlermeldungen}
 \label{sec:errors}
