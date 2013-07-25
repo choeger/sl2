@@ -566,11 +566,18 @@ Wir haben eine Reihe kleinerer Testprogramme geschrieben.
    \verb|option| und \verb|dict|.
  \item[\texttt{transitiveimports.sl}] Verwendet \verb|option|, ohne es direkt
    zu importieren. Stattdessen werden \verb|dict| und \verb|list| benutzt.
-   (Das ist ein wichtiger Testfalls!)
- \item[\texttt{similarimports.sl}]
- \item[\texttt{librarytest.sl}]
- \item[\texttt{boxsort.sl}]
- \item[\texttt{koch.sl}]
+   (Das ist ein wichtiger Testfall!)
+ \item[\texttt{similarimports.sl}] Importiert eine neudefinierte \verb|Option|
+   und zeigt, dass sie nicht mit \verb|Option| aus \verb|std/option| clasht.
+ \item[\texttt{librarytest.sl}] Testet das Zusammenspiel einiger Funktionen aus
+   \verb|list| und \verb|dict| sowie \verb|real|. Macht außerdem vom lokalen
+   Überschreiben von Prelude-Bezeichnern Gebrauch.
+ \item[\texttt{boxsort.sl}] Größeres Beispiel, das mittels \verb|basicweb| eine
+   interaktive Website erzeugt. Macht starken Gebrauch von allen möglichen
+   Features aus den \verb|std|-Librarys.
+ \item[\texttt{koch.sl}] Modifizierte Version des ursprünglichen
+   Kochkurvenbeispiels. Verwendet Browseranzeige und \verb|timing|, um eine
+   Animation ausgehend von der Kochkurve zu zeichnen.
 \end{description}
 
 \section{Zusammenfassung}
