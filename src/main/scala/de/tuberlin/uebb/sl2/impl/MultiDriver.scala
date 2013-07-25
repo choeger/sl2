@@ -276,12 +276,13 @@ trait MultiDriver extends Driver {
     // copy .js and .signature of imported modules from classpath to modules/ directory
     // TODO: should not copy prelude on every compiled module
     // TODO: should not copy modules that have just been compiled
+/*
     for(i <- imports.filter(_.isInstanceOf[ResolvedModuleImport])) {
       val imp = i.asInstanceOf[ResolvedModuleImport]
       copy(Paths.get(imp.file.toURI),   Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.signature"))
       copy(Paths.get(imp.jsFile.toURI), Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.js"))
     }
-    
+ */    
     val tarJs = new File(modulesDir, name + ".js")
     println("compiling "+name+" to "+tarJs)
     // TODO: maybe CombinatorParser does not yet parse qualified imports correctly, like ParboiledParser did before?
@@ -318,7 +319,8 @@ trait MultiDriver extends Driver {
     
     // create main.js only if a main function is declared
     if(program.isInstanceOf[Program] && program.asInstanceOf[Program].functionDefs.contains("main")) {
-        val mainJs = new File(config.destination, "main.js")
+      val mainJs = new File(config.destination, "main.js")
+      val paths = JsObject(List((JsName("std"), JsStr(getClass().getResource("/lib/").toString))))
     	println("creating "+mainJs.getAbsolutePath)
 	    val mainWriter = new PrintWriter(mainJs)
 	    for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
@@ -335,8 +337,9 @@ trait MultiDriver extends Driver {
 	    mainWriter.println("/***********************************/") 
 	    val mainTemplate = Source.fromURL(getClass.getResource("/js/main_template.js")).getLines.mkString("\n")
 	    mainWriter.write(mainTemplate.replace("%%MODULE_PATHS_LIST%%", "\""+name+"\"")
-	    	.replace("%%MODULE_NAMES_LIST%%", "$$$"+name.substring(0, name.length()-3))
-	    		.replace("%%MAIN%%", JsPrettyPrinter.pretty(JsFunctionCall("$$$"+name.substring(0, name.length()-3)+".$main"))))
+              .replace("%%PATHS%%", JsPrettyPrinter.pretty(paths))
+	      .replace("%%MODULE_NAMES_LIST%%", "$$$"+name.substring(0, name.length()-3))
+	      .replace("%%MAIN%%", JsPrettyPrinter.pretty(JsFunctionCall("$$$"+name.substring(0, name.length()-3)+".$main"))))
 	    mainWriter.close()
 	    
 	    // copy index.html, require.js to config.destination

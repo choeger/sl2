@@ -57,8 +57,8 @@ object Main
     with FDCheckerImpl
     with TypeCheckerImpl
     with ProgramCheckerImpl
-    with SimpleDriver
-    //with MultiDriver
+    //with SimpleDriver
+    with MultiDriver
     with DebugOutput
     with SignatureJsonSerializer
     with ModuleResolverImpl
