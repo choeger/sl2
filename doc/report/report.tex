@@ -70,32 +70,90 @@
 
 \section{Überblick}
 
-Im Rahmen des Projekts erweiterten wir den Sprachumfang von SL um folgende
+Ziel des Projektes war es, SL um ein Modulsystem zu erweitertern. Dazu
+reicherten wir den Sprachumfang von SL mit einer Reihe von Konstrukten an. Für
+diese besprechen wir die Syntax genauer in Abschnitt~\ref{sec:syntax},
+die semantische Analyse in Abschnitt~\ref{sec:semantics} und die
+Codegenerierung in Abschnitt~\ref{sec:codegen}. Grob umfassen die neuen
 Features:
 
 \begin{description}
- \item[Export von Bezeichnern]
- \item[Import von Modulen] 
- \item[Qualifizierte Bezeichner] blubb
- \item[Externe Definitionen] blubb
- \item[Externe Datentypen] blubb
- \item[Import von JavaScript-Code] blubb
+ \item[Module] Jede SL-Datei wird jetzt als eine Modul-Definition aufgefasst.
+ \item[Export von Bezeichnern] Durch das \verb|PUBLIC|-Keyword können
+   Funktionsdeklarationen für andere Module importierbar gemacht werden. \\
+   \verb|PUBLIC FUN f : Int -> Int| \quad fügt \verb|f : Int -> Int|
+   der öffentlichen Signatur eines Moduls hinzu.\\
+   \verb|PUBLIC DATA T = C| \quad exportiert den Konstruktor \verb|C : T|.
+   Während der Übersetzung eine Moduls \verb|code.sl| wird nicht nur eine
+   \verb|code.js|, sondern auch eine \verb|code.signature| mit den
+   Signaturinformationen angelegt. 
+ \item[Import von Modulen] Module können importiert mittels \verb|IMPORT|
+   werden. \\
+   \verb|IMPORT "code" AS M| \quad macht die exportierten Definitionen aus
+   \verb|code.sl| unter dem lokalen Modulbezeichner \verb|M| verfügbar. 
+ \item[Qualifizierte Bezeichner] In Ausdrücken, Pattern und Typausdrücken
+   können importierte Bezeichner vorkommen, beispielsweise so:\\
+   \verb|FUN g : M.T -> Int|\\
+   \verb|DEF g M.C = M.f 23|
+ \item[Externe Definitionen] Mithilfe von \verb|EXTERN| lassen sich
+   Funktionsdefinitionen als JavaScript angeben.\\
+   \verb|FUN myCast : String -> Int|\\
+   \verb.DEF EXTERN myCast = {| parseInt |}.\\
+   In diesem Code wird \verb|myCast| durch JavaScripts \verb|parseInt|
+   definiert. Allerdings: \verb|EXTERN| ist nicht zur Verwendung in normalen
+   Modulen vorgesehen, sondern soll nur in der Definition von Bibliotheken
+   zum Einsatz kommen. Aus einer \verb|EXTERN|-Definition sollte auch nicht
+   auf andere Definitionen des Moduls zugegriffen werden.
+ \item[Externe Datentypen] Durch die externen Definitionen werden häufig
+   auch ,,externe`` Datentypen notwendig.\\
+   \verb|DATA EXTERN Node| \quad definiert einen Typ ohne Konstruktoren.
+   Die Programmiererin hat dafür Sorge zu tragen, dass dadurch nicht
+   versehentlich leere Typen entstehen.
+ \item[Import von JavaScript-Code] Zum Zusammenspiel mit \verb|DEF EXTERN|
+   gibt es auch noch die Möglichkeit, JavaScript-Code in ein Modul
+   einzubinden.\\
+   \verb|IMPORT EXTERN "_code"| \quad zum Beispiel bindet die Datei
+   \verb|_code.js| direkt mit in das Compilat mit ein.
 \end{description}
-
-Für die neuen Konstrukte besprechen wir die Syntax genauer in Abschnitt~\ref{sec:syntax},
-die semantische Analyse in Abschnitt~\ref{sec:semantics} und die
-Codegenerierung in Abschnitt~\ref{sec:codegen}.
 
 Darüber hinaus widmeten wir uns auch noch weiteren Themen:
 
 \begin{description}
- \item[Syntaxanpassungen] blubb
- \item[Compilationdriver] blubb
- \item[Fehlermeldungen] blubb
- \item[Prelude] blubb
- \item[Libraries] blubb
- \item[Beispielprogramme] blubb
- \item[Tests] blubb
+ \item[Syntaxanpassungen] Einige Details wie Inkonsistenzen zwischen den
+   bestehenden Parsern und die implizite Klammerung bei Typausdrücken
+   Zum Beispiel \verb|Dat a -> b| wird jetzt als \verb|(Dat a) -> b| und
+   nicht mehr als \verb|Dat (a->b)| gelesen.
+   (Siehe Abschnitt~\ref{sec:syntaxAdjustments})
+ \item[Compilationdriver] Das Ergebnis des SL-Compilers wird nicht mehr
+   nach Stdout geschrieben, sondern in Dateien abgelegt. Dabei werden auch
+   transitive Abhängigkeiten aufgelöst und notwendige zusätzliche Dateien
+   mit angelegt. (Siehe Abschnitt~\ref{sec:compBuild})
+ \item[Fehlermeldungen] Fehlermeldungen von syntaktischer und semantischer
+   Analyse sowie Modulauflösung enthalten jetzt für gewöhnlich auch Angaben
+   zum Ort des Fehlers. Viele Fehlermeldungen sind etwas präziser geworden,
+   auch wenn sie immer noch mäßig hilfreich beim produktiven Einsatz ohne
+   tiefere Compilerkenntnisse sein dürften.
+   (Siehe Abschnitt~\ref{sec:errors})
+ \item[Prelude] Die vormals hart in den SL-Übersetzer eingebauten grundlegenden
+   Funktionen werden jetzt aus einem Modul importiert.
+   (Siehe Abschnitt~\ref{sec:libsPrelude})\\
+   Prelude wird durch jedes SL-Programm implizit unqualifiziert importiert.
+   Unqualifizierte Imports, die nicht das Prelude betreffen, haben wir nicht
+   vorgesehen und aktuell würden sie auch Probleme bei der Typprüfung
+   verursachen.
+ \item[Bibliotheken] Wir haben einige simple Bibliotheken für \verb|List|,
+   \verb|Option|, \verb|Either|, \verb|Real|, \verb|Dict|, println-Debugging
+   und Webentwicklung geschrieben. Diese stehen in mannigfaltiger Abhängigkeit
+   voneinander und versuchen vielseitig Gebrauch von den neuen Features zu
+   machen.
+   (Siehe Abschnitt~\ref{sec:libs})
+ \item[Beispielprogramme] Zusätzlich zu den Bibliotheken programmierten wir
+   einige ausführbare SL-Programme, die auf den Bibliotheken aufbauen.
+   (Siehe Abschnitt~\ref{sec:samples})
+ \item[Tests] Für viele der neuen Features schrieben wir auch Unit-Tests.
+   Der Großteil unserer Arbeit an dieser Front floss jedoch darein, die alten
+   Unit-Tests an die neuen Features anzupassen.
+   (Siehe Abschnitt~\ref{sec:samples})
 \end{description}
 
 \section{Syntax und Parser}\label{sec:syntax}
@@ -103,6 +161,9 @@ Darüber hinaus widmeten wir uns auch noch weiteren Themen:
 \TODO{Fritz: Syntaxanpassungen, Schwierigkeiten, Designentscheidungen}
 
 \subsection{Qualifizierte Bezeichner}
+
+\subsection{Weitere Anpassungen der bestehenden Grammatik}
+\label{sec:syntaxAdjustments}
 
 \subsection{Grammatik}
 
@@ -228,7 +289,12 @@ gespeichert sind}
 \subsection{Externe Definitionen}
 \TODO{Das ist wohl eher für Ben...}
 
+\section{Fehlermeldungen}
+\label{sec:errors}
+\TODO{Fritz}
+
 \section{Prelude und Bibliotheken}
+\label{sec:libs}
 
 Einerseits zur Erweiterung des ursprünglichen Funktionsumfangs, andererseits
 vor allem zum Testen des neuen Modulsystems, haben wir eine Reihe grundlegender
@@ -238,7 +304,8 @@ Besonderheiten bei ihrer Verwendung des Modulsystems und neuer Sprachfeatures
 ansprechen. Die vollständigen Module inklusive Implementierung finden sich
 in \verb|/src/main/resources/lib/|.
 
-\subsection{Prelude und Libraries}
+\subsection{Prelude}
+\label{sec:libsPrelude}
 
 Fast alle vormals fest in den Compiler eingebauten Funktionen und Konstruktoren
 werden jetzt durch ein eigenes, umfangreicheres Prelude-Modul definiert.
@@ -463,10 +530,8 @@ Das Prelude als echtes Modul umzusetzen, gestaltet auch den Compiler
 Funktionen innerhalb der Sprache und führen kein Eigenleben in Checks und
 Codegenerierung mehr.
 
-\section{Beispielprogramme}
-
-\section{Fehlermeldungen}
-\TODO{Fritz}
+\section{Beispielprogramme und Tests}
+\label{sec:samples}
 
 \section{Zusammenfassung}
 
