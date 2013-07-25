@@ -285,7 +285,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
   private def opRegex: Parser[String] = not(eqRegex) ~> """[!§%&/=\?\+\*#\-\<\>|]+""".r ^^ { case s: String => s }
   private def eqRegex: Parser[String] = """=(?![!§%&/=\?\+\*#\-:\<\>|])""".r ^^ { case s: String => s }
   private def keyword: Parser[String] = keywords.mkString("", "|", "").r
-  private def jsRegex = jsOpenLex ~> """(?:(?!\|\}).|\n)*""".r <~ jsCloseLex ^^ { case s: String => s }
+  private def jsRegex = jsOpenLex ~> """(?:(?!\|\}).|\n|\r)*""".r <~ jsCloseLex ^^ { case s: String => s }
   private def anyToken = keyword | consRegex | varRegex | eqRegex | jsOpenLex | jsCloseLex | """^[ \t\n]""".r
 
   //Qualified things
