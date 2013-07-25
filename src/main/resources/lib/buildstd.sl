@@ -2,7 +2,7 @@
 -- this is no "real" module.
 -- it's only here to make compiling all of std easier.
 
-IMPORT "prelude"  AS M00
+-- IMPORT "prelude"  AS M00  -- must still be built from hand!
 IMPORT "basicweb" AS M01
 IMPORT "debuglog" AS M02
 IMPORT "dict"     AS M03

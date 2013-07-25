@@ -50,7 +50,9 @@ trait ModuleResolverImpl extends ModuleResolver {
      *   module ::= [:alnum:-_]+
      */
     def validatePath(imp : Import) : Either[Error, Unit] = {
-      if (imp.path.matches("/?([a-zA-Z0-9-_.]+/)*[a-zA-Z0-9-_]+"))
+      if (imp.path.equals("prelude") || imp.path.equals("std/prelude"))
+    	return Left(ImportError("Prelude must not be imported explicitly.", imp.attribute))
+      else if (imp.path.matches("/?([a-zA-Z0-9-_.]+/)*[a-zA-Z0-9-_]+"))
         return Right()
       else
         return Left(InvalidPathError(imp.path, imp.attribute))
