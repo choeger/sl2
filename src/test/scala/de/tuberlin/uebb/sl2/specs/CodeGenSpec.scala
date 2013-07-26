@@ -109,11 +109,17 @@ trait CodeGenSpec
       		"   fun(require, modules[nextModule], null)\n" +
       		"};\n"
       val interlude1 = "nextModule=\"std/prelude.sl\";\n"
-      val prelude = Source.fromFile(new File(getClass().getResource("/lib/prelude.sl.js").toURI())).getLines.mkString("\n")
+      val preludeURL = getClass().getResource("/lib/prelude.sl.js")
+      if(preludeURL == null) throw new TestFailedException("Test resource /lib/prelude.sl.js not found", 0)
+      val prelude = Source.fromFile(new File(preludeURL.toURI())).getLines.mkString("\n")
       val interlude2 = """nextModule="std/option.sl";"""
-      val option = Source.fromFile(new File(getClass().getResource("/lib/option.sl.js").toURI())).getLines.mkString("\n")
+      val optionURL = getClass().getResource("/lib/option.sl.js")
+      if(optionURL == null) throw new TestFailedException("Test resource /lib/option.sl.js not found", 0)
+      val option = Source.fromFile(new File(optionURL.toURI())).getLines.mkString("\n")
       val interlude3 = """nextModule="std/list.sl";"""
-      val lib = Source.fromFile(new File(getClass().getResource("/lib/list.sl.js").toURI())).getLines.mkString("\n")
+      val listURL = getClass().getResource("/lib/list.sl.js")
+      if(listURL == null) throw new TestFailedException("Test resource /lib/list.sl.js not found", 0)
+      val lib = Source.fromFile(new File(listURL.toURI())).getLines.mkString("\n")
       val conf = Main.defaultConfig
       val js = Main.compileSL(str, conf)
       val interlude4 = "nextModule=\"test\";\n"
@@ -261,7 +267,7 @@ trait CodeGenSpec
     it("Should compile mutually recursive even and odd function") {
       ("""DEF even n = IF n == 0 THEN True ELSE odd (n-1)  
          |DEF odd n = IF n == 1 THEN True ELSE even (n-1)
-         |PUBLIC FUN test: a
+         |PUBLIC FUN test: Void Int
          |DEF test = even 22""".compiled.evaluated) should equal("true".evaluated)
     }
 
