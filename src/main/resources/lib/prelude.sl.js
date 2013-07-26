@@ -1,5 +1,5 @@
 /***********************************/
-// included from: /home/fpz/code/sl2/target/scala-2.10/classes/lib/_prelude.js
+// included from: C:\Users\monochromata\git\sl2\target\scala-2.10\classes\lib\_prelude.js
 /***********************************/
 /*
  * This basic module is necessary as an import to every SL
@@ -143,7 +143,7 @@ function _bindnr(l) {
 }
 /***********************************/
 /***********************************/
-// generated from: prelude.sl
+// generated from: prelude
 /***********************************/
 define(function(require, exports, module) {
     
