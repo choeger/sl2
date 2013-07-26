@@ -13,7 +13,7 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
     val f : PartialFunction[Any, Any] = {
       case Syntax.Var(ide, "") => {Syntax.Var(ide, declarations.getOrElse(ide, Syntax.LocalMod))}
       case Syntax.ConVar(ide, "") => {Syntax.ConVar(ide, declarations.getOrElse(ide, Syntax.LocalMod))}
-      case tv: TConVar => {tv}
+      case tv: Syntax.TConVar => {tv}
     }
     map(f, program)
   }
