@@ -14,10 +14,18 @@
 % grammar.
 \DeclareTextSymbol{\BackslashTT}{T1}{"5C}
 
+% needed to have a table of contents with llncs...
+\setcounter{tocdepth}{2}
+\makeatletter
+\renewcommand*\l@author[2]{}
+\renewcommand*\l@title[2]{}
+\makeatletter
+
+
 \author{Benjamin Bisping, Rico Jasper, Sebastian Lohmeier,
 	Friedrich Moritz Psiorz}
-\title{Projektbericht: Erweiterung von SL um ein Modulsystem}
-\institute{Compilerbauprojekt SoSe 2013, Technische Universität Berlin}
+\title{Projektbericht: \textbf{Erweiterung von SL um ein Modulsystem}}
+\institute{Compilerbauprojekt SoSe 2013\\Technische Universität Berlin}
 
 \newcommand{\verbatiminput}[2][]{%
   \lstinputlisting[basewidth=0.5em,
@@ -64,6 +72,12 @@
 
 \maketitle
 
+\begin{abstract}
+Worum geht es hier?
+\end{abstract}
+
+\let\clearpage\relax
+\tableofcontents
 
 \section{Einleitung}
 
