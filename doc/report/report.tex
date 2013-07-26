@@ -212,21 +212,16 @@ Wir möchten verbieten, dass ein Modul mehrfach vom lokalen Modul importiert wir
 Zum Beispiel ist folgende Importliste nicht erlaubt, da hier zwei Mal derselbe Modulbezeichner ,,\verb|Duplicate|`` verwendet wird:
 
 \begin{verbatim}
-IMPORT "my/path/moduleA"    AS Duplicate
-IMPORT "other/path/moduleB" AS Duplicate
-IMPORT "my/path/moduleC"    AS Innocent
+IMPORT "my/path/module-a"    AS Duplicate
+IMPORT "other/path/module-b" AS Duplicate
+IMPORT "my/path/module-v"    AS Innocent
 \end{verbatim}
 
-Unsere Annahme, dass Module eindeutig über den Pfad identifiziert werden, kann in einigen Fällen jedoch unzureichend sein:
-
-\begin{verbatim}
-IMPORT "my/path/moduleA"         AS A1
-IMPORT "my/path/../path/moduleA" AS A2
-\end{verbatim}
+Unsere Annahme, dass Module eindeutig über den Pfad identifiziert werden, kann in einigen Fällen jedoch unzureichend sein. Dies betrifft die Groß- und Kleinschreibung auf Windowssystemen sowie die Verwendung von ,,.`` und ,,..``. Daher verbieten wir die Verwendung von Punkten und Großbuchstaben.
 
 Neben dem regulären Import existiert auch noch der unqualifizierte Import. Dieser ist für den Programmierer unzugänglich. Er dient zum Einbinden des Preludes, sodass Funktionen wie Addition auch ohne Modulbezeichner verwendet werden können. Der unqualifizierte Import ist von der Prüfung von doppelten Modulbezeichnern ausgeschlossen, jedoch nicht von Tests auf Pfade
 
-Laut unserer Grammatik \TODO{tolle grammatik oder verweis zur grammatik} wird der Pfad zu einem externen Modul als String definiert. Der Parser akzeptiert daher jede Art von gültigen Strings. Deshalb muss an dieser Stelle die Pfadsyntax überprüft werden. Grammatik \ref{grm:importpath} zeigt die Produktionsregeln für Pfade. Erlaubt sind relative Pfade bestehend aus beliebig vielen Verzeichnissen und dem Moduldateinamen am Ende. Als Trennungssymbol dient das Schrägstrichsymbol ,/`. Verzeichnisse dürfen Buchstaben, Zahlen, Minussymbole, Unterstriche und Punkte enthalten. Dies gilt auch für das Modul mit Ausnahme von Punkten. Der Modulname entspricht dem Dateinamen der Quelldatei ohne Endung ,,.sl``.
+Laut unserer Grammatik \TODO{tolle grammatik oder verweis zur grammatik} wird der Pfad zu einem externen Modul als String definiert. Der Parser akzeptiert daher jede Art von gültigen Strings. Deshalb muss an dieser Stelle die Pfadsyntax überprüft werden. Grammatik \ref{grm:importpath} zeigt die Produktionsregeln für Pfade. Erlaubt sind relative Pfade bestehend aus beliebig vielen Verzeichnissen und dem Moduldateinamen am Ende. Als Trennungssymbol dient das Schrägstrichsymbol ,/`. Verzeichnisse und Module dürfen Kleinbuchstaben, Zahlen, Minussymbole und Unterstriche enthalten. Der Modulname entspricht dem Dateinamen der Quelldatei ohne Endung ,,.sl``.
 
 \begin{grammarfigure}[grm:importpath]{Gültige Importpfade}
   <Path>   ::= (<Dir> '/')* <Module>
@@ -260,10 +255,7 @@ IMPORT "d.i.r/module-g"          AS G
 
 \subsubsection{Laden der Signatur}
 
-Falls die Importe korrekt sind, werden die dazugehörigen Moduldateien geladen. Ein Modul liegt dabei immer in zwei Dateien vor: Die Signatur (,,*.signatur``) und die in JavaScript übersetzte Implementierung  (,,*.js``). Können nicht alle benötigten Dateien gefunden werden, so kann der Kompiliervorgang nicht fortgesetzt werden.
-
-\TODO{Suchpfade?}
-\TODO{std resource?}
+Falls die Importe korrekt sind, werden die dazugehörigen Moduldateien geladen. Ein Modul liegt dabei immer in zwei Dateien vor: Die Signatur (,,*.signatur``) und die in JavaScript übersetzte Implementierung  (,,*.js``). Können nicht alle benötigten Dateien gefunden werden, so kann der Kompiliervorgang nicht fortgesetzt werden. Die Suche der Dateien erfolgt relativ zum Klassenpfad, Zielverzeichnis, \TODO{mainUnit?} und aktuellen Verzeichnis.
 
 Die Signatur-Datei enthält einen Teil des abstrakten Syntaxbaums des zu importierenden Moduls. Datentypdefinitionen und Funktionssignaturen sind hier in einer serialisierten Form abgespeichert. Das Format dieser Datei wird in Abschnitt \ref{sec:compSig} beschrieben.
 
@@ -343,9 +335,9 @@ Das Modul Option ist C unbekannt. Es kann also keine Funktionen oder Typen aus d
 
 Vor dem eigentlichen Type-Checking werden die Datentyp- und Funktionsdefinitionen überprüft. Einige der Tests mussten erweitert werden, um auch importierte Definitionen berücksichtigen zu können.
 
-\TODO{unqualified TypeConsDisjoint, DataConsDisjoint}
-
 Im Falle der Datentypdefinitionen gibt es die zwei Tests, \verb|checkNoUndefinedTypeCons| und \verb|checkTypeConsApp|, welche auch den Kontext von Importen beachten müssen. \verb|checkNoUndefinedTypeCons| überprüft ob die im Programm verwendeten Konstruktoren existieren. Bisher war dies auf den lokalen Kontext beschränkt. Da jedoch auch Konstruktoren aus anderen Modulen verwendet werden können sollen, werden jene zu der Menge der bekannten Konstruktoren hinzugefügt. Aus demselben Grund musste auch \verb|checkTypeConsApp| erweitert werden. Diese Funktion testet, ob genügend Parameter für einen Konstruktor angegeben wurden.
+
+Da Datendefinitionen von unqualifizierten Importen Probleme verursachen können, müssen diese in weiteren Tests betrachtet werden. Typbezeichner und Konstruktoren dürfen nicht mit lokalen Definitionen in Konflikt geraten. Deshalb werden jene importierten Datendefinitionen in den Tests \verb|checkTypeConsDisjoint| und \verb|unqualifiedImportedDataDefs| ebenfalls betrachtet
 
 Für den Type-Check ist es notwendig den initialen Kontext um den Modulkontext zu erweitern. Dazu muss der Modulkontext zunächst gebildet werden. Dies geschieht auf ähnliche Weise, wie auch der Kontext des lokalen Moduls aufgebaut wird. Alle Konstruktoren der Module erhalten ein Typschema und werden zusammen mit den Funktionen dem Kontext hinzugefügt.
 
