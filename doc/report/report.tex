@@ -160,6 +160,23 @@ Darüber hinaus widmeten wir uns auch noch weiteren Themen:
 \section{Syntax und Parser}\label{sec:syntax}
 
 \TODO{Fritz: Syntaxanpassungen, Schwierigkeiten, Designentscheidungen}
+\subsection{Syntaxanpassungen}
+
+\subsubsection{Operatoren}
+
+In der ursprünglichen Version von SL wurde unterschieden zwischen
+eingebauten und selbst definierten Operatoren. Einige der vorgegebenen
+definierten Operatoren hatten überdies Namen, die für selbst
+definierte Operatoren nicht erlaubt wären, nämlich \verb|+s| für die
+String-Konkatenation sowie die Gleitkommaoperatoren \verb|+r|,
+\verb|-r|, \verb|*r| und \verb|/r|. Außerdem war ein unäres Minus
+sowohl auf Gleitkomma- als auch auf Ganzzahlen definiert, was in der
+Sprache dahingehend einzigartig war, dass es ansonsten weder unäre
+Operatoren gibt, noch überladene Funktionen/Operatoren, noch
+Bezeichner, die je nach Position (präfix oder infix) eine
+unterschidliche Funktion bezeichnen, wie in diesem Fall das
+Minuszeichen einerseits die Negation auf Gleitkomma- und Ganzzahlen
+und andererseits die Subtraktion von Ganzzahlen bezeichnete.
 
 \subsection{Qualifizierte Bezeichner}
 
