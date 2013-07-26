@@ -421,7 +421,9 @@ die den Aufruf der main-Funktion in node.js und im Browser erlauben
 (siehe Abschnitt \ref{sec:compBuild}).
 
 \TODO{Ausführung des Codes in (unterstützem) Browser und node.js,
-Voraussetzungen dafür}
+Voraussetzungen dafür (require.js muss ggf. im node.js installiert werden)}
+\TODO{Re-Kompilierung der Standardbibliothek: erst prelude.sl, dann buildstd.sl}
+\TODO{Anpassung der Pfade zur Standardbibliothek in main.js}
 
 \subsection{Signaturen}
 \label{sec:compSig}
@@ -431,10 +433,10 @@ Voraussetzungen dafür}
 \label{sec:compReq}
 
 Um die Module zur Laufzeit in JavaScript zu laden, wurde
-require.js\footnote{http://requirejs.org/ v. 2.1.6 \TODO{updaten auf 2.1.8}}
+require.js\footnote{http://requirejs.org/ v. 2.1.6}
 statt CommonJS\footnote{http://www.commonjs.org/} ausgewählt, da es im
-Gegensatz zum Modulsystem von node.js auch im Browser verfügbar ist,
-jedoch auch in node.js genutzt werden kann\TODO{naja, das stimmt noch nicht ganz}.
+Gegensatz zum Modulsystem von node.js auch ohne Umwege sowohl im Browser
+als auch in node.js verfügbar ist.
 
 In node.js stehen zwei Wege zur Verfügung, um Abhängigkeiten zwischen
 Modulen zu deklarieren und zur Laufzeit aufzulösen, siehe Listings
