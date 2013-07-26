@@ -144,9 +144,14 @@ trait ModuleResolverImpl extends ModuleResolver {
   }
 
   def findImportResource(path: String, attr: Attribute): Either[Error, File] = {
-    val files = List(new File(getClass().getResource("/lib/"+path).toURI()))
-    files.find(_.canRead()).toRight(
-      ImportError("Could not find resource " + quote(path)+ " at " + files.map(_.getCanonicalPath()).mkString("\n\t\t\t\tor "), attr))
+    val url = getClass().getResource("/lib/"+path);
+    if(url == null) {
+    	Left(ImportError("Could not find resource " + quote("/lib/"+path), attr))
+    } else {
+	    val files = List(new File(url.toURI()))
+	    files.find(_.canRead()).toRight(
+	      ImportError("Could not find resource " + quote(path)+ " at " + files.map(_.getCanonicalPath()).mkString("\n\t\t\t\tor "), attr))
+    }
   }
   
   def findImport(config: Config, path: String, attr: Attribute): Either[Error, File] = {

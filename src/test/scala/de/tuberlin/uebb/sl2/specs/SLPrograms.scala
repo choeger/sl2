@@ -44,37 +44,39 @@ trait SLPrograms {
   """.stripMargin
 
   val concat = """
-  |DEF xs        +++ Nil = xs
-  |DEF Nil       +++ xs  = xs
-  |DEF (Cons x xs) +++ ys  = Cons x (xs +++ ys)
+  |DEF xs            +++ L.Nil = xs
+  |DEF L.Nil         +++ xs  = xs
+  |DEF (L.Cons x xs) +++ ys  = L.Cons x (xs +++ ys)
     """.stripMargin
 
 
-  val range = "DEF range n = IF n <= 0 THEN Cons 0 Nil ELSE Cons n (range (n - 1))"
+  val range = """
+  |IMPORT "std/List" AS L
+  |DEF range n = IF n <= 0 THEN L.Cons 0 L.Nil ELSE L.Cons n (range (n - 1))"""
 
   
   val filter = """
-  |DEF filter (Nil)       p = Nil
-  |DEF filter (Cons x xs) p = IF p x THEN Cons x (filter xs p) ELSE filter xs p
+  |DEF filter (L.Nil)       p = L.Nil
+  |DEF filter (L.Cons x xs) p = IF p x THEN L.Cons x (filter xs p) ELSE filter xs p
   |
   |DEF filterNot xs p = filter xs (\ x . not (p x))
   """.stripMargin
 
 
   val reverse = """
-  |DEF reverse Nil = Nil
-  |DEF reverse xs  = reverseHelper Nil xs
+  |DEF reverse L.Nil = L.Nil
+  |DEF reverse xs  = reverseHelper L.Nil xs
   |
-  |DEF reverseHelper r Nil       = r
-  |DEF reverseHelper r (Cons x xs) = reverseHelper (Cons x r) xs
+  |DEF reverseHelper r L.Nil         = r
+  |DEF reverseHelper r (L.Cons x xs) = reverseHelper (L.Cons x r) xs
   """.stripMargin
 
 
   val sort = range + concat + filter + reverse + """
-  |DEF quicksort Nil        = Nil
-  |DEF quicksort (Cons x Nil) = Cons x Nil
-  |DEF quicksort (Cons x xs) = LET lessThanX = \ y . y < x
-  |                          IN (filter xs lessThanX) +++ (Cons x (filterNot xs lessThanX))
+  |DEF quicksort L.Nil            = L.Nil
+  |DEF quicksort (L.Cons x L.Nil) = L.Cons x L.Nil
+  |DEF quicksort (L.Cons x xs)    = LET lessThanX = \ y . y < x
+  |                                 IN (filter xs lessThanX) +++ (L.Cons x (filterNot xs lessThanX))
   """.stripMargin
 
 
@@ -104,11 +106,12 @@ trait SLPrograms {
 
 
   val lambdaPatterns = """
-  | DEF f = (\ (Cons a b) (Cons x (Cons Nil Nil)) y True . a / y)
+  | IMPORT "std/List" AS L
+  | DEF f = (\ (L.Cons a b) (L.Cons x (L.Cons L.Nil L.Nil)) y True . a / y)
   |         (LET first = 1593
-  |  	         rest  = Cons 1 Nil
-  |          IN Cons first rest)
-  |         (Cons Nil (Cons Nil Nil))
+  |  	         rest  = L.Cons 1 L.Nil
+  |          IN L.Cons first rest)
+  |         (L.Cons L.Nil (L.Cons L.Nil L.Nil))
   |         (LET a = -9 IN a / 3)
   |         True
   """.stripMargin
@@ -138,7 +141,8 @@ trait SLPrograms {
 
 
   val shadowedPatternVar = """
-  | DEF f (Cons b a) v = LET g = \ a . a + v
+  | IMPORT "std/List" AS L
+  | DEF f (L.Cons b a) v = LET g = \ a . a + v
   |                      IN g b
   """.stripMargin
 
@@ -160,21 +164,23 @@ trait SLPrograms {
 
 
   val partialApplication = """
+  | IMPORT "std/List" AS L
   | DEF f a b = a + b
   |
-  | DEF g a = Cons (\x . f x a) Nil
+  | DEF g a = L.Cons (\x . f x a) L.Nil
   |
-  | DEF first (Cons a b) = a
-  | DEF rest (Cons a b) = b
+  | DEF first (L.Cons a b) = a
+  | DEF rest (L.Cons a b) = b
   |
   | DEF call a c = (first c) a
   """.stripMargin
 
 
   val lateMatch = """
-  | DEF f (Cons a b) x (Cons c d) = 1
-  | DEF f z          x (Cons f g) = 2
-  | DEF f y          x Nil        = 3
+  | IMPORT "std/List" AS L
+  | DEF f (L.Cons a b) x (L.Cons c d) = 1
+  | DEF f z            x (L.Cons f g) = 2
+  | DEF f y            x L.Nil        = 3
   """.stripMargin
 
   val mixedPatterns = """

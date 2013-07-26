@@ -2,6 +2,8 @@ package de.tuberlin.uebb.sl2.modules
 
 import de.tuberlin.uebb.sl2.modules._
 import java.io.File
+import java.io.IOException
+import java.net.URL
 
 /**
  * Sort the nodes in a given set of edges topologically.
@@ -26,9 +28,12 @@ trait TopologicalSorting
       if(name.startsWith("std/")) {
           // load std/ library from resources directory
           this.name = name.replace("std/", "")
-          this.sourceFile = new File(getClass().getResource("/lib/"+this.name+".sl").toURI())
-          this.signatureFile = new File(getClass().getResource("/lib/"+this.name+".sl.signature").toURI())
-          this.jsFile = new File(getClass().getResource("/lib/"+this.name+".sl.js").toURI())
+          val stdSource = getClass().getResource("/lib/"+this.name+".sl")
+          if(stdSource == null)
+            throw new IOException("Could not find source of standard library: "+quote("/lib/"+name))
+          this.sourceFile = new File(stdSource.toURI())
+          this.signatureFile = new File(new URL(stdSource.toString+".signature").toURI())
+          this.jsFile = new File(new URL(stdSource.toString+".js").toURI())
       } else {
           // load ordinary files relative to source- and classpath
           this.sourceFile = new File(config.sourcepath, name+".sl")

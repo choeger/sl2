@@ -98,9 +98,6 @@ trait CodeGenSpec
   implicit class slString(val s: String) {
 
     def compiled() = {
-      //val exp = parseExpr(str).right.get
-      //val js = expToJs(exp, "tmp") & JsName("tmp")
-      // TODO: add define() function
       val str = s.stripMargin
       val defineSrc = "var modules = {};\n" +
       		"var nextModule = '';\n" +
@@ -111,54 +108,29 @@ trait CodeGenSpec
       		"   modules[nextModule] = {}\n" +
       		"   fun(require, modules[nextModule], null)\n" +
       		"};\n"
-      // TODO: add compiled prelude
       val interlude1 = "nextModule=\"std/prelude.sl\";\n"
-      //val prelude = "modules[nextModule] = {$True: true, $False : false};\n"
       val prelude = Source.fromFile(new File(getClass().getResource("/lib/prelude.sl.js").toURI())).getLines.mkString("\n")
-      // TODO: add compiled source in main/template, invocation of main
+      val interlude2 = """nextModule="std/Option.sl";"""
+      val option = Source.fromFile(new File(getClass().getResource("/lib/option.sl.js").toURI())).getLines.mkString("\n")
+      val interlude3 = """nextModule="std/List.sl";"""
+      val lib = Source.fromFile(new File(getClass().getResource("/lib/list.sl.js").toURI())).getLines.mkString("\n")
       val conf = Main.defaultConfig
-      // println("sl="+str)
       val js = Main.compileSL(str, conf)
-      //for(jss <- "/*test code*/\n%s".format(defineSrc + interlude1 + prelude + interlude2 + js.right + testInvocation)) yield jss
-      val interlude2 = "nextModule=\"test\";\n"
-      /*val js = "define(function(require, exports, module) {"+
-    "var $$std$prelude = require(\"std/prelude.sl\")"+
-"; ; var $test = function () { var $test = true;"+
-"	return $test }(); ; exports.$test = $test"+
-"});"
+      val interlude4 = "nextModule=\"test\";\n"
       val testInvocation = "modules.test.$test"
-	  println(defineSrc + interlude2 + js + testInvocation)*/
-      val testInvocation = "modules.test.$test"
-      //println(defineSrc + interlude1 + prelude + interlude2 + js.right.get + testInvocation)
       if(js.isLeft) {
     	  throw new TestFailedException("ERROR: "+js.left.get.toString+"while compiling: "+str+"\n", 0)
     	  "" // will lead to an EvaluatorException
       } else {
-	      val result = (defineSrc + interlude1 + prelude + interlude2 + js.right.get + testInvocation + "\n")
-	      //println(result)
-	      result
+	      (defineSrc +
+	          interlude1 + prelude +
+	          interlude2 + option +
+	          interlude3 + lib +
+	          interlude4 + js.right.get + testInvocation + "\n")
       }
-      /*"var modules = {};\n"+
-"var nextModule = '';\n"+
-"var require = function(module) {\n"+
-"        return modules[module]\n"+
-"};\n"+
-"define = function(fun) {\n"+
-"        modules[nextModule] = {}\n"+
-"        fun(require, modules[nextModule], null)\n"+
-"};\n"+
-"nextModule=\"std/prelude.sl\";\n"+
-"modules[nextModule] = {$True: true};\n"+
-"nextModule=\"test\";\n"+
-"define(function(require, exports, module) {\n"+
-"    var $$std$prelude = require(\"std/prelude.sl\")\n"+
-" \n"+
-"; ; var $test = function () { var $test = $$std$prelude.$True; return $test }(); ; exports.$test = $test\n"+
-"});modules.test.$test"*/
     }
 
     def compileProgramAndExpr(expr: String) = {
-//            println(str+"\n"+parseAst(preludeSl + str))
       val ast = parseAst(s).right.get
 
       val astJs = astToJs(ast)
@@ -261,10 +233,11 @@ trait CodeGenSpec
     }
 
     it("Should compile the head and tail function correctly") {
-      ("""DEF head (Cons x xs) = x
-         |DEF tail (Cons x xs) = xs
+      ("""IMPORT "std/List" AS L
+         |DEF head (L.Cons x xs) = x
+         |DEF tail (L.Cons x xs) = xs
          |PUBLIC FUN test: Int
-         |DEF test = head (tail (Cons 2 (Cons 1 Nil)))""".compiled.evaluated) should equal("1".evaluated)
+         |DEF test = head (tail (L.Cons 2 (L.Cons 1 L.Nil)))""".compiled.evaluated) should equal("1".evaluated)
     }
 
     it("Should compile the tree data structure correctly") {
@@ -355,13 +328,14 @@ trait CodeGenSpec
     it("Should compile late matches") {
       (lateMatch+"\n"+
        """PUBLIC FUN test: x
-         |DEF test = f (Cons 1 Nil) 3 Nil""").compiled.evaluated should equal("3".evaluated)
+         |DEF test = f (L.Cons 1 L.Nil) 3 L.Nil""").compiled.evaluated should equal("3".evaluated)
     }
 
     it("Should compile nested matches") {
-      """DEF f (Cons (Cons a b) (Cons d Nil)) = a
+      """IMPORT "std/List" AS L
+        |DEF f (L.Cons (L.Cons a b) (L.Cons d L.Nil)) = a
         |PUBLIC FUN test: x
-        |DEF test = f (Cons (Cons 4 (Cons 5 Nil)) (Cons (Cons 8 Nil) Nil))""".compiled.evaluated should equal("4".evaluated)
+        |DEF test = f (L.Cons (L.Cons 4 (L.Cons 5 L.Nil)) (L.Cons (L.Cons 8 L.Nil) L.Nil))""".compiled.evaluated should equal("4".evaluated)
     }
 
     it("Should compile mixed patterns") {
@@ -380,43 +354,48 @@ trait CodeGenSpec
 
   describe("Compiling list concatenation") {
     it("Should work on the empty lists") {
-      (concat+"\n"+
+      ("""IMPORT "std/List" AS L"""+"\n"+concat+"\n"+
        """PUBLIC FUN test: a
-         |DEF test = Nil +++ Nil""").compiled.evaluated should
-         equal("""PUBLIC FUN test: b
-				 |DEF test = Nil""".compiled.evaluated)
+         |DEF test = L.Nil +++ L.Nil""").compiled.evaluated should
+         equal("""IMPORT "std/List" AS L
+        		 |PUBLIC FUN test: b
+				 |DEF test = L.Nil""".compiled.evaluated)
     }
 
     it("Should work on the singleton list") {
-      (concat+"\n"+
+      ("""IMPORT "std/List" AS L"""+"\n"+concat+"\n"+
        """PUBLIC FUN test: a
-         |DEF test = (Cons 1 Nil) +++ Nil""").compiled.evaluated should
-         equal("""PUBLIC FUN test: b
-				 |DEF test = Cons 1 Nil""".compiled.evaluated)
+         |DEF test = (L.Cons 1 L.Nil) +++ L.Nil""").compiled.evaluated should
+         equal("""IMPORT "std/List" AS L
+        		 |PUBLIC FUN test: b
+				 |DEF test = L.Cons 1 L.Nil""".compiled.evaluated)
     }
 
     it("Should be symmetric on the empty list") {
-      (concat+"\n"+
+      ("""IMPORT "std/List" AS L"""+"\n"+concat+"\n"+
        """PUBLIC FUN test: a
-         |DEF test = Nil +++ (Cons 1 Nil)""").compiled.evaluated should
-         equal("""PUBLIC FUN test: b
-        		 |DEF test = Cons 1 Nil""".compiled.evaluated)
+         |DEF test = L.Nil +++ (L.Cons 1 L.Nil)""").compiled.evaluated should
+         equal("""IMPORT "std/List" AS L
+        		 |PUBLIC FUN test: b
+        		 |DEF test = L.Cons 1 L.Nil""".compiled.evaluated)
     }
 
     it("Should append to the end of the list") {
-      (concat+"\n"+
+      ("""IMPORT "std/List" AS L"""+"\n"+concat+"\n"+
        """PUBLIC FUN test: a
-         |DEF test = (Cons 2 Nil) +++ (Cons 1 Nil)""").compiled.evaluated should
-         equal("""PUBLIC FUN test: b
-        		 |DEF test = Cons 2 (Cons 1 Nil)""".compiled.evaluated)
+         |DEF test = (L.Cons 2 L.Nil) +++ (L.Cons 1 L.Nil)""").compiled.evaluated should
+         equal("""IMPORT "std/List" AS L
+        		 |PUBLIC FUN test: b
+        		 |DEF test = L.Cons 2 (L.Cons 1 L.Nil)""".compiled.evaluated)
     }
 
     it("Should work on slightly larger lists") {
-      (concat+"\n"+
+      ("""IMPORT "std/List" AS L"""+"\n"+concat+"\n"+
        """PUBLIC FUN test: a
-         |DEF test = (Cons 4 (Cons 3 (Cons 2 (Cons 1 Nil)))) +++ (Cons 4 (Cons 3 (Cons 2 (Cons 1 Nil))))""").compiled.evaluated should
-         equal("""PUBLIC FUN test: b
-        		 |DEF test = (Cons 4 (Cons 3 (Cons 2 (Cons 1 (Cons 4 (Cons 3 (Cons 2 (Cons 1 Nil))))))))""".compiled.evaluated)
+         |DEF test = (L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 L.Nil)))) +++ (L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 L.Nil))))""").compiled.evaluated should
+         equal("""IMPORT "std/List" AS L
+        		 |PUBLIC FUN test: b
+        		 |DEF test = (L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 (L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 L.Nil))))))))""".compiled.evaluated)
     }
   }
 
@@ -426,78 +405,87 @@ trait CodeGenSpec
       (range+"\n"+
        """PUBLIC FUN test: a
          |DEF test = range 0""").compiled.evaluated should
-         be ("""PUBLIC FUN test: b
-               |DEF test = Cons 0 Nil""".compiled.evaluated)
+         be ("""IMPORT "std/List" AS L
+        	   |PUBLIC FUN test: b
+               |DEF test = L.Cons 0 L.Nil""".compiled.evaluated)
     }
 
     it("Should work for a smaller list") {
       (range+"\n"+
        """PUBLIC FUN test: a
          |DEF test = range 4""").compiled.evaluated should
-         be ("""PUBLIC FUN test: b
-               |DEF test = Cons 4 (Cons 3 (Cons 2 (Cons 1 (Cons 0 Nil))))""".compiled.evaluated)
+         be ("""IMPORT "std/List" AS L
+        	   |PUBLIC FUN test: b
+               |DEF test = L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 (L.Cons 0 L.Nil))))""".compiled.evaluated)
     }
   }
 
   
   describe("Compiling filter") {
     it("Should work in the empty list") {
-      (filter+"\n"+
+      ("""IMPORT "std/List" AS L"""+"\n"+filter+"\n"+
        """PUBLIC FUN test: a
-         |DEF test = filter Nil (\ x . False)""").compiled.evaluated should
-         equal("""PUBLIC FUN test: b
-                 |DEF test = Nil""".compiled.evaluated)
+         |DEF test = filter L.Nil (\ x . False)""").compiled.evaluated should
+         equal("""IMPORT "std/List" AS L
+        	     |PUBLIC FUN test: b
+                 |DEF test = L.Nil""".compiled.evaluated)
     }
     
     it("Should work on equality") {
-      (filter+"\n"+
+      ("""IMPORT "std/List" AS L"""+"\n"+filter+"\n"+
        """PUBLIC FUN test: a
-         |DEF test = filter (Cons 1 (Cons 2 (Cons 0 Nil))) (\ x . x == 0) """).compiled.evaluated should
-         equal("""PUBLIC FUN test: b
-                 |DEF test = Cons 0 Nil""".compiled.evaluated)
+         |DEF test = filter (L.Cons 1 (L.Cons 2 (L.Cons 0 L.Nil))) (\ x . x == 0) """).compiled.evaluated should
+         equal("""IMPORT "std/List" AS L
+        	     |PUBLIC FUN test: b
+                 |DEF test = L.Cons 0 L.Nil""".compiled.evaluated)
     }
 
     it("Should work on greater-than") {
-      (filter+"\n"+
+      ("""IMPORT "std/List" AS L"""+"\n"+filter+"\n"+
        """PUBLIC FUN test: a
-         |DEF test = filter (Cons 1 (Cons 0 (Cons 2 Nil))) (\ x . x > 0)""").compiled.evaluated should
-         equal("""PUBLIC FUN test: b
-                 |DEF test = Cons 1 (Cons 2 Nil)""".compiled.evaluated)
+         |DEF test = filter (L.Cons 1 (L.Cons 0 (L.Cons 2 L.Nil))) (\ x . x > 0)""").compiled.evaluated should
+         equal("""IMPORT "std/List" AS L
+        	     |PUBLIC FUN test: b
+                 |DEF test = L.Cons 1 (L.Cons 2 L.Nil)""".compiled.evaluated)
     }
   }
 
 
   describe("Compiling reverse") {
     it("Should work on the empty list") {
-      (reverse+"\n"+
+      ("""IMPORT "std/List" AS L"""+"\n"+reverse+"\n"+
        """PUBLIC FUN test: a
-         |DEF test = reverse Nil""").compiled.evaluated should
-         equal("""PUBLIC FUN test: a
-                 |DEF test=Nil""".compiled.evaluated)
+         |DEF test = reverse L.Nil""").compiled.evaluated should
+         equal("""IMPORT "std/List" AS L
+        	     |PUBLIC FUN test: a
+                 |DEF test=L.Nil""".compiled.evaluated)
     }
     
     it("Should work on the singleton list") {
-      (reverse+"\n"+
+      ("""IMPORT "std/List" AS L"""+"\n"+reverse+"\n"+
        """PUBLIC FUN test: a
-         |DEF test = reverse (Cons 1 Nil)""").compiled.evaluated should
-         equal("""PUBLIC FUN test: a
-                 |DEF test=Cons 1 Nil""".compiled.evaluated)
+         |DEF test = reverse (L.Cons 1 L.Nil)""").compiled.evaluated should
+         equal("""IMPORT "std/List" AS L
+        	     |PUBLIC FUN test: a
+                 |DEF test=L.Cons 1 L.Nil""".compiled.evaluated)
     }
 
     it("Should work on a 4-element list") {
-      (reverse+"\n"+
+      ("""IMPORT "std/List" AS L"""+"\n"+reverse+"\n"+
        """PUBLIC FUN test: a
-         |DEF test = reverse (Cons 4 (Cons 3 (Cons 2 (Cons 1 Nil))))""").compiled.evaluated should
-         equal("""PUBLIC FUN test: a
-                 |DEF test=Cons 1 (Cons 2 (Cons 3 (Cons 4 Nil)))""".compiled.evaluated)
+         |DEF test = reverse (L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 L.Nil))))""").compiled.evaluated should
+         equal("""IMPORT "std/List" AS L
+        	     |PUBLIC FUN test: a
+                 |DEF test=L.Cons 1 (L.Cons 2 (L.Cons 3 (L.Cons 4 L.Nil)))""".compiled.evaluated)
     }
 
     it("Should work be it's own inverse") {
-      (reverse+"\n"+
+      ("""IMPORT "std/List" AS L"""+"\n"+reverse+"\n"+
        """PUBLIC FUN test: a
-         |DEF test = reverse (reverse (Cons 4 (Cons 3 (Cons 2 (Cons 1 Nil)))))""").compiled.evaluated should
-         equal("""PUBLIC FUN test: a
-                 |DEF test=Cons 4 (Cons 3 (Cons 2 (Cons 1 Nil)))""".compiled.evaluated)
+         |DEF test = reverse (reverse (L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 L.Nil)))))""").compiled.evaluated should
+         equal("""IMPORT "std/List" AS L
+        	     |PUBLIC FUN test: a
+                 |DEF test=L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 L.Nil)))""".compiled.evaluated)
     }
   }
 
@@ -506,29 +494,55 @@ trait CodeGenSpec
     it("Should work in the empty list") {
       (sort+"\n"+
        """PUBLIC FUN test: a
-         |DEF test = quicksort Nil""").compiled.evaluated should
-         equal("""PUBLIC FUN test: a
-                 |DEF test=Nil""".compiled.evaluated)
+         |DEF test = quicksort L.Nil""").compiled.evaluated should
+         equal("""IMPORT "std/List" AS L
+        	     |PUBLIC FUN test: a
+                 |DEF test=L.Nil""".compiled.evaluated)
     }
 
     it("Should work on the singleton list") {
-      sort.compileProgramAndExpr("""quicksort (Cons 1 Nil)""").evaluated should equal("Cons 1 Nil".compiled.evaluated)
+      (sort+"\n"+
+       """PUBLIC FUN test: a
+         |DEF test = quicksort (L.Cons 1 L.Nil)""").compiled.evaluated should
+         equal("""IMPORT "std/List" AS L
+        	     |PUBLIC FUN test: a
+                 |DEF test=L.Cons 1 L.Nil""".compiled.evaluated)
     }
 
     it("Should work on an ordered list") {
-      sort.compileProgramAndExpr("""quicksort (Cons 1 (Cons 2 (Cons 3 (Cons 4 Nil))))""").evaluated should equal("Cons 1 (Cons 2 (Cons 3 (Cons 4 Nil)))".compiled.evaluated)
+      (sort+"\n"+
+       """PUBLIC FUN test: a
+         |DEF test = quicksort (L.Cons 1 (L.Cons 2 (L.Cons 3 (L.Cons 4 L.Nil))))""").compiled.evaluated should
+         equal("""IMPORT "std/List" AS L
+        	     |PUBLIC FUN test: a
+                 |DEF test=L.Cons 1 (L.Cons 2 (L.Cons 3 (L.Cons 4 L.Nil)))""".compiled.evaluated)
     }
     
     it("Should work on an reverse-ordered list") {
-      sort.compileProgramAndExpr("""quicksort (Cons 4 (Cons 3 (Cons 2 (Cons 1 Nil))))""").evaluated should equal("Cons 1 (Cons 2 (Cons 3 (Cons 4 Nil)))".compiled.evaluated)
+      (sort+"\n"+
+       """PUBLIC FUN test: a
+         |DEF test = quicksort (L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 L.Nil))))""").compiled.evaluated should
+         equal("""IMPORT "std/List" AS L
+        	     |PUBLIC FUN test: a
+                 |DEF test=L.Cons 1 (L.Cons 2 (L.Cons 3 (L.Cons 4 L.Nil)))""".compiled.evaluated)
     }
 
     it("Should work on larger input") {
-      sort.compileProgramAndExpr("quicksort (reverse (range 100))").evaluated should equal(range.compileProgramAndExpr("range 100").evaluated)
+      (sort+"\n"+
+       """PUBLIC FUN test: a
+         |DEF test = quicksort (reverse (range 100))""").compiled.evaluated should
+         equal((range+"""
+                |PUBLIC FUN test: a
+                |DEF test=range 100""").compiled.evaluated)
     }
 
     it("Should work on even larger input") {
-      sort.compileProgramAndExpr("quicksort (reverse (range 1000))").evaluated should equal(range.compileProgramAndExpr("range 1000").evaluated)
+      (sort+"\n"+
+       """PUBLIC FUN test: a
+         |DEF test = quicksort (reverse (range 1000))""").compiled.evaluated should
+         equal((range+"""
+                |PUBLIC FUN test: a
+                |DEF test=range 1000""").compiled.evaluated)
     }
   }
 
@@ -586,7 +600,7 @@ trait CodeGenSpec
     it("Should compile functions with shadowed pattern variables") {
       (shadowedPatternVar+"\n"+
        """PUBLIC FUN test: z
-         |DEF test = f (Cons 1 (Cons 2 Nil)) 10""").compiled.evaluated should equal("11".evaluated)
+         |DEF test = f (L.Cons 1 (L.Cons 2 L.Nil)) 10""").compiled.evaluated should equal("11".evaluated)
     }
 
     it("Should compile functions where pattern variables shadow top-level names") {

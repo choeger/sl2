@@ -33,6 +33,7 @@ import scala.text.Document
 import scala.text.DocText
 import de.tuberlin.uebb.sl2.modules._
 import java.io.File
+import java.io.IOException
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.net.URI;
@@ -122,24 +123,28 @@ trait MultiDriver extends Driver {
    * <li>Otherwise create a module that is not to be compiled.</li>    
    */
   def findModule(importedBy: Module, name: String, config: Config):Either[Error,Module] = {
-    val module = new Module(name, config)
-    if(!module.signatureFile.canRead()) {
-    	// no signature file exists
-    	if(module.sourceFile.canRead()) {
-    		module.compile = true
-    	    Right(module)
-    	} else {
-    		Left(FilesNotFoundError("Module "+name+" imported by "+importedBy.name+" not found: ",
-    				module.sourceFile, module.signatureFile))
-    	}
-    } else if(module.sourceFile.canRead() &&
-              module.sourceFile.lastModified() >= module.signatureFile.lastModified()) {
-    	// a signature file exists, as well as a source file
-        module.compile = true
-        Right(module)
-    } else {
-    	// a signature, but no source file exists: load from signature
-    	Right(module)
+    try {
+	    val module = new Module(name, config)
+	    if(!module.signatureFile.canRead()) {
+	    	// no signature file exists
+	    	if(module.sourceFile.canRead()) {
+	    		module.compile = true
+	    	    Right(module)
+	    	} else {
+	    		Left(FilesNotFoundError("Module "+name+" imported by "+importedBy.name+" not found: ",
+	    				module.sourceFile, module.signatureFile))
+	    	}
+	    } else if(module.sourceFile.canRead() &&
+	              module.sourceFile.lastModified() >= module.signatureFile.lastModified()) {
+	    	// a signature file exists, as well as a source file
+	        module.compile = true
+	        Right(module)
+	    } else {
+	    	// a signature, but no source file exists: load from signature
+	    	Right(module)
+	    }
+    } catch {
+      case ioe: IOException => Left(GenericError(ioe.getMessage()))
     }
   }
   
