@@ -859,17 +859,27 @@ Wir haben eine Reihe kleinerer Testprogramme geschrieben.
  \item[\texttt{koch.sl}] Modifizierte Version des ursprünglichen
    Kochkurvenbeispiels. Verwendet Browseranzeige und \verb|timing|, um eine
    Animation ausgehend von der Kochkurve zu zeichnen.
- \item[\texttt{sub/hello.sl}] Gibt "Hello Moon!" aus und wird von
+ \item[\texttt{sub/hello.sl}] Gibt ,,Hello Moon!'' aus und wird von
    \texttt{moonWorld.sl} verwendet, um das Einbinden verschieden
    qualifizierter Module mit identischem einfachen Namen zu testen.
  \item[\texttt{moonWorld.sl}] Verwendet \texttt{hello.sl} und
    \texttt{sub/hello.sl}, um zu prüfen, ob die beiden Module getrennt
    kompiliert und eingebunden werden.
- \item[\texttt{cycleA.sl} \textnormal{und} \texttt{cycleB.sl}] enhalten eine direkte
-   zyklische Abhängigkeit, um zu testen, ob diese erkannt wird.
+ \item[\texttt{cycleA.sl} \textnormal{und} \texttt{cycleB.sl}] enhalten eine
+   direkte zyklische Abhängigkeit, um zu testen, ob diese erkannt wird. Sie
+   bilden damit ausnahmsweise kein Beispielprogramm, sondern eben ein 
+   Nicht-Programm.
 \end{description}
 
-\section{Zusammenfassung}
+\subsection{Testfälle}
+
+\section{Zusammenfassung und Ausblick}
+
+zyklische Abhängigkeiten
+paketsystem
+bessere distributionsoptionen
+fehlermeldungen
+mehr bibliotheken
 
 \TODO{...}
 
