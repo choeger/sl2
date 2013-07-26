@@ -76,8 +76,10 @@
 Worum geht es hier?
 \end{abstract}
 
+\begingroup
 \let\clearpage\relax
 \tableofcontents
+\endgroup
 
 \section{Einleitung}
 
@@ -233,7 +235,7 @@ IMPORT "my/path/module-v"    AS Innocent
 
 Unsere Annahme, dass Module eindeutig über den Pfad identifiziert werden, kann in einigen Fällen jedoch unzureichend sein. Dies betrifft die Groß- und Kleinschreibung auf Windowssystemen sowie die Verwendung von ,,.`` und ,,..``. Daher verbieten wir die Verwendung von Punkten und Großbuchstaben.
 
-Neben dem regulären Import existiert auch noch der unqualifizierte Import. Dieser ist für den Programmierer unzugänglich. Er dient zum Einbinden des Preludes, sodass Funktionen wie Addition auch ohne Modulbezeichner verwendet werden können. Das Prelude wird implizit von jedem Modul importiert. Der unqualifizierte Import ist von der Prüfung von doppelten Modulbezeichnern ausgeschlossen, jedoch nicht von Tests auf Pfade.
+Neben dem regulären Import existiert auch noch der unqualifizierte Import. Dieser ist für den Programmierer unzugänglich. Er dient zum Einbinden des Preludes, sodass Funktionen wie Addition auch ohne Modulbezeichner verwendet werden können. Der unqualifizierte Import ist von der Prüfung von doppelten Modulbezeichnern ausgeschlossen, jedoch nicht von Tests auf Pfade
 
 Laut unserer Grammatik \TODO{tolle grammatik oder verweis zur grammatik} wird der Pfad zu einem externen Modul als String definiert. Der Parser akzeptiert daher jede Art von gültigen Strings. Deshalb muss an dieser Stelle die Pfadsyntax überprüft werden. Grammatik \ref{grm:importpath} zeigt die Produktionsregeln für Pfade. Erlaubt sind relative Pfade bestehend aus beliebig vielen Verzeichnissen und dem Moduldateinamen am Ende. Als Trennungssymbol dient das Schrägstrichsymbol ,/`. Verzeichnisse und Module dürfen Kleinbuchstaben, Zahlen, Minussymbole und Unterstriche enthalten. Der Modulname entspricht dem Dateinamen der Quelldatei ohne Endung ,,.sl``.
 
@@ -357,46 +359,52 @@ Für den Type-Check ist es notwendig den initialen Kontext um den Modulkontext z
 
 Die lokalen Funktionssignaturen und -definitionen sowie die Signaturen aus den externen Modulen werden genutzt um das Programm in ELC\footnote{Enriched Lambda Calculus} zu übersetzen. Die Übersetzung wird dann zusammen mit dem initialen Kontext inklusive Modulkontext an den Type-Checker übergeben, der weitestgehend unangerührt blieb.
 
-\section{Codegenerierung}\label{sec:codegen}
+\section{Codegenerierung}
+\label{sec:codegen}
 
-\TODO{Sebastian: Beispiele, Schwierigkeiten, Designentscheidungen}
-
-\TODO{Aufruf des Compilers, aus binary und in sbt, durchgehendes Beispiel}
-
-Die Ausführung des generierten JavaScript-Codes wird in
-node.js\footnote{http://nodejs.org/ - getestet mit Version 0.10.10
-(\TODO{aktualisieren auf 0.10.13})},
-Firefox\footnote{\TODO{URL, zum Testen benutzte Version und OS}},
-Chrome\footnote{\TODO{URL, zum Testen benutzte Version und OS}} und
-Internet Explorer\footnote{\TODO{URL, zum Testen benutzte Version und OS}}
-unterstützt.
-
-Bei Aufruf des Compilers mit
-\begin{lstlisting}
-$> <PROGRAMM-NAME> -d <outputDirectory> -cp <classpathDirectory>
-[ -sourcepath <sourceDirectory> ] <moduleFile>
-\end{lstlisting}
-
-werden aus dem \texttt{<classpathDirectory>} die Signatur-Dateien
-bereits kompilierter Module geladen, sowie das angegebene
-\texttt{<moduleFile>} sowie alle von diesem transitiv verwendeten Module,
-die noch nicht kompiliert im \texttt{<outputDirectory>} vorhanden sind
-bzw. deren \TODO{keine Metonymie!} Modifikationsdatum im
-\texttt{<outputDirectory>} vor dem Modifikationdatum der
-SL-Moduldatei im \texttt{<sourceDirectory>} liegt, kompiliert. Dabei
+Der SL2-Compiler generiert Code, der unter node.js\footnote{http://nodejs.org/ - getestet mit Version 0.10.10} und im Browser\footnote{getestet mit Firefox, Chrome und Internet Explorer} ausgeführt werden kann. Bei einem Compileraufruf können jeweils mehrere
+Dateien angebenen werden (siehe Abschnitt \ref{sec:compInvoc}). Während
+der Compilierung werden aus dem \texttt{<classpathDirectory>} die
+Signatur-Dateien (siehe Abschnitt \ref{sec:compSig}) bereits
+kompilierter Module geladen. Anschließend werden die angegebenen
+\texttt{<module files>} sowie von diesem verwendete Module, kompiliert
+(Details siehe Abschnitt \ref{sec:compBuild}). Während der Codegenerierung
 werden Signaturen (siehe Abschnitt \ref{sec:compSig}), sowie
 JavaScript-Dateien (siehe Abschnitt \ref{sec:compBuild}) für alle
 kompilierten Module erstellt, wobei require.js (siehe Abschnitt
 \ref{sec:compReq}) verwendet wird, um die JavaScript-Dateien der
 Module zu laden. Sofern das beim Aufruf des Compilers angegebene
-\texttt{<moduleFile>} eine Funktion namens
+\texttt{<module files>} eine Funktion namens
 \texttt{main} deklariert, werden für dieses noch eine
 \texttt{main.js}-Datei und eine \texttt{index.html}-Datei erstellt,
 die den Aufruf der main-Funktion in node.js und im Browser erlauben
 (siehe Abschnitt \ref{sec:compBuild}).
 
 \TODO{Ausführung des Codes in (unterstützem) Browser und node.js,
-Voraussetzungen dafür}
+Voraussetzungen dafür (require.js muss ggf. im node.js installiert werden)}
+\TODO{Re-Kompilierung der Standardbibliothek: erst prelude.sl, dann buildstd.sl}
+\TODO{Anpassung der Pfade zur Standardbibliothek in main.js}
+
+\subsection{Compileraufruf und Pfadangaben}
+\label{sec:compInvoc}
+
+Bei Aufruf des Compilers mit
+\begin{verbatim}
+$> <PROGRAMM-NAME> [-d <output directory>] [-cp <classpath directory>]
+-sourcepath <source directory> <module files>
+\end{verbatim}
+\TODO{PROGRAMM-NAME}
+
+bzw. im Scala Build Tool:
+\begin{verbatim}
+run-main de.tuberlin.uebb.sl2.impl.Main  [-d <output directory>]
+[-cp <classpath directory>] -sourcepath <source directory>
+<module files>
+\end{verbatim}
+\TODO{Syntax für optionale Argumente}
+\TODO{die Verzeichnisse erklären}
+\TODO{Standard-Bibliotheken}
+\TODO{Überleitung zu den Signaturen}
 
 \subsection{Signaturen}
 \label{sec:compSig}
@@ -427,8 +435,6 @@ PUBLIC DATA MyType a = Ctor1 a | Ctor2
 PUBLIC FUN foo : MyType Int -> Int
 DEF foo x = ...
 \end{verbatim}
-
-Exportiert werden nur jene Funktionen und Datentypen, welche durch das Schlüsselwort \verb|PUBLIC| als öffentlich deklariert wurden. Dies erzwingt die Angabe einer Signatur für Funktionen, die exportiert werden sollen. Der Typ einer öffentlichen Funktion kann also nicht inferiert werden. Dadurch ist gewährleistet, dass die Schnittstellen des Moduls immer so sind, wie der Programmierer es erwartet. Für uns war allerdings entscheidend, dass wir auf inferierte Typen keinen leichten Zugriff haben. Das liegt daran, dass die abstrakte SL-Syntax zum Type-Checking in ELC übersetzt wird. Daher können wir nicht mehr ermitteln, welches ELC-Konstrukt zu welchem SL-Konstrukt gehört. Dieses Problem ist zwar lösbar, indem man explizite Verweise in den ELC-Baum angibt, wurde von uns aber nicht weiter verfolgt.
 
 Das Wurzelobjekt ist ein JSON-Hash der stets die drei Elemente \verb|imports|, \verb|signatures| und \verb|dataDefs| enthält. Dies sind auch die Bezeichner der korrespondierenden Felder aus der Klasse \verb|Program|, welches den abstrakten Syntaxbaum speichert.
 
@@ -495,12 +501,12 @@ Zuletzt müssen noch die Datentypdefinitionen serialisiert werden. Diese werden 
 \label{sec:compReq}
 
 Um die Module zur Laufzeit in JavaScript zu laden, wurde
-require.js\footnote{http://requirejs.org/ v. 2.1.6 \TODO{updaten auf 2.1.8}}
+require.js\footnote{http://requirejs.org/ v. 2.1.6}
 statt CommonJS\footnote{http://www.commonjs.org/} ausgewählt, da es im
-Gegensatz zum Modulsystem von node.js auch im Browser verfügbar ist,
-jedoch auch in node.js genutzt werden kann\TODO{naja, das stimmt noch nicht ganz}.
+Gegensatz zum Modulsystem von node.js auch ohne Umwege sowohl im Browser
+als auch in node.js verfügbar ist.
 
-In node.js stehen zwei Wege zur Verfügung, um Abhängigkeiten zwischen
+In require.js stehen zwei Wege zur Verfügung, um Abhängigkeiten zwischen
 Modulen zu deklarieren und zur Laufzeit aufzulösen, siehe Listings
 \ref{lst:req1} und \ref{lst:req2}. \TODO{AMD besprechen?} Die
 Moduldefinition mit einem Array von Abhängigkeiten (siehe Beispiel im
@@ -516,22 +522,22 @@ gewählt, um später statische zirkuläre Abhängigkeiten auflösen zu
 können, auch wenn die bisherige Implementierung des Compilers dies
 nicht erlaubt.
 
-\begin{lstlisting}{caption={Moduldefinition mit Abhängigkeits-Array},label=lst:req1}
+\begin{verbatim}
 define(["modules/B"], function(b) {
   return {
     "a" : function() { return "A.a"; },
     "b" : function() { return b.b(); }
   };
 });
-\end{lstlisting}
+\end{verbatim}
 
-\begin{lstlisting}{caption={Moduldefinition mit Export-Objekt},label=lst:req2}
+\begin{verbatim}
 define(function(require, exports, module) {
   var b = require("modules/B");
   exports.a = function() { return "A.a"; };
   exports.b = function() { return b.b(); };
 });
-\end{lstlisting}
+\end{verbatim}
 
 \TODO{Kompilierung der Module}
 
@@ -547,6 +553,8 @@ oder global? in Systemvoraussetzungen für SL2 beschreiben}
 \subsection{Build-Prozess}
 \label{sec:compBuild}
 
+\TODO{MultiDriver, ModuleLinearization, zyklische Abhängigkeiten}
+
 \TODO{implizit unqualifiziert importieres prelude aus dem
 resources-Verzeichnis der SL2-Distribution, Zugriffe darauf werden
 nach dem Typcheck qualifiziert mit /lib/prelude -- bzw. mit /lib/prelude}
@@ -556,6 +564,9 @@ in JavaScript?}
 
 \TODO{Ort, an dem die Templates, prelude, und require.js (im Distributable)
 gespeichert sind}
+\TODO{wenn mehr als ein Modul eine main-Methode bereitstellt, kann nur
+die zuletzt ausgeführte verwendet werden}
+\TODO{Hierarchie der generierten Dateien}
 
 \subsection{Externe Definitionen}
 Besonders beim Schreiben von Funktionsbibliotheken muss man häufig auf
@@ -848,6 +859,14 @@ Wir haben eine Reihe kleinerer Testprogramme geschrieben.
  \item[\texttt{koch.sl}] Modifizierte Version des ursprünglichen
    Kochkurvenbeispiels. Verwendet Browseranzeige und \verb|timing|, um eine
    Animation ausgehend von der Kochkurve zu zeichnen.
+ \item[\texttt{sub/hello.sl}] Gibt "Hello Moon!" aus und wird von
+   \texttt{moonWorld.sl} verwendet, um das Einbinden verschieden
+   qualifizierter Module mit identischem einfachen Namen zu testen.
+ \item[\texttt{moonWorld.sl}] Verwendet \texttt{hello.sl} und
+   \texttt{sub/hello.sl}, um zu prüfen, ob die beiden Module getrennt
+   kompiliert und eingebunden werden.
+ \item[\texttt{cycleA.sl} \textnormal{und} \texttt{cycleB.sl}] enhalten eine direkte
+   zyklische Abhängigkeit, um zu testen, ob diese erkannt wird.
 \end{description}
 
 \section{Zusammenfassung}
