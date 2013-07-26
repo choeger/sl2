@@ -178,6 +178,85 @@ unterschidliche Funktion bezeichnen, wie in diesem Fall das
 Minuszeichen einerseits die Negation auf Gleitkomma- und Ganzzahlen
 und andererseits die Subtraktion von Ganzzahlen bezeichnete.
 
+
+Was die ungewöhnlich benannten Operatoren für Zeichenketten- und
+Gleitokmmaoperationen angeht, so haben wir uns dafür entschieden, sie
+aus der Sprache zu entfernen.  Dies verhindert auch Parserprobleme,
+wenn Bezeichner direkt hinter Operatoren geschrieben werden; so wurde
+etwa \verb|1+sum| bisher als \verb|1 +s um| geparst, was zu Verwirrung
+führen kann.  Der Operator für die String-Konkatenation heißt nun
+\verb|++|, die Gleitkommaoperationen sind nun in einem eigenen Modul
+untergebracht und müssen in Programmen entsprechend qualifiziert
+verwendet werden, z.B. schreibt man nun \verb|1.0 R.+ 2.5| statt
+\verb|1.0 +r 2.5|, falls das Modul \emph{std/real} als \verb|R|
+importiert wurde.
+
+Das unäre Minus haben wir komplett aus der Sprache entfernt.
+Stattdessen gibt es jetzt in der Prelude eine Funktion \verb|neg| für
+die Negation von Ganzzahlen; außerdem können nun Gleitkomma- und
+Ganzzahlliterale ein Minus als Vorzeichen enthalten, wenn dieses nicht
+durch Leerschritte oder Klammern von der ersten Ziffer bzw. dem
+Dezimalpunkt getrennt ist.  So sind beispielsweise die Schreibweisen
+\verb|5 * (-1)| und \verb|5 * -1| immer noch zulässig, nicht aber
+\verb|5 * -(1)|, \verb|5 * - 1| oder auch \verb|5 * (-x)|.
+Problematisch bei dieser Lösung ist allerdings, dass sie beim Parsen
+auch zu uninutitiven Ergebnissen führt.  Beispielsweise würde man
+erwarten, dass der Ausdruck \verb|x-2| (ohne Leerschritte) als
+Subtraktion geparst wird, also gleichbedeutend mit \verb|x - 2|.
+Tatsächlich wird der Ausdruck aber als Applikation von x mit dem
+Argument $-2$ geparst, gleichbedeutend mit als \verb|x (-2)|.
+
+\subsubsection{Import-Statements}
+
+Um das Modulsystem nutzen zu können, muss es eine Möglichkeit geben,
+andere Module zu importieren.  Dazu haben wir ein
+\emph{Import}-Statement eingebaut, mit der folgenden Syntax:
+
+\begin{quote}
+\verb|IMPORT| \emph{Modulpfad} \verb|AS| \emph{Modulbezeichner}
+\end{quote}
+
+Dabei ist der \emph{Modulbezeichner} ein großgeschriebener
+SL-Bezeichner, der zur Qualifikation von importierten Bezeichnern
+verwendet wird.  Der \emph{Modulpfad} der Pfad der Moduldateien, ohne
+Dateiendung.  Wenn das Modul etwa aus der Datei
+\emph{testmodule.sl} im aktuellen Verzeichnis kompiliert wurde, so
+heißt der \emph{Modulpfad} einfach \verb|"testmodule"|.  Beginnt der
+Modulpfad jedoch mit dem Präfix \emph{std/}, so wird das Modul in der
+Standardbibliothek gesucht.  Der \emph{Modulpfad} für das Listenmodul
+in der Standardbibliothek ist also \verb|"std/list"|.
+
+Die Sprache stellt nur Syntax für solche qualifizierten Importe zur
+Verfügung.  Der einzige unqualifizierte Import eines Moduls ist der
+implizite Import von \emph{std/prelude}, der automatisch bei jeder
+Kompilierung vorgenommen wird.
+
+\subsubsection{Externe Datentypen, externe Imports und externe
+  Definitionen}
+Bei der Implementation von Modulen, insbesondere des Moduls
+\emph{std/prelude}, das Funktionen definiert, die vormals direkt in
+den Sprachkern eingebaut waren, wurden auch bestimmte
+Spracherweiterungen nötig.
+
+Externe Definitionen erlauben den Aufruf von \emph{JavaScript}-Code
+ohne Verwendung der DOM-Monade. Dadurch können Funktionen aus
+\emph{JavaScript} verwendet werden, um die Primitiven von SL zu
+implementieren.  Der Programmierer hat bei Verwendung von externen
+Definitionen selbst darauf zu achten, dass die Funktion keine
+Nebeneffekte hat und dass die Funktion wirklich den in der Signatur
+angegebenen Typ hat, ohne dass der Compiler dies prüfen kann.
+Die Syntax hierfür ist:
+
+\verb|DEF EXTERN| \emph{Funtkions-/Operatorname} \verb:= {|:
+\emph{JavaScript-Code} \verb:|}:
+
+Dabei ist zu beachten, dass im Gegensatz zu normalen Funktions-
+bzw. Operatordefinitionen keine Argumente angegeben werden dürfen.
+
+\TODO{Hier noch mehr!}
+
+\subsubsection{Sichtbarkeit}
+
 \subsection{Qualifizierte Bezeichner}
 
 \subsection{Weitere Anpassungen der bestehenden Grammatik}
