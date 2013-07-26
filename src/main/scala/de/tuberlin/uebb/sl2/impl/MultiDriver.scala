@@ -65,9 +65,10 @@ trait MultiDriver extends Driver {
     println("classpath="+config.classpath)
     // load all (indirectly) required modules
     val modules = for(src <- config.sources) yield createModuleFromSourceFile(src, config)
+    val errors = modules.filter(_.isLeft)
+    if(errors.size > 0)
+    	return Left(ErrorList(errors.map(_.left.get)))
     val dependencies = loadDependencies(modules, config, Map[Module,Set[Module]]())    
-    println("modules="+modules)
-    println("dependencies="+dependencies)
     if(dependencies.isLeft) {
     	Left(dependencies.left.get)
     } else {
