@@ -638,9 +638,8 @@ DATA EXTERN DOM a
 Stärker als andere Module bildet das Prelude Funktionen auf handgeschriebenen
 JavaScript-Code ab. Diese Abbildung wurde bisher durch eine hardcodierte
 Umwandlung im SL-Compiler realisiert. Dank \verb|IMPORT EXTERN| und
-\verb|DEF EXTERN| \textbf{VERWEIS EINBAUEN} kann das Prelude selbst
-spezifizieren, dass \verb|+| auf das JavaScript-Objekt \verb|_add|
-aus \verb|_prelude.js| abgebildet werden soll.
+\verb|DEF EXTERN| kann das Prelude selbst spezifizieren, dass \verb|+| auf das
+JavaScript-Objekt \verb|_add| aus \verb|_prelude.js| abgebildet werden soll.
 
 \begin{verbatim}
 IMPORT EXTERN "_prelude" 
@@ -789,7 +788,7 @@ einsetzt, sollte alles klar gehen.
 
 Wir schrieben auch eine kleine Bibliothek \verb|basicweb|, die einige der
 Input/Output-Möglichkeiten von Websites bereitstellt. Diese Bibliothek ergibt
-natürlich nur sinn, wenn das mit SL erzeugte JS-Script im Browser ausgeführt
+natürlich nur Sinn, wenn das mit SL erzeugte JS-Script im Browser ausgeführt
 wird.
 
 \begin{verbatim}
