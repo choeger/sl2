@@ -62,20 +62,19 @@ trait MultiDriver extends Driver {
   	with TopologicalSorting =>
 	
   override def run(config: Config): Either[Error, String] = {
-    println("classpath="+config.classpath)
     // load all (indirectly) required modules
     val modules = for(src <- config.sources) yield createModuleFromSourceFile(src, config)
     val errors = modules.filter(_.isLeft)
     if(errors.size > 0)
     	return Left(ErrorList(errors.map(_.left.get)))
-    val dependencies = loadDependencies(modules, config, Map[Module,Set[Module]]())    
+    val dependencies = loadDependencies(modules, config,
+        scala.collection.mutable.Map[Module,Set[Module]]())    
     if(dependencies.isLeft) {
     	Left(dependencies.left.get)
     } else {
     	// sort topologically
 	    val sortedModules = topoSort(dependencies.right.get)
-	    println("sortedModules="+sortedModules)
-	    prepareCompilation(config)
+	    ensureDirExists(config.destination)
 	    // compile in topological order
 	    val result =(for(modules <- sortedModules.right;
 	    		     results <- errorMap(modules.toSeq.toList, handleModuleSource(config)).right) yield "")
@@ -167,8 +166,9 @@ trait MultiDriver extends Driver {
    * if they are not yet a key in the given dependencies map.
    */
   def loadDependencies(modules: List[Either[Error,Module]], config: Config,
-      dependencies: Map[Module,Set[Module]]): Either[Error,Map[Module,Set[Module]]] = {
-    var deps:Either[Error,Map[Module,Set[Module]]] = Right(dependencies)
+      dependencies: scala.collection.mutable.Map[Module,Set[Module]]):
+      Either[Error,scala.collection.mutable.Map[Module,Set[Module]]] = {
+    var deps:Either[Error,scala.collection.mutable.Map[Module,Set[Module]]] = Right(dependencies)
     for (module <- modules; mod <- module.right) {
 	      if(!deps.isLeft)
 	        deps = loadDependencies(mod, config, deps.right.get)
@@ -182,7 +182,8 @@ trait MultiDriver extends Driver {
    * be compiled.
    */
   def loadDependencies(module: Module, config: Config,
-      dependencies: Map[Module,Set[Module]]): Either[Error,Map[Module,Set[Module]]] = {
+      dependencies: scala.collection.mutable.Map[Module,Set[Module]]):
+      Either[Error,scala.collection.mutable.Map[Module,Set[Module]]] = {
     if((dependencies contains module) || !module.compile) {
       Right(dependencies)
     } else {
@@ -191,12 +192,12 @@ trait MultiDriver extends Driver {
         Left(deps.left.get)
       } else {
     	  val depsR = deps.right.get.filter(_.compile) // ignore dependencies that need no compilation
-	      var newDeps = dependencies + (module -> depsR)
+	      dependencies += module -> depsR
 	      for (dep <- Right(depsR).right;
 	    	   de <- dep) {
-	        val result = loadDependencies(de, config, newDeps)
-	        if(result.isLeft) return result else newDeps=result.right.get }
-	      Right(newDeps)
+	        val result = loadDependencies(de, config, dependencies)
+	        if(result.isLeft) return result }
+	      Right(dependencies)
       } 
     }
   }
@@ -212,34 +213,31 @@ trait MultiDriver extends Driver {
     val ast = parseAst(code)
     
     // resolve dependencies
-    val r = (for (
+    for (
       mod <- ast.right;
       imports <- resolveDependencies(mod, config).right;
       x <- findModules(module, imports, config).right
-    ) yield x)
-    println("dependencies of "+module.name+": "+r)
-    r
+    ) yield x
   }
   
   def handleModuleSource(config: Config)(module: Module) = {
-    handleSource(module.sourceFile, config)
+    handleSource(module, config)
   }
   
-  def handleSource(file: File, inputConfig: Config) = {
+  def handleSource(module: Module, inputConfig: Config) = {
     // load input file
-    val name = file.getName()
+    val name = module.name
     // if no destination has been specified, the output goes to the folder of the input file.
     // TODO: implement a test for this
-    val destination = if (inputConfig.destination == null) file.getParentFile() else inputConfig.destination
-    val config = inputConfig.copy(mainUnit = file, destination = destination)
-    val source = scala.io.Source.fromFile(file)
+    val destination = if (inputConfig.destination == null) module.sourceFile.getParentFile() else inputConfig.destination
+    val config = inputConfig.copy(mainUnit = module.sourceFile, destination = destination)
+    val source = scala.io.Source.fromFile(module.sourceFile)
     val code = source.mkString
     source.close()
 
     // parse the syntax
     fileName = name
     val ast = parseAst(code)
-    //debugPrint(ast.toString());
 
     val checkResults = for (
       mo <- ast.right;
@@ -290,22 +288,20 @@ trait MultiDriver extends Driver {
     }
   }
   
-  def prepareCompilation(config: Config) = {
-    // Create modules directory, if necessary
-    val modulesDir = config.destination;//new File(config.destination, "modules")
-    if(!modulesDir.exists()) {
-      if(modulesDir.mkdirs()) {
-        println("Created directory "+modulesDir)
+  def ensureDirExists(dir: File) = {
+    // Create directory, if necessary
+    if(!dir.exists()) {
+      if(dir.mkdirs()) {
+        println("Created directory "+dir)
       } else {
-        println("Could not create directory"+modulesDir)
+        println("Could not create directory"+dir)
       }
-    } else if(!modulesDir.isDirectory()) {
-      println(modulesDir+" is not a directory")
+    } else if(!dir.isDirectory()) {
+    	println(dir+" is not a directory")
     }
   }
   
   def compileToString(program: Program, imports: List[ResolvedImport]) = {
-    // TODO: maybe CombinatorParser does not yet parse qualified imports correctly, like ParboiledParser did before?
     val moduleTemplate = Source.fromURL(getClass().getResource("/js/module_template.js")).getLines.mkString("\n")
     val stringWriter = new StringWriter()
     val moduleWriter = new PrintWriter(stringWriter)
@@ -335,21 +331,11 @@ trait MultiDriver extends Driver {
     val compiled = astToJs(program)
     val modulesDir = config.destination
     
-    // copy .js and .signature of imported modules from classpath to modules/ directory
-    // TODO: should not copy prelude on every compiled module
-    // TODO: should not copy modules that have just been compiled
-/*
-    for(i <- imports.filter(_.isInstanceOf[ResolvedModuleImport])) {
-      val imp = i.asInstanceOf[ResolvedModuleImport]
-      copy(Paths.get(imp.file.toURI),   Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.signature"))
-      copy(Paths.get(imp.jsFile.toURI), Paths.get(modulesDir.getAbsolutePath(), imp.path+".sl.js"))
-    }
- */    
-    val tarJs = new File(modulesDir, name + ".js")
+    val tarJs = new File(modulesDir, name + ".sl.js")
+    ensureDirExists(tarJs.getParentFile())
     println("compiling "+name+" to "+tarJs)
-    // TODO: maybe CombinatorParser does not yet parse qualified imports correctly, like ParboiledParser did before?
     val moduleTemplate = Source.fromURL(getClass().getResource("/js/module_template.js")).getLines.mkString("\n")
-    val moduleWriter = new PrintWriter(new File(modulesDir, name + ".js"))
+    val moduleWriter = new PrintWriter(tarJs)
     for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
       val imp = i.asInstanceOf[ResolvedExternImport]
       val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
@@ -374,7 +360,7 @@ trait MultiDriver extends Driver {
             & functionSigsToJs(program.signatures))));
     moduleWriter.close();
     
-    val signatureFile = new File(modulesDir, name + ".signature")
+    val signatureFile = new File(modulesDir, name + ".sl.signature")
     println("writing signature of "+name+" to "+signatureFile)
     val writerSig = new PrintWriter(signatureFile)
     writerSig.write(serialize(program))
@@ -383,8 +369,12 @@ trait MultiDriver extends Driver {
     // create main.js only if a main function is declared
     if(program.isInstanceOf[Program] && program.asInstanceOf[Program].functionDefs.contains("main")) {
       val mainJs = new File(config.destination, "main.js")
-      val paths = JsObject(List((JsName("std"), JsStr(getClass().getResource("/lib/").toString))))
-    	println("creating "+mainJs.getAbsolutePath)
+      if(getClass().getResource("/lib/") == null)
+    	  return Left(GenericError("Cannot compile: Standard library "+quote("/lib/")+" not found."))
+      val preludeURL = getClass().getResource("/lib/")
+      val stdURL = JsObject(List((JsName("std"), JsStr(preludeURL.toString))))
+      val stdPath = JsObject(List((JsName("std"), JsStr(preludeURL.getPath.substring(1)))))
+      println("creating "+mainJs)
 	    val mainWriter = new PrintWriter(mainJs)
 	    for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
 	      val imp = i.asInstanceOf[ResolvedExternImport]
@@ -392,24 +382,25 @@ trait MultiDriver extends Driver {
 	      mainWriter.println("/***********************************/")
 	      mainWriter.println("// included from: "+imp.file.getCanonicalPath())
 	      mainWriter.println("/***********************************/")
-	      mainWriter.println(includedCode)
+	      mainWriter.println(includedCode) 
 	      mainWriter.println("/***********************************/")
 	    }
 	    mainWriter.println("/***********************************/")
 	    mainWriter.println("// generated from: "+name)
 	    mainWriter.println("/***********************************/") 
 	    val mainTemplate = Source.fromURL(getClass.getResource("/js/main_template.js")).getLines.mkString("\n")
-	    mainWriter.write(mainTemplate.replace("%%MODULE_PATHS_LIST%%", "\""+name+"\"")
-              .replace("%%PATHS%%", JsPrettyPrinter.pretty(paths))
-	      .replace("%%MODULE_NAMES_LIST%%", "$$$"+name.substring(0, name.length()-3))
-	      .replace("%%MAIN%%", JsPrettyPrinter.pretty(JsFunctionCall("$$$"+name.substring(0, name.length()-3)+".$main"))))
+	    mainWriter.write(mainTemplate.replace("%%MODULE_PATHS_LIST%%", "\""+name+".sl\"")
+          .replace("%%STD_PATH%%", JsPrettyPrinter.pretty(stdPath))
+          .replace("%%STD_URL%%", JsPrettyPrinter.pretty(stdURL))
+	      .replace("%%MODULE_NAMES_LIST%%", "$$$"+name.replace("/", "$").replace("\\", "$"))
+	      .replace("%%MAIN%%", JsPrettyPrinter.pretty(JsFunctionCall("$$$"+name.replace("/", "$").replace("\\", "$")+".$main"))))
 	    mainWriter.close()
 	    
 	    // copy index.html, require.js to config.destination
 	    copy(Paths.get(getClass().getResource("/js/index.html").toURI()),
-	        Paths.get(config.destination.getAbsolutePath(), "index.html"))
+	        Paths.get(config.destination.getPath, "index.html"))
 	    copy(Paths.get(getClass().getResource("/js/require.js").toURI()),
-	        Paths.get(config.destination.getAbsolutePath(), "require.js"))
+	        Paths.get(config.destination.getPath, "require.js"))
     }
     
     return Right("compilation successful")
