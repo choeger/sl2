@@ -7,7 +7,7 @@ if (typeof window === 'undefined') {
         //function to requirejs so that node modules
         //are loaded relative to the top-level JS file.
         nodeRequire: require,
-	paths: %%PATHS%%
+	paths: %%STD_PATH%%
     });
     
     requirejs([%%MODULE_PATHS_LIST%%], function(%%MODULE_NAMES_LIST%%) {
@@ -15,7 +15,7 @@ if (typeof window === 'undefined') {
     });
 } else {
     require.config({
-	paths: %%PATHS%%
+	paths: %%STD_URL%%
     });
 
     /* in browsers*/ 
