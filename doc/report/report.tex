@@ -198,8 +198,6 @@ Nachdem die abstrakte Syntax vom Parser eingelesen wurde, müssen die Importe au
 \subsubsection{Import-Überprüfung}
 
 \TODO{Modulbezeichner richtiger Begriff?}
-\TODO{redundant?}
-\TODO{IMPORT EXTERN, Unqualifizierter Import?}
 
 Die Import-Anweisung ist im Grunde ein Paar aus Modulpfad und Modulbezeichner:
 
@@ -226,36 +224,38 @@ IMPORT "my/path/moduleA"         AS A1
 IMPORT "my/path/../path/moduleA" AS A2
 \end{verbatim}
 
+Neben dem regulären Import existiert auch noch der unqualifizierte Import. Dieser ist für den Programmierer unzugänglich. Er dient zum Einbinden des Preludes, sodass Funktionen wie Addition auch ohne Modulbezeichner verwendet werden können. Der unqualifizierte Import ist von der Prüfung von doppelten Modulbezeichnern ausgeschlossen, jedoch nicht von Tests auf Pfade
+
 Laut unserer Grammatik \TODO{tolle grammatik oder verweis zur grammatik} wird der Pfad zu einem externen Modul als String definiert. Der Parser akzeptiert daher jede Art von gültigen Strings. Deshalb muss an dieser Stelle die Pfadsyntax überprüft werden. Grammatik \ref{grm:importpath} zeigt die Produktionsregeln für Pfade. Erlaubt sind relative Pfade bestehend aus beliebig vielen Verzeichnissen und dem Moduldateinamen am Ende. Als Trennungssymbol dient das Schrägstrichsymbol ,/`. Verzeichnisse dürfen Buchstaben, Zahlen, Minussymbole, Unterstriche und Punkte enthalten. Dies gilt auch für das Modul mit Ausnahme von Punkten. Der Modulname entspricht dem Dateinamen der Quelldatei ohne Endung ,,.sl``.
 
 \begin{grammarfigure}[grm:importpath]{Gültige Importpfade}
-  <Path>     ::= (<Dir> '/')* <Module>
-  <Dir>      ::= (<alphanum> | '-' | '\_' | '.')+
-  <Module>   ::= (<alphanum> | '-' | '\_')+
-  <alphanum> ::= 'a' | \cdots | 'z'
-            \alt 'A' | \cdots | 'Z'
-            \alt '0' | \cdots | '9'
+  <Path>   ::= (<Dir> '/')* <Module>
+  <Dir>    ::= <char>+
+  <Module> ::= <char>+
+  <char>   ::= 'a' | \cdots | 'z'
+          \alt '0' | \cdots | '9'
+          \alt '-' | '\_'
 \end{grammarfigure}
 
 Dies sind Beispiele für korrekte Pfade:
 
 \begin{verbatim}
-IMPORT "moduleA"             AS A
-IMPORT "dir/moduleB"         AS B
-IMPORT ".hidden/dir/moduleC" AS C
-IMPORT "../module_D"         AS D
-IMPORT "123/moduleE"         AS E
-IMPORT "./module-6"          AS F
+IMPORT "module-a"     AS A
+IMPORT "dir/module-b" AS B
+IMPORT "123/module-c" AS C
+IMPORT "module_4"     AS D
 \end{verbatim}
 
 Inkorrekt sind dagegen die folgenden:
 
 \begin{verbatim}
-IMPORT "moduleA.sl"             AS A
-IMPORT "dir/."                  AS B
-IMPORT "/absolute/path/moduleC" AS C
-IMPORT "m.o.d.u.l.e.D"          AS D
-IMPORT "my//moduleE"            AS E
+IMPORT "MoDuLe"                  AS A
+IMPORT "module-b.sl"             AS B
+IMPORT "dir/."                   AS C
+IMPORT "/absolute/path/module-d" AS D
+IMPORT "m.o.d.u.l.e"             AS E
+IMPORT "./module-f"              AS F
+IMPORT "d.i.r/module-g"          AS G
 \end{verbatim}
 
 \subsubsection{Laden der Signatur}
