@@ -71,6 +71,8 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
   
   // actual substitution methods
   
+  // note: this could have been a lot easier if the map function from SyntaxTraversale would have been utilized
+  
   private def normalizeModule(sub : ModuleVar => ModuleVar) : ResolvedImport => ResolvedImport = imp => imp match {
     // normalize only qualified imports
     case ui: ResolvedUnqualifiedImport => ui
@@ -130,6 +132,7 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
   }
   
   private def normalizeConType(sub : ModuleVar => ModuleVar) : TConVar => TConVar = {
+    // TODO: obsolete? BaseTypes shouldn't be qualified anymore
     tcv => 
       if (BaseType.typeVars.contains(tcv)) {
         tcv

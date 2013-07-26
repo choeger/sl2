@@ -237,13 +237,13 @@ Inkorrekt sind dagegen die folgenden:
 IMPORT "moduleA.sl"             AS A
 IMPORT "dir/."                  AS B
 IMPORT "/absolute/path/moduleC" AS C
-IMPORT "../m.o.d.u.l.e.D"       AS D
+IMPORT "m.o.d.u.l.e.D"          AS D
 IMPORT "my//moduleE"            AS E
 \end{verbatim}
 
 \subsubsection{Laden der Signatur}
 
-Falls die Importe korrekt sind, werden die dazugehörigen Module-Dateien geladen. Ein Modul liegt dabei immer in zwei Dateien vor: Die Signatur (,,*.signatur``) und die in JavaScript übersetzte Implementierung  (,,*.js``). Können nicht alle benötigten Dateien gefunden werden, so kann der Kompiliervorgang nicht fortgesetzt werden.
+Falls die Importe korrekt sind, werden die dazugehörigen Moduldateien geladen. Ein Modul liegt dabei immer in zwei Dateien vor: Die Signatur (,,*.signatur``) und die in JavaScript übersetzte Implementierung  (,,*.js``). Können nicht alle benötigten Dateien gefunden werden, so kann der Kompiliervorgang nicht fortgesetzt werden.
 
 \TODO{Suchpfade}
 \TODO{std resource}
@@ -251,6 +251,119 @@ Falls die Importe korrekt sind, werden die dazugehörigen Module-Dateien geladen
 Die Signatur-Datei enthält einen Teil des abstrakten Syntaxbaums des zu importierenden Moduls. Datentypdefinitionen und Funktionssignaturen sind hier in einer serialisierten Form abgespeichert. Das Format dieser Datei wird in Abschnitt \ref{sec:compSig} beschrieben.
 
 \subsection{Type-Checking}
+
+Durch das Auflösen besteht nun Zugriff auf die Signaturen der Importe. Diese können in ihrer ursprünglichen Form aber noch nicht dem Type-Checker übergeben werden. Vorher erfolgt eine Normalisierungsphase.
+
+\subsubsection{Modulnormalisierung}
+
+Jedes Modul kann wiederum Module importieren. Demzufolge ist es auch möglich, dass zwei importierte Module A und B von einem dritten Modul ,,List`` Gebrauch machen. Im folgenden Beispiel importiert das Modul C diese Module:
+
+\TODO{Module besser abbilden}
+
+\begin{figure}[H]
+\begin{verbatim}
+IMPORT "std/list" AS List
+
+FUN foo : List.List -> List.List
+\end{verbatim}
+\caption{Modul A}
+\end{figure}
+
+\begin{figure}[H]
+\begin{verbatim}
+IMPORT "std/list" AS L
+
+DATA MyType = Ctor L.List
+\end{verbatim}
+\caption{Modul B}
+\end{figure}
+
+\begin{figure}[H]
+\begin{verbatim}
+IMPORT "a" AS A
+IMPORT "b" AS B
+IMPORT "std/list" AS StdList
+
+FUN bar : B.MyType -> StdList.List
+DEF bar x = CASE x OF B.Ctor l THEN A.foo l
+\end{verbatim}
+\caption{Modul C}
+\end{figure}
+
+Hier würde der Type-Checker nicht wissen, dass der Typ \verb|List.List| aus Modul A derselbe ist wie \verb|L.List| in Modul C. Deshalb müssen die aufgelösten Importe normalisiert werden. Die Idee dahinter ist, dass jedem Modul genau ein Modulbezeichner zugeordnet wird. Dieser Bezeichner wird vom lokalen Modul, hier C, bestimmt. Das bedeutet, dass der Modulbezeichner für das Modul List durch \verb|StdList| ersetzt wird.
+
+Nach der Normalisierung sieht die abstrakte Syntax der Importierten Module also so aus:
+
+\begin{figure}[H]
+\begin{verbatim}
+IMPORT "std/list" AS StdList
+
+FUN foo : StdList.List -> StdList.List
+\end{verbatim}
+\caption{Normalisiertes Modul A}
+\end{figure}
+
+\begin{figure}[H]
+\begin{verbatim}
+IMPORT "std/list" AS StdList
+
+DATA MyType = Ctor StdList.List
+\end{verbatim}
+\caption{Normalisiertes Modul B}
+\end{figure}
+
+Diese Ersetzung ist möglich, da auch C das Modul List importiert. Anhand des Pfades \verb|"std/list"| kann dieses Modul auch in den anderen Modulen erkannt und der Bezeichner substituiert werden.
+
+Es kann jedoch auch der Fall eintreten, dass C das List-Modul unbekannt ist. In diesem Fall wird ein neuer Bezeichner generiert. Dieser hat die Form \verb|#<Nummer>| wobei \verb|<Nummer>| durch eine fortlaufende Nummer ersetzt wird. Durch dieses Vorgehen kann auch das folgende Beispielprogramm typgeprüft werden:
+
+\begin{figure}[H]
+\begin{verbatim}
+IMPORT "std/list" AS L
+IMPORT "std/option" AS O
+
+FUN foo : O.Option -> Int
+\end{verbatim}
+\caption{Unbekannter Import -- Modul A}
+\label{fig:unknownModA}
+\end{figure}
+
+\begin{figure}[H]
+\begin{verbatim}
+IMPORT "std/list" AS L
+IMPORT "std/option" AS O
+
+FUN bar : List.List -> O.Option
+\end{verbatim}
+\caption{Unbekannter Import -- Modul B}
+\label{fig:unknownModB}
+\end{figure}
+
+\begin{figure}[H]
+\begin{verbatim}
+IMPORT "a" AS A
+IMPORT "b" AS B
+IMPORT "std/list" AS L
+
+FUN baz : L.List -> Int
+DEF baz l = B.foo(A.bar(l))
+\end{verbatim}
+\caption{Unbekannter Import -- Modul C}
+\label{fig:unknownModC}
+\end{figure}
+
+Das Modul Option ist C unbekannt. Es kann also keine Funktionen oder Typen aus diesem Modul direkt verwenden. Dennoch ist es möglich die Funktionen \verb|foo| und \verb|bar| wie in Abbildung \ref{fig:unknownModC} aufzurufen. Während der Normalisierung wird der Modulbezeichner \verb|O| in A und B durch \verb|#1| ersetzt.
+
+\subsubsection{Modulkontext}
+
+Vor dem eigentlichen Type-Checking werden die Datentyp- und Funktionsdefinitionen überprüft. Einige der Tests mussten erweitert werden, um auch importierte Definitionen berücksichtigen zu können.
+
+\TODO{unqualified TypeConsDisjoint, DataConsDisjoint}
+
+Im Falle der Datentypdefinitionen gibt es die zwei Tests, \verb|checkNoUndefinedTypeCons| und \verb|checkTypeConsApp|, welche auch den Kontext von Importen beachten müssen. \verb|checkNoUndefinedTypeCons| überprüft ob die im Programm verwendeten Konstruktoren existieren. Bisher war dies auf den lokalen Kontext beschränkt. Da jedoch auch Konstruktoren aus anderen Modulen verwendet werden können sollen, werden jene zu der Menge der bekannten Konstruktoren hinzugefügt. Aus demselben Grund musste auch \verb|checkTypeConsApp| erweitert werden. Diese Funktion testet, ob genügend Parameter für einen Konstruktor angegeben wurden.
+
+Für den Type-Check ist es notwendig den initialen Kontext um den Modulkontext zu erweitern. Dazu muss der Modulkontext zunächst gebildet werden. Dies geschieht auf ähnliche Weise, wie auch der Kontext des lokalen Moduls aufgebaut wird. Alle Konstruktoren der Module erhalten ein Typschema und werden zusammen mit den Funktionen dem Kontext hinzugefügt.
+
+Die lokalen Funktionssignaturen und -definitionen sowie die Signaturen aus den externen Modulen werden genutzt um das Programm in ELC\footnote{Enriched Lambda Calculus} zu übersetzen. Die Übersetzung wird dann zusammen mit dem initialen Kontext inklusive Modulkontext an den Type-Checker übergeben, der weitestgehend unangerührt blieb.
 
 \section{Codegenerierung}\label{sec:codegen}
 
