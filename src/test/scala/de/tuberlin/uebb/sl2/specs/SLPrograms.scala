@@ -51,7 +51,7 @@ trait SLPrograms {
 
 
   val range = """
-  |IMPORT "std/List" AS L
+  |IMPORT "std/list" AS L
   |DEF range n = IF n <= 0 THEN L.Cons 0 L.Nil ELSE L.Cons n (range (n - 1))"""
 
   
@@ -106,7 +106,7 @@ trait SLPrograms {
 
 
   val lambdaPatterns = """
-  | IMPORT "std/List" AS L
+  | IMPORT "std/list" AS L
   | DEF f = (\ (L.Cons a b) (L.Cons x (L.Cons L.Nil L.Nil)) y True . a / y)
   |         (LET first = 1593
   |  	         rest  = L.Cons 1 L.Nil
@@ -141,7 +141,7 @@ trait SLPrograms {
 
 
   val shadowedPatternVar = """
-  | IMPORT "std/List" AS L
+  | IMPORT "std/list" AS L
   | DEF f (L.Cons b a) v = LET g = \ a . a + v
   |                      IN g b
   """.stripMargin
@@ -164,7 +164,7 @@ trait SLPrograms {
 
 
   val partialApplication = """
-  | IMPORT "std/List" AS L
+  | IMPORT "std/list" AS L
   | DEF f a b = a + b
   |
   | DEF g a = L.Cons (\x . f x a) L.Nil
@@ -177,7 +177,7 @@ trait SLPrograms {
 
 
   val lateMatch = """
-  | IMPORT "std/List" AS L
+  | IMPORT "std/list" AS L
   | DEF f (L.Cons a b) x (L.Cons c d) = 1
   | DEF f z            x (L.Cons f g) = 2
   | DEF f y            x L.Nil        = 3

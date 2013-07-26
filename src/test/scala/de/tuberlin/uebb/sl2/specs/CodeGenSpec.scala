@@ -110,9 +110,9 @@ trait CodeGenSpec
       		"};\n"
       val interlude1 = "nextModule=\"std/prelude.sl\";\n"
       val prelude = Source.fromFile(new File(getClass().getResource("/lib/prelude.sl.js").toURI())).getLines.mkString("\n")
-      val interlude2 = """nextModule="std/Option.sl";"""
+      val interlude2 = """nextModule="std/option.sl";"""
       val option = Source.fromFile(new File(getClass().getResource("/lib/option.sl.js").toURI())).getLines.mkString("\n")
-      val interlude3 = """nextModule="std/List.sl";"""
+      val interlude3 = """nextModule="std/list.sl";"""
       val lib = Source.fromFile(new File(getClass().getResource("/lib/list.sl.js").toURI())).getLines.mkString("\n")
       val conf = Main.defaultConfig
       val js = Main.compileSL(str, conf)
@@ -233,7 +233,7 @@ trait CodeGenSpec
     }
 
     it("Should compile the head and tail function correctly") {
-      ("""IMPORT "std/List" AS L
+      ("""IMPORT "std/list" AS L
          |DEF head (L.Cons x xs) = x
          |DEF tail (L.Cons x xs) = xs
          |PUBLIC FUN test: Int
@@ -332,7 +332,7 @@ trait CodeGenSpec
     }
 
     it("Should compile nested matches") {
-      """IMPORT "std/List" AS L
+      """IMPORT "std/list" AS L
         |DEF f (L.Cons (L.Cons a b) (L.Cons d L.Nil)) = a
         |PUBLIC FUN test: x
         |DEF test = f (L.Cons (L.Cons 4 (L.Cons 5 L.Nil)) (L.Cons (L.Cons 8 L.Nil) L.Nil))""".compiled.evaluated should equal("4".evaluated)
@@ -354,46 +354,46 @@ trait CodeGenSpec
 
   describe("Compiling list concatenation") {
     it("Should work on the empty lists") {
-      ("""IMPORT "std/List" AS L"""+"\n"+concat+"\n"+
+      ("""IMPORT "std/list" AS L"""+"\n"+concat+"\n"+
        """PUBLIC FUN test: a
          |DEF test = L.Nil +++ L.Nil""").compiled.evaluated should
-         equal("""IMPORT "std/List" AS L
+         equal("""IMPORT "std/list" AS L
         		 |PUBLIC FUN test: b
 				 |DEF test = L.Nil""".compiled.evaluated)
     }
 
     it("Should work on the singleton list") {
-      ("""IMPORT "std/List" AS L"""+"\n"+concat+"\n"+
+      ("""IMPORT "std/list" AS L"""+"\n"+concat+"\n"+
        """PUBLIC FUN test: a
          |DEF test = (L.Cons 1 L.Nil) +++ L.Nil""").compiled.evaluated should
-         equal("""IMPORT "std/List" AS L
+         equal("""IMPORT "std/list" AS L
         		 |PUBLIC FUN test: b
 				 |DEF test = L.Cons 1 L.Nil""".compiled.evaluated)
     }
 
     it("Should be symmetric on the empty list") {
-      ("""IMPORT "std/List" AS L"""+"\n"+concat+"\n"+
+      ("""IMPORT "std/list" AS L"""+"\n"+concat+"\n"+
        """PUBLIC FUN test: a
          |DEF test = L.Nil +++ (L.Cons 1 L.Nil)""").compiled.evaluated should
-         equal("""IMPORT "std/List" AS L
+         equal("""IMPORT "std/list" AS L
         		 |PUBLIC FUN test: b
         		 |DEF test = L.Cons 1 L.Nil""".compiled.evaluated)
     }
 
     it("Should append to the end of the list") {
-      ("""IMPORT "std/List" AS L"""+"\n"+concat+"\n"+
+      ("""IMPORT "std/list" AS L"""+"\n"+concat+"\n"+
        """PUBLIC FUN test: a
          |DEF test = (L.Cons 2 L.Nil) +++ (L.Cons 1 L.Nil)""").compiled.evaluated should
-         equal("""IMPORT "std/List" AS L
+         equal("""IMPORT "std/list" AS L
         		 |PUBLIC FUN test: b
         		 |DEF test = L.Cons 2 (L.Cons 1 L.Nil)""".compiled.evaluated)
     }
 
     it("Should work on slightly larger lists") {
-      ("""IMPORT "std/List" AS L"""+"\n"+concat+"\n"+
+      ("""IMPORT "std/list" AS L"""+"\n"+concat+"\n"+
        """PUBLIC FUN test: a
          |DEF test = (L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 L.Nil)))) +++ (L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 L.Nil))))""").compiled.evaluated should
-         equal("""IMPORT "std/List" AS L
+         equal("""IMPORT "std/list" AS L
         		 |PUBLIC FUN test: b
         		 |DEF test = (L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 (L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 L.Nil))))))))""".compiled.evaluated)
     }
@@ -405,7 +405,7 @@ trait CodeGenSpec
       (range+"\n"+
        """PUBLIC FUN test: a
          |DEF test = range 0""").compiled.evaluated should
-         be ("""IMPORT "std/List" AS L
+         be ("""IMPORT "std/list" AS L
         	   |PUBLIC FUN test: b
                |DEF test = L.Cons 0 L.Nil""".compiled.evaluated)
     }
@@ -414,7 +414,7 @@ trait CodeGenSpec
       (range+"\n"+
        """PUBLIC FUN test: a
          |DEF test = range 4""").compiled.evaluated should
-         be ("""IMPORT "std/List" AS L
+         be ("""IMPORT "std/list" AS L
         	   |PUBLIC FUN test: b
                |DEF test = L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 (L.Cons 0 L.Nil))))""".compiled.evaluated)
     }
@@ -423,28 +423,28 @@ trait CodeGenSpec
   
   describe("Compiling filter") {
     it("Should work in the empty list") {
-      ("""IMPORT "std/List" AS L"""+"\n"+filter+"\n"+
+      ("""IMPORT "std/list" AS L"""+"\n"+filter+"\n"+
        """PUBLIC FUN test: a
          |DEF test = filter L.Nil (\ x . False)""").compiled.evaluated should
-         equal("""IMPORT "std/List" AS L
+         equal("""IMPORT "std/list" AS L
         	     |PUBLIC FUN test: b
                  |DEF test = L.Nil""".compiled.evaluated)
     }
     
     it("Should work on equality") {
-      ("""IMPORT "std/List" AS L"""+"\n"+filter+"\n"+
+      ("""IMPORT "std/list" AS L"""+"\n"+filter+"\n"+
        """PUBLIC FUN test: a
          |DEF test = filter (L.Cons 1 (L.Cons 2 (L.Cons 0 L.Nil))) (\ x . x == 0) """).compiled.evaluated should
-         equal("""IMPORT "std/List" AS L
+         equal("""IMPORT "std/list" AS L
         	     |PUBLIC FUN test: b
                  |DEF test = L.Cons 0 L.Nil""".compiled.evaluated)
     }
 
     it("Should work on greater-than") {
-      ("""IMPORT "std/List" AS L"""+"\n"+filter+"\n"+
+      ("""IMPORT "std/list" AS L"""+"\n"+filter+"\n"+
        """PUBLIC FUN test: a
          |DEF test = filter (L.Cons 1 (L.Cons 0 (L.Cons 2 L.Nil))) (\ x . x > 0)""").compiled.evaluated should
-         equal("""IMPORT "std/List" AS L
+         equal("""IMPORT "std/list" AS L
         	     |PUBLIC FUN test: b
                  |DEF test = L.Cons 1 (L.Cons 2 L.Nil)""".compiled.evaluated)
     }
@@ -453,37 +453,37 @@ trait CodeGenSpec
 
   describe("Compiling reverse") {
     it("Should work on the empty list") {
-      ("""IMPORT "std/List" AS L"""+"\n"+reverse+"\n"+
+      ("""IMPORT "std/list" AS L"""+"\n"+reverse+"\n"+
        """PUBLIC FUN test: a
          |DEF test = reverse L.Nil""").compiled.evaluated should
-         equal("""IMPORT "std/List" AS L
+         equal("""IMPORT "std/list" AS L
         	     |PUBLIC FUN test: a
                  |DEF test=L.Nil""".compiled.evaluated)
     }
     
     it("Should work on the singleton list") {
-      ("""IMPORT "std/List" AS L"""+"\n"+reverse+"\n"+
+      ("""IMPORT "std/list" AS L"""+"\n"+reverse+"\n"+
        """PUBLIC FUN test: a
          |DEF test = reverse (L.Cons 1 L.Nil)""").compiled.evaluated should
-         equal("""IMPORT "std/List" AS L
+         equal("""IMPORT "std/list" AS L
         	     |PUBLIC FUN test: a
                  |DEF test=L.Cons 1 L.Nil""".compiled.evaluated)
     }
 
     it("Should work on a 4-element list") {
-      ("""IMPORT "std/List" AS L"""+"\n"+reverse+"\n"+
+      ("""IMPORT "std/list" AS L"""+"\n"+reverse+"\n"+
        """PUBLIC FUN test: a
          |DEF test = reverse (L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 L.Nil))))""").compiled.evaluated should
-         equal("""IMPORT "std/List" AS L
+         equal("""IMPORT "std/list" AS L
         	     |PUBLIC FUN test: a
                  |DEF test=L.Cons 1 (L.Cons 2 (L.Cons 3 (L.Cons 4 L.Nil)))""".compiled.evaluated)
     }
 
     it("Should work be it's own inverse") {
-      ("""IMPORT "std/List" AS L"""+"\n"+reverse+"\n"+
+      ("""IMPORT "std/list" AS L"""+"\n"+reverse+"\n"+
        """PUBLIC FUN test: a
          |DEF test = reverse (reverse (L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 L.Nil)))))""").compiled.evaluated should
-         equal("""IMPORT "std/List" AS L
+         equal("""IMPORT "std/list" AS L
         	     |PUBLIC FUN test: a
                  |DEF test=L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 L.Nil)))""".compiled.evaluated)
     }
@@ -495,7 +495,7 @@ trait CodeGenSpec
       (sort+"\n"+
        """PUBLIC FUN test: a
          |DEF test = quicksort L.Nil""").compiled.evaluated should
-         equal("""IMPORT "std/List" AS L
+         equal("""IMPORT "std/list" AS L
         	     |PUBLIC FUN test: a
                  |DEF test=L.Nil""".compiled.evaluated)
     }
@@ -504,7 +504,7 @@ trait CodeGenSpec
       (sort+"\n"+
        """PUBLIC FUN test: a
          |DEF test = quicksort (L.Cons 1 L.Nil)""").compiled.evaluated should
-         equal("""IMPORT "std/List" AS L
+         equal("""IMPORT "std/list" AS L
         	     |PUBLIC FUN test: a
                  |DEF test=L.Cons 1 L.Nil""".compiled.evaluated)
     }
@@ -513,7 +513,7 @@ trait CodeGenSpec
       (sort+"\n"+
        """PUBLIC FUN test: a
          |DEF test = quicksort (L.Cons 1 (L.Cons 2 (L.Cons 3 (L.Cons 4 L.Nil))))""").compiled.evaluated should
-         equal("""IMPORT "std/List" AS L
+         equal("""IMPORT "std/list" AS L
         	     |PUBLIC FUN test: a
                  |DEF test=L.Cons 1 (L.Cons 2 (L.Cons 3 (L.Cons 4 L.Nil)))""".compiled.evaluated)
     }
@@ -522,7 +522,7 @@ trait CodeGenSpec
       (sort+"\n"+
        """PUBLIC FUN test: a
          |DEF test = quicksort (L.Cons 4 (L.Cons 3 (L.Cons 2 (L.Cons 1 L.Nil))))""").compiled.evaluated should
-         equal("""IMPORT "std/List" AS L
+         equal("""IMPORT "std/list" AS L
         	     |PUBLIC FUN test: a
                  |DEF test=L.Cons 1 (L.Cons 2 (L.Cons 3 (L.Cons 4 L.Nil)))""".compiled.evaluated)
     }
