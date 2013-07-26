@@ -262,8 +262,8 @@ IMPORT "my//moduleE"            AS E
 
 Falls die Importe korrekt sind, werden die dazugehörigen Moduldateien geladen. Ein Modul liegt dabei immer in zwei Dateien vor: Die Signatur (,,*.signatur``) und die in JavaScript übersetzte Implementierung  (,,*.js``). Können nicht alle benötigten Dateien gefunden werden, so kann der Kompiliervorgang nicht fortgesetzt werden.
 
-\TODO{Suchpfade}
-\TODO{std resource}
+\TODO{Suchpfade?}
+\TODO{std resource?}
 
 Die Signatur-Datei enthält einen Teil des abstrakten Syntaxbaums des zu importierenden Moduls. Datentypdefinitionen und Funktionssignaturen sind hier in einer serialisierten Form abgespeichert. Das Format dieser Datei wird in Abschnitt \ref{sec:compSig} beschrieben.
 
@@ -273,30 +273,19 @@ Durch das Auflösen besteht nun Zugriff auf die Signaturen der Importe. Diese k�
 
 \subsubsection{Modulnormalisierung}
 
-Jedes Modul kann wiederum Module importieren. Demzufolge ist es auch möglich, dass zwei importierte Module A und B von einem dritten Modul ,,List`` Gebrauch machen. Im folgenden Beispiel importiert das Modul C diese Module:
+Jedes Modul kann wiederum Module importieren. Demzufolge ist es auch möglich, dass zwei importierte Module A und B von einem dritten Modul ,,List`` Gebrauch machen. Im folgenden Beispiel importiert das Modul C diese Module.
 
-\TODO{Module besser abbilden}
 
-\begin{figure}[H]
 \begin{verbatim}
+-- Module A --
 IMPORT "std/list" AS List
-
 PUPBLIC FUN foo : List.List -> List.List
-\end{verbatim}
-\caption{Modul A}
-\end{figure}
 
-\begin{figure}[H]
-\begin{verbatim}
+-- Module B --
 IMPORT "std/list" AS L
-
 PUBLIC DATA MyType = Ctor L.List
-\end{verbatim}
-\caption{Modul B}
-\end{figure}
 
-\begin{figure}[H]
-\begin{verbatim}
+-- Modul C --
 IMPORT "a" AS A
 IMPORT "b" AS B
 IMPORT "std/list" AS StdList
@@ -304,59 +293,42 @@ IMPORT "std/list" AS StdList
 FUN bar : B.MyType -> StdList.List
 DEF bar x = CASE x OF B.Ctor l THEN A.foo l
 \end{verbatim}
-\caption{Modul C}
-\end{figure}
 
 Hier würde der Type-Checker nicht wissen, dass der Typ \verb|List.List| aus Modul A derselbe ist wie \verb|L.List| in Modul C. Deshalb müssen die aufgelösten Importe normalisiert werden. Die Idee dahinter ist, dass jedem Modul genau ein Modulbezeichner zugeordnet wird. Dieser Bezeichner wird vom lokalen Modul, hier C, bestimmt. Das bedeutet, dass der Modulbezeichner für das Modul List durch \verb|StdList| ersetzt wird.
 
 Nach der Normalisierung sieht die abstrakte Syntax der Importierten Module also so aus:
 
-\begin{figure}[H]
 \begin{verbatim}
+-- Module A --
 IMPORT "std/list" AS StdList
 
 PUBLIC FUN foo : StdList.List -> StdList.List
-\end{verbatim}
-\caption{Normalisiertes Modul A}
-\end{figure}
 
-\begin{figure}[H]
-\begin{verbatim}
+-- Module B --
 IMPORT "std/list" AS StdList
 
 PUBLIC DATA MyType = Ctor StdList.List
 \end{verbatim}
-\caption{Normalisiertes Modul B}
-\end{figure}
 
 Diese Ersetzung ist möglich, da auch C das Modul List importiert. Anhand des Pfades \verb|"std/list"| kann dieses Modul auch in den anderen Modulen erkannt und der Bezeichner substituiert werden.
 
 Es kann jedoch auch der Fall eintreten, dass C das List-Modul unbekannt ist. In diesem Fall wird ein neuer Bezeichner generiert. Dieser hat die Form \verb|#<Nummer>| wobei \verb|<Nummer>| durch eine fortlaufende Nummer ersetzt wird. Durch dieses Vorgehen kann auch das folgende Beispielprogramm typgeprüft werden:
 
-\begin{figure}[H]
+
 \begin{verbatim}
+-- Module A --
 IMPORT "std/list" AS L
 IMPORT "std/option" AS O
 
 PUBLIC FUN foo : O.Option -> Int
-\end{verbatim}
-\caption{Unbekannter Import -- Modul A}
-\label{fig:unknownModA}
-\end{figure}
 
-\begin{figure}[H]
-\begin{verbatim}
+-- Module B --
 IMPORT "std/list" AS L
 IMPORT "std/option" AS O
 
 PUBLIC FUN bar : List.List -> O.Option
-\end{verbatim}
-\caption{Unbekannter Import -- Modul B}
-\label{fig:unknownModB}
-\end{figure}
 
-\begin{figure}[H]
-\begin{verbatim}
+-- Modul C --
 IMPORT "a" AS A
 IMPORT "b" AS B
 IMPORT "std/list" AS L
@@ -364,11 +336,8 @@ IMPORT "std/list" AS L
 FUN baz : L.List -> Int
 DEF baz l = B.foo(A.bar(l))
 \end{verbatim}
-\caption{Unbekannter Import -- Modul C}
-\label{fig:unknownModC}
-\end{figure}
 
-Das Modul Option ist C unbekannt. Es kann also keine Funktionen oder Typen aus diesem Modul direkt verwenden. Dennoch ist es möglich die Funktionen \verb|foo| und \verb|bar| wie in Abbildung \ref{fig:unknownModC} aufzurufen. Während der Normalisierung wird der Modulbezeichner \verb|O| in A und B durch \verb|#1| ersetzt.
+Das Modul Option ist C unbekannt. Es kann also keine Funktionen oder Typen aus diesem Modul direkt verwenden. Dennoch ist es möglich die Funktionen \verb|foo| und \verb|bar| wie in Modul C aufzurufen. Während der Normalisierung wird der Modulbezeichner \verb|O| in A und B durch \verb|#1| ersetzt.
 
 \subsubsection{Modulkontext}
 
