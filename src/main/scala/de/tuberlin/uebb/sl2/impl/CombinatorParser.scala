@@ -53,7 +53,9 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
     try {
       parseAll(parseTopLevel, new ParserString(in)) match {
         case Success(result, _) => Right(result)
-        case failure: NoSuccess => Left(scala.sys.error(failure.msg)) // HERE IS WHERE THE EXCEPTIONS GET THROWN!
+        case failure: NoSuccess => 
+//          println("Parser Error: " + failure.toString)
+          Left(convertError(failure)) // HERE IS WHERE THE EXCEPTIONS GET THROWN!
       }
     } catch {
       case err: Error => Left(err)
@@ -424,6 +426,13 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
       return EmptyAttribute
   }
 
+  private def convertError(ns: NoSuccess) = ns match {
+    case NoSuccess(msg, in1) => 
+      val pos = offsetToPosition(in1.offset)
+      val attr = AttributeImpl(FileLocation(fileName, pos, pos))
+      throw ParseError(msg, attr)
+  }
+
   private implicit def parser2Attributed[T](p: Parser[T]): AttributedParser[T] = new AttributedParser(p)
   private implicit def regexAttributed(p: Regex): AttributedParser[String] = new AttributedParser(regex(p))
 
@@ -442,6 +451,15 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
             val att = AttributeImpl(FileLocation(fileName, from, to))
             Success(f(att, t), in1)
           }
+/*
+        case Error(msg, in1) => 
+          {
+            val from = offsetToPosition(start)
+            val to = offsetToPosition(in1.offset)
+            val att = AttributeImpl(FileLocation(fileName, from, to))
+            throw ParseError("From CombinatorParser: " + msg, att)
+          }
+ */
         case ns: NoSuccess => ns
       }
     }

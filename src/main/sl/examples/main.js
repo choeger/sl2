@@ -1,5 +1,5 @@
 /***********************************/
-// generated from: boxsort.sl
+// generated from: transitiveimports.sl
 /***********************************/
 if (typeof window === 'undefined') {
     /* in node.js */
@@ -13,8 +13,8 @@ if (typeof window === 'undefined') {
 	paths: {std : "file:/home/fpz/code/sl2/target/scala-2.10/classes/lib/" }
     });
     
-    requirejs(["boxsort.sl"], function($$$boxsort) {
-        $$$boxsort.$main()
+    requirejs(["transitiveimports.sl"], function($$$transitiveimports) {
+        $$$transitiveimports.$main()
     });
 } else {
     require.config({
@@ -22,7 +22,7 @@ if (typeof window === 'undefined') {
     });
 
     /* in browsers*/ 
-    require(["boxsort.sl"], function($$$boxsort) {
-        $$$boxsort.$main()
+    require(["transitiveimports.sl"], function($$$transitiveimports) {
+        $$$transitiveimports.$main()
     });
 }

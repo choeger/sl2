@@ -1,5 +1,5 @@
 /***********************************/
-// included from: C:\Users\Rico\Documents\GitHub\sl2\target\scala-2.10\classes\lib\_prelude.js
+// included from: /home/fpz/code/sl2/target/scala-2.10/classes/lib/_prelude.js
 /***********************************/
 /*
  * This basic module is necessary as an import to every SL

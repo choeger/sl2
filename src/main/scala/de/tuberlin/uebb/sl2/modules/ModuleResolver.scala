@@ -50,4 +50,6 @@ trait ModuleResolver {
   
   def checkImports(imports : List[Import]) : Either[Error, Unit]
 
+  def findImportResource(path: String, attr: Attribute): Either[Error, File]
+
 }

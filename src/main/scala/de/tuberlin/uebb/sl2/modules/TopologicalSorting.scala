@@ -26,9 +26,9 @@ trait TopologicalSorting
       if(name.startsWith("std/")) {
           // load std/ library from resources directory
           this.name = name.replace("std/", "")
-          this.sourceFile = new File(getClass().getResource("/lib/"+this.name+".sl").toURI())
-          this.signatureFile = new File(getClass().getResource("/lib/"+this.name+".sl.signature").toURI())
-          this.jsFile = new File(getClass().getResource("/lib/"+this.name+".sl.js").toURI())
+          this.sourceFile = fromRight(findImportResource(this.name+".sl", EmptyAttribute))
+          this.signatureFile = fromRight(findImportResource(this.name+".sl.signature", EmptyAttribute))
+          this.jsFile = fromRight(findImportResource(this.name+".sl.js", EmptyAttribute))
       } else {
           // load ordinary files relative to source- and classpath
           this.sourceFile = new File(config.sourcepath, name+".sl")
@@ -36,7 +36,12 @@ trait TopologicalSorting
           this.jsFile = new File(config.classpath, name+".sl.js")
       }
     }
-    
+
+    def fromRight(ei: Either[Error, File]):File = ei match {
+      case Right(f) => return f
+      case Left(err) => throw err
+    }
+
     override def toString() = {
       "(Module "+quote(name)+" (compile="+compile+")"+/*
       	" sourceFile="+quote(sourceFile.getCanonicalPath())+

@@ -60,27 +60,31 @@ trait MultiDriver extends Driver {
   	with TopologicalSorting =>
 	
   override def run(config: Config): Either[Error, String] = {
-    println("classpath="+config.classpath)
-    // load all (indirectly) required modules
-    val modules = for(src <- config.sources) yield createModuleFromSourceFile(src, config)
-    val dependencies = loadDependencies(modules, config, Map[Module,Set[Module]]())    
-    println("modules="+modules)
-    println("dependencies="+dependencies)
-    if(dependencies.isLeft) {
+    try {
+      println("classpath="+config.classpath)
+      // load all (indirectly) required modules
+      val modules = for(src <- config.sources) yield createModuleFromSourceFile(src, config)
+      val dependencies = loadDependencies(modules, config, Map[Module,Set[Module]]())
+      println("modules="+modules)
+      println("dependencies="+dependencies)
+      if(dependencies.isLeft) {
     	Left(dependencies.left.get)
-    } else {
+      } else {
     	// sort topologically
-	    val sortedModules = topoSort(dependencies.right.get)
-	    println("sortedModules="+sortedModules)
-	    prepareCompilation(config)
-	    // compile in topological order
-	    val result =(for(modules <- sortedModules.right;
-	    		     results <- errorMap(modules.toSeq.toList, handleModuleSource(config)).right) yield "")
-	    if(result.isLeft) {
-	      result
-	    } else {
-	      Right("compilation successful")
-	    }
+	val sortedModules = topoSort(dependencies.right.get)
+	println("sortedModules="+sortedModules)
+	prepareCompilation(config)
+	// compile in topological order
+	val result =(for(modules <- sortedModules.right;
+	  results <- errorMap(modules.toSeq.toList, handleModuleSource(config)).right) yield "")
+	if(result.isLeft) {
+	  result
+	} else {
+	  Right("compilation successful")
+	}
+      }
+    } catch {
+      case err:Error => Left(err)
     }
   }
   
