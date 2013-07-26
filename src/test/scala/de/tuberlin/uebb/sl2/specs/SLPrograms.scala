@@ -43,10 +43,6 @@ trait SLPrograms {
   |DEF l4 = (LET c2 = 3 IN \y.c2+y)(LET c2 = 5 IN c2)
   """.stripMargin
 
-
-  val multipleParams = "DEF add x y z = x + y + z"
-
-
   val concat = """
   |DEF xs        +++ Nil = xs
   |DEF Nil       +++ xs  = xs

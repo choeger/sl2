@@ -270,7 +270,7 @@ trait MultiDriver extends Driver {
       _ <- checkProgram(mo, normalizeModules(imports)).right) yield imports
     
     if(checkResults.isLeft) {
-      checkResults
+      Left(checkResults.left.get)
     } else {
     	// generate code, if checks were successful
 	    for (
@@ -301,7 +301,8 @@ trait MultiDriver extends Driver {
   def compileToString(program: Program, imports: List[ResolvedImport]) = {
     // TODO: maybe CombinatorParser does not yet parse qualified imports correctly, like ParboiledParser did before?
     val moduleTemplate = Source.fromURL(getClass().getResource("/js/module_template.js")).getLines.mkString("\n")
-    val moduleWriter = new PrintWriter(new StringWriter())
+    val stringWriter = new StringWriter()
+    val moduleWriter = new PrintWriter(stringWriter)
     for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
       val imp = i.asInstanceOf[ResolvedExternImport]
       val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
@@ -321,7 +322,7 @@ trait MultiDriver extends Driver {
             & functionDefsExternToJs(program.functionDefsExtern)
             & functionDefsToJs(program.functionDefs)
             & functionSigsToJs(program.signatures))));
-    moduleWriter.toString
+    stringWriter.toString
   }
   
   def compile(program: Program, name: String, imports: List[ResolvedImport], config: Config): Either[Error, String] = {    
