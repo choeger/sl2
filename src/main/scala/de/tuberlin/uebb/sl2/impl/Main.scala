@@ -66,7 +66,7 @@ object Main
     with ModuleContextImpl
   	with TopologicalSorting {
 
-  val usage = """Usage:B <sl> [-d destination directory] [-cp <class-path-directory>] -sourcepath <source-path> source file(s)"""
+  val usage = """Usage:B <sl> [-d <destination directory>] [-cp <class-path-directory>] -sourcepath <source-path> source file(s)"""
 
   def main(args: Array[String]) {
     if (args.isEmpty)
