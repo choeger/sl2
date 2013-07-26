@@ -14,10 +14,18 @@
 % grammar.
 \DeclareTextSymbol{\BackslashTT}{T1}{"5C}
 
+% needed to have a table of contents with llncs...
+\setcounter{tocdepth}{2}
+\makeatletter
+\renewcommand*\l@author[2]{}
+\renewcommand*\l@title[2]{}
+\makeatletter
+
+
 \author{Benjamin Bisping, Rico Jasper, Sebastian Lohmeier,
 	Friedrich Moritz Psiorz}
-\title{Projektbericht: Erweiterung von SL um ein Modulsystem}
-\institute{Compilerbauprojekt SoSe 2013, Technische Universität Berlin}
+\title{Projektbericht: \textbf{Erweiterung von SL um ein Modulsystem}}
+\institute{Compilerbauprojekt SoSe 2013\\Technische Universität Berlin}
 
 \newcommand{\verbatiminput}[2][]{%
   \lstinputlisting[basewidth=0.5em,
@@ -64,6 +72,14 @@
 
 \maketitle
 
+\begin{abstract}
+Worum geht es hier?
+\end{abstract}
+
+\begingroup
+\let\clearpage\relax
+\tableofcontents
+\endgroup
 
 \section{Einleitung}
 
@@ -159,13 +175,14 @@ Darüber hinaus widmeten wir uns auch noch weiteren Themen:
 
 \section{Syntax und Parser}\label{sec:syntax}
 
-\TODO{Fritz: Syntaxanpassungen, Schwierigkeiten, Designentscheidungen}
-\subsection{Syntaxanpassungen}
+\subsection{Grammatik}
 
-\subsubsection{Neue Grammatik für SL}
-
-Die Grammatik von Sl ist in der Abbildung \ref[grm:sl], die
-lexikalische Struktur ist in Abbildung \ref[grm:lex].
+Die Grammatik von SL ist in der Abbildung~\ref{grm:sl}, die
+lexikalische Struktur ist in Abbildung~\ref{grm:lex}. Nicht erwähnt
+darin sind die Kommentare.  SL folgt bei den Kommentaren der Tradition
+von Haskell; es gibt also einerseits Zeilenkommentare,
+die  mit \verb|--| eingeleitet werden, andererseits auch Blockkommentare, die
+von \verb:{|: und \verb:|}: eingeschlossen werden.
 
 \begin{grammarfigure}[grm:sl]{Grammatik von SL}
 <Program>   ::= <Toplevel>+
@@ -229,6 +246,8 @@ lexikalische Struktur ist in Abbildung \ref[grm:lex].
 <exp>       ::= 'e' <int> | 'E' <int>
 \end{grammarfigure}
 
+\subsection{Syntaxanpassungen}
+
 \subsubsection{Operatoren}
 
 In der ursprünglichen Version von SL wurde unterschieden zwischen
@@ -245,9 +264,8 @@ unterschidliche Funktion bezeichnen, wie in diesem Fall das
 Minuszeichen einerseits die Negation auf Gleitkomma- und Ganzzahlen
 und andererseits die Subtraktion von Ganzzahlen bezeichnete.
 
-
 Was die ungewöhnlich benannten Operatoren für Zeichenketten- und
-Gleitokmmaoperationen angeht, so haben wir uns dafür entschieden, sie
+Gleitokmmaoperationen betrifft, so haben wir uns dafür entschieden, sie
 aus der Sprache zu entfernen.  Dies verhindert auch Parserprobleme,
 wenn Bezeichner direkt hinter Operatoren geschrieben werden; so wurde
 etwa \verb|1+sum| bisher als \verb|1 +s um| geparst, was zu Verwirrung
@@ -298,16 +316,47 @@ Verfügung.  Der einzige unqualifizierte Import eines Moduls ist der
 implizite Import von \emph{std/prelude}, der automatisch bei jeder
 Kompilierung vorgenommen wird.
 
-\subsubsection{Externe Datentypen, externe Imports und externe
-  Definitionen}
+Wir haben uns für das Design mit den qualifizierten Imports
+entschieden, da es bei komplexeren Projekten beim Verständnis des
+Codes stark hilft, wenn leicht nachvollzogen werden kann, aus welchem
+Modul eine bestimmte Funktion oder ein Typ stammt.  Eine alternative
+Möglichkeit, dieses Ziel zu erreichen, wäre beim Import alle zu
+importierenden Bezeichner einzeln aufzulisten. Dadurch wären zwar
+Ausdrücke sauberer lesbar, allerdings müsste dann bei jeder Verwendung
+einer neuen Funktion diese mühsam in der Importzeile hinzugefügt
+werden.  Außerdem lässt sich auch mit unserer Lösung ein ähnliches
+Ergebnis erreichen, wie das folgende Beispiel zeigt:
+\begin{verbatim}
+IMPORT "std/list" AS List
+DEF length = List.length
+\end{verbatim}
+Dies funktioniert allerdings nur für Funktionen, nicht für Typen oder
+Konstruktoren.  Eine dahingehende Erweiterung, vielleicht auch eine
+entsprechende Kurzschreibweise, wäre für die Zukunft sinnvoll.
+Ebenfalls wünschenswert wäre die Möglichkeit, das Modul
+\emph{std/prelude} qualifiziert zu importieren und dadurch den
+unqualifizierten Import zu überschreiben.  Dies wäre etwa sinnvoll für
+Anwendungen, die viel mit Gleitkommazahlen arbeiten und darum lieber
+die Operatoren \verb|+|, \verb|-|, \verb|*|, \verb|/| aus
+\emph{std/real} unqualifiziert verwenden würden. Es ist zwar jetzt
+schon möglich, so etwas zu schreiben wie
+\verb|DEF a + b = a Real.+ b|,
+aber dadurch wird es unmöglich, die Addition aus der Prelude im
+gleichen Modul zu verwenden.
+
+\subsubsection{Externe Definitionen, externe Imports und externe
+  Datentypen}
 Bei der Implementation von Modulen, insbesondere des Moduls
 \emph{std/prelude}, das Funktionen definiert, die vormals direkt in
 den Sprachkern eingebaut waren, wurden auch bestimmte
-Spracherweiterungen nötig.
+Spracherweiterungen nötig.  Für all diese Erweiterungen verwenden wir
+das gleiche Keyword \verb|EXTERN|.  Dies soll signalisieren, dass es
+sich dabei um Features handelt, die nur nötig sind, wenn man mit
+SL-„externem“, d.h. JavaScript-Code arbeitet.
 
-Externe Definitionen erlauben den Aufruf von \emph{JavaScript}-Code
+Externe Definitionen erlauben den Aufruf von JavaScript-Code
 ohne Verwendung der DOM-Monade. Dadurch können Funktionen aus
-\emph{JavaScript} verwendet werden, um die Primitiven von SL zu
+JavaScript verwendet werden, um die Primitiven von SL zu
 implementieren.  Der Programmierer hat bei Verwendung von externen
 Definitionen selbst darauf zu achten, dass die Funktion keine
 Nebeneffekte hat und dass die Funktion wirklich den in der Signatur
@@ -321,11 +370,11 @@ Dabei ist zu beachten, dass im Gegensatz zu normalen Funktions-
 bzw. Operatordefinitionen keine Argumente angegeben werden dürfen.
 
 Externe Imports ermöglichen es, dem Compiler mitzuteilen, dass er den
-Inhalt einer beliebigen \emph{JavaScript}-Datei bei der
+Inhalt einer beliebigen JavaScript-Datei bei der
 Codegenerierung vor die Ausgabe kopieren soll. Dadurch kann auf die
-in dieser Datei in \emph{JavaScript}-Blöcken zugegriffen werden.
+in dieser Datei in JavaScript-Blöcken zugegriffen werden.
 Dies ist besonders hilfreich in Kombination mit externen Definitionen,
-wobei der tatsächliche Inhalt der \emph{JavaScript}-Funktionen in der
+wobei der tatsächliche Inhalt der JavaScript-Funktionen in der
 importen Datei liegt und in der externen Definition lediglich deren
 Name angegeben ist.  Das Modul \emph{std/prelude} ist etwa auf diese
 Weise geschrieben. Die Syntax für externe Importe ist:
@@ -338,7 +387,7 @@ Dabei ist \emph{Pfad} wieder ein Zeichenkettenliteral; die Endung
 \emph{.js} entfällt dabei.
 
 Externe Datentypen sind Datentypen ohne Konstruktoren. Dadurch können
-etwa verschiedene Typen von \emph{JavaScript}-Objekten dargestellt
+etwa verschiedene Typen von JavaScript-Objekten dargestellt
 werden.  Die Basistypen \verb|Int| und \verb|String| gehören etwa in
 diese Kategorie.  Die Syntax lautet:
 
@@ -354,6 +403,20 @@ Funktionen bzw. Konstruktoren exportiert, sind also in anderen Modulen
 sichtbar.  Nicht als \verb|PUBLIC| markierte Datentypen werden
 ebenfalls exportiert, allerdings ohne ihre Konstruktoren.
 
+Eine alternative Notation für die Markierung von Exporten wäre ein
+explizites Export-Statement analog zum Import-Statenment gewesen, in
+dem dann alle exportierten Bezeichner des Moduls aufgeführt werden.
+Uns hat die Annotation der Funktionssignaturen allerdings mehr
+zugesagt, da sie für exportierte, d.h. nach außen sichtbare Funktionen
+die Angabe einer Signatur erzwingt.  Gerade bei nicht selbst
+geschriebenen Funktionen ist die Signatur elementar für das
+Verständnis, was der Zweck einer Funktion ist und wie sie verwendet
+werden kann; die Signatur anzugeben wäre in jedem Fall guter Stil.
+Das Keyword \verb|PUBLIC| zu verwenden lag für uns nahe, da es in
+ähnlicher Funktion auch in anderen bekannten Sprachen wie Java oder
+C++ verwendet wird und seine Bedeutung dadurch eventuell intuitiver
+verständlich ist.
+
 \subsection{Qualifizierte Bezeichner}
 Da wir Module im Allgemeinen qualifiziert importieren, muss auf
 importierte Bezeichner auch qualifiziert zugegriffen werden. Die
@@ -366,12 +429,59 @@ entsprechende Syntax lautet:
 Der \emph{Modulbezeichner} ist ein großgeschriebener Bezeichner, wie
 er auch für Typen und Konstruktoren verwendet wird.  Der
 \emph{Bezeichner} ist ein gewöhnlicher SL-Typ-, Konstruktor- oder
-Funktionsbezeichner. 
+Funktionsbezeichner.  Namen sind immer nur einfach qualifiziert, da es
+in SL weder verschachtelte Modulnamen gibt, noch Datenstrukturen mit
+Feldnamen analog etwa zu Strukturen in C. Dadurch ist bei
+qualifizierten Bezeichnern immer auf den ersten ersten Blick
+ersichtlich, welcher Teil wofür steht.
+
+Bei der Auswahl von Namen sollte bereits beim Schreiben eines Moduls
+darauf geachtet werden, dass diese später einmal qualifiziert
+verwendet werden.  So könnte beispielsweise ein (imaginäres) Modul für
+die Verwendung von Dateien als \verb|File| importiert werden und dann
+Typen wie \verb|File.Name| oder \verb|File.Handle| oder Funktionen wie
+\verb|File.size| oder \verb|File.owner| bereitstellen.  Durch solch
+geschickte Auswahl von Namen kann der Nachteil des Overheads durch die
+obligatorische Qualifikation von Bezeichnern verringert oder gar ganz
+verhindert werden.
+
+Nachdem die Erweiterung der Syntax um die Qualifikationen teilweise
+ein komplexeres Unterfangen war, können jetzt qualifizierte Bezeichner
+tatsächlich an allen Stellen stehen, an denen auch unqualifizierte
+Bezeichner stehen können, außer natürlich auf der linken Seite von
+Definitionen und als Typ- oder Patternvariablen. Während es
+zwischenzeitlich nötig war, qualifizierte Bezeichner etwa als
+Feldtypen bei der Definition von Datenstrukturen zu klammern, ist dies
+nun nicht mehr erforderlich.
 
 \subsection{Weitere Anpassungen der bestehenden Grammatik}
 \label{sec:syntaxAdjustments}
 
-\subsection{Grammatik}
+\subsubsection{Präzedenz in Funktionssignaturen}
+
+Bisher wurde der Typ \verb|List a -> b| als \verb|List (a -> b)|
+interpretiert.  Wir haben diese unintuitive Präzedenz geändert zu
+\verb|(List a) -> b|.  Dies entspricht nicht nur unserer Intuition,
+sondern auch etwa der Präzedenz in Haskell, von dem SL seine
+Typ-Syntax abgeleitet zu haben scheint. 
+
+\subsubsection{Verbesserungen im Combinator-Parser}
+
+Während bisher hauptsächlich der Parboiled-Parser verwendet wurde, war
+es unser Ziel, beide Parser gleichwertig immer auf dem aktuellen Stand
+der Entwicklung zu halten.  Zu Beginn unserer Arbeiten fehlte dem
+Combinator-Parser noch die Unterstützung für einige Sprachfeatures,
+etwa die Definition von eigenen Operatoren oder das Parsen von
+Gleitkomma-Literalen.  Auch unterschied sich das Verhalten der Parser
+in so manchem Detail, wie etwa der Behandluch von JavaScript-Blöcken
+mit Zeilenumbrüchen.  Wir haben nicht nur den Combinator-Parser in
+an alle unsere Spracherweiterungen angepasst, sodass er gleichwertig
+mit dem Parboiled-Parser Programme korrekt parst, wir haben ihn sogar
+zu unserem primären Parser erhoben, da er beim Parsen jeder Produktion
+ein Attribut mit Dateiname sowie Zeilen- und Spaltennummer der Start-
+und Endposition zuweist.  Dies hat sich bei der Ausgabe von sinnvollen
+Fehlermeldungen als unverzichtbar herausgestellt (siehe
+\ref{sec:errors}).
 
 \section{Semantische Analyse}\label{sec:semantics}
 
@@ -531,46 +641,52 @@ Für den Type-Check ist es notwendig den initialen Kontext um den Modulkontext z
 
 Die lokalen Funktionssignaturen und -definitionen sowie die Signaturen aus den externen Modulen werden genutzt um das Programm in ELC\footnote{Enriched Lambda Calculus} zu übersetzen. Die Übersetzung wird dann zusammen mit dem initialen Kontext inklusive Modulkontext an den Type-Checker übergeben, der weitestgehend unangerührt blieb.
 
-\section{Codegenerierung}\label{sec:codegen}
+\section{Codegenerierung}
+\label{sec:codegen}
 
-\TODO{Sebastian: Beispiele, Schwierigkeiten, Designentscheidungen}
-
-\TODO{Aufruf des Compilers, aus binary und in sbt, durchgehendes Beispiel}
-
-Die Ausführung des generierten JavaScript-Codes wird in
-node.js\footnote{http://nodejs.org/ - getestet mit Version 0.10.10
-(\TODO{aktualisieren auf 0.10.13})},
-Firefox\footnote{\TODO{URL, zum Testen benutzte Version und OS}},
-Chrome\footnote{\TODO{URL, zum Testen benutzte Version und OS}} und
-Internet Explorer\footnote{\TODO{URL, zum Testen benutzte Version und OS}}
-unterstützt.
-
-Bei Aufruf des Compilers mit
-\begin{lstlisting}
-$> <PROGRAMM-NAME> -d <outputDirectory> -cp <classpathDirectory>
-[ -sourcepath <sourceDirectory> ] <moduleFile>
-\end{lstlisting}
-
-werden aus dem \texttt{<classpathDirectory>} die Signatur-Dateien
-bereits kompilierter Module geladen, sowie das angegebene
-\texttt{<moduleFile>} sowie alle von diesem transitiv verwendeten Module,
-die noch nicht kompiliert im \texttt{<outputDirectory>} vorhanden sind
-bzw. deren \TODO{keine Metonymie!} Modifikationsdatum im
-\texttt{<outputDirectory>} vor dem Modifikationdatum der
-SL-Moduldatei im \texttt{<sourceDirectory>} liegt, kompiliert. Dabei
+Der SL2-Compiler generiert Code, der unter node.js\footnote{http://nodejs.org/ - getestet mit Version 0.10.10} und im Browser\footnote{getestet mit Firefox, Chrome und Internet Explorer} ausgeführt werden kann. Bei einem Compileraufruf können jeweils mehrere
+Dateien angebenen werden (siehe Abschnitt \ref{sec:compInvoc}). Während
+der Compilierung werden aus dem \texttt{<classpathDirectory>} die
+Signatur-Dateien (siehe Abschnitt \ref{sec:compSig}) bereits
+kompilierter Module geladen. Anschließend werden die angegebenen
+\texttt{<module files>} sowie von diesem verwendete Module, kompiliert
+(Details siehe Abschnitt \ref{sec:compBuild}). Während der Codegenerierung
 werden Signaturen (siehe Abschnitt \ref{sec:compSig}), sowie
 JavaScript-Dateien (siehe Abschnitt \ref{sec:compBuild}) für alle
 kompilierten Module erstellt, wobei require.js (siehe Abschnitt
 \ref{sec:compReq}) verwendet wird, um die JavaScript-Dateien der
 Module zu laden. Sofern das beim Aufruf des Compilers angegebene
-\texttt{<moduleFile>} eine Funktion namens
+\texttt{<module files>} eine Funktion namens
 \texttt{main} deklariert, werden für dieses noch eine
 \texttt{main.js}-Datei und eine \texttt{index.html}-Datei erstellt,
 die den Aufruf der main-Funktion in node.js und im Browser erlauben
 (siehe Abschnitt \ref{sec:compBuild}).
 
 \TODO{Ausführung des Codes in (unterstützem) Browser und node.js,
-Voraussetzungen dafür}
+Voraussetzungen dafür (require.js muss ggf. im node.js installiert werden)}
+\TODO{Re-Kompilierung der Standardbibliothek: erst prelude.sl, dann buildstd.sl}
+\TODO{Anpassung der Pfade zur Standardbibliothek in main.js}
+
+\subsection{Compileraufruf und Pfadangaben}
+\label{sec:compInvoc}
+
+Bei Aufruf des Compilers mit
+\begin{verbatim}
+$> <PROGRAMM-NAME> [-d <output directory>] [-cp <classpath directory>]
+-sourcepath <source directory> <module files>
+\end{verbatim}
+\TODO{PROGRAMM-NAME}
+
+bzw. im Scala Build Tool:
+\begin{verbatim}
+run-main de.tuberlin.uebb.sl2.impl.Main  [-d <output directory>]
+[-cp <classpath directory>] -sourcepath <source directory>
+<module files>
+\end{verbatim}
+\TODO{Syntax für optionale Argumente}
+\TODO{die Verzeichnisse erklären}
+\TODO{Standard-Bibliotheken}
+\TODO{Überleitung zu den Signaturen}
 
 \subsection{Signaturen}
 \label{sec:compSig}
@@ -667,12 +783,12 @@ Zuletzt müssen noch die Datentypdefinitionen serialisiert werden. Diese werden 
 \label{sec:compReq}
 
 Um die Module zur Laufzeit in JavaScript zu laden, wurde
-require.js\footnote{http://requirejs.org/ v. 2.1.6 \TODO{updaten auf 2.1.8}}
+require.js\footnote{http://requirejs.org/ v. 2.1.6}
 statt CommonJS\footnote{http://www.commonjs.org/} ausgewählt, da es im
-Gegensatz zum Modulsystem von node.js auch im Browser verfügbar ist,
-jedoch auch in node.js genutzt werden kann\TODO{naja, das stimmt noch nicht ganz}.
+Gegensatz zum Modulsystem von node.js auch ohne Umwege sowohl im Browser
+als auch in node.js verfügbar ist.
 
-In node.js stehen zwei Wege zur Verfügung, um Abhängigkeiten zwischen
+In require.js stehen zwei Wege zur Verfügung, um Abhängigkeiten zwischen
 Modulen zu deklarieren und zur Laufzeit aufzulösen, siehe Listings
 \ref{lst:req1} und \ref{lst:req2}. \TODO{AMD besprechen?} Die
 Moduldefinition mit einem Array von Abhängigkeiten (siehe Beispiel im
@@ -688,22 +804,22 @@ gewählt, um später statische zirkuläre Abhängigkeiten auflösen zu
 können, auch wenn die bisherige Implementierung des Compilers dies
 nicht erlaubt.
 
-\begin{lstlisting}{caption={Moduldefinition mit Abhängigkeits-Array},label=lst:req1}
+\begin{verbatim}
 define(["modules/B"], function(b) {
   return {
     "a" : function() { return "A.a"; },
     "b" : function() { return b.b(); }
   };
 });
-\end{lstlisting}
+\end{verbatim}
 
-\begin{lstlisting}{caption={Moduldefinition mit Export-Objekt},label=lst:req2}
+\begin{verbatim}
 define(function(require, exports, module) {
   var b = require("modules/B");
   exports.a = function() { return "A.a"; };
   exports.b = function() { return b.b(); };
 });
-\end{lstlisting}
+\end{verbatim}
 
 \TODO{Kompilierung der Module}
 
@@ -719,6 +835,8 @@ oder global? in Systemvoraussetzungen für SL2 beschreiben}
 \subsection{Build-Prozess}
 \label{sec:compBuild}
 
+\TODO{MultiDriver, ModuleLinearization, zyklische Abhängigkeiten}
+
 \TODO{implizit unqualifiziert importieres prelude aus dem
 resources-Verzeichnis der SL2-Distribution, Zugriffe darauf werden
 nach dem Typcheck qualifiziert mit /lib/prelude -- bzw. mit /lib/prelude}
@@ -728,6 +846,9 @@ in JavaScript?}
 
 \TODO{Ort, an dem die Templates, prelude, und require.js (im Distributable)
 gespeichert sind}
+\TODO{wenn mehr als ein Modul eine main-Methode bereitstellt, kann nur
+die zuletzt ausgeführte verwendet werden}
+\TODO{Hierarchie der generierten Dateien}
 
 \subsection{Externe Definitionen}
 Besonders beim Schreiben von Funktionsbibliotheken muss man häufig auf
@@ -1020,6 +1141,14 @@ Wir haben eine Reihe kleinerer Testprogramme geschrieben.
  \item[\texttt{koch.sl}] Modifizierte Version des ursprünglichen
    Kochkurvenbeispiels. Verwendet Browseranzeige und \verb|timing|, um eine
    Animation ausgehend von der Kochkurve zu zeichnen.
+ \item[\texttt{sub/hello.sl}] Gibt "Hello Moon!" aus und wird von
+   \texttt{moonWorld.sl} verwendet, um das Einbinden verschieden
+   qualifizierter Module mit identischem einfachen Namen zu testen.
+ \item[\texttt{moonWorld.sl}] Verwendet \texttt{hello.sl} und
+   \texttt{sub/hello.sl}, um zu prüfen, ob die beiden Module getrennt
+   kompiliert und eingebunden werden.
+ \item[\texttt{cycleA.sl} \textnormal{und} \texttt{cycleB.sl}] enhalten eine direkte
+   zyklische Abhängigkeit, um zu testen, ob diese erkannt wird.
 \end{description}
 
 \section{Zusammenfassung}

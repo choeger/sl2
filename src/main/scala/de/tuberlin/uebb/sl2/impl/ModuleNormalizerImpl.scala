@@ -13,13 +13,12 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
     val f : PartialFunction[Any, Any] = {
       case Syntax.Var(ide, "") => {Syntax.Var(ide, declarations.getOrElse(ide, Syntax.LocalMod))}
       case Syntax.ConVar(ide, "") => {Syntax.ConVar(ide, declarations.getOrElse(ide, Syntax.LocalMod))}
-      case tv: TConVar => {tv}
+      case tv: Syntax.TConVar => {tv}
     }
     map(f, program)
   }
   
   def getImportedUnqualifiedDeclarations(imports: List[ResolvedImport]) = {
-    // TODO: need to distinguish between dataDefs and signatures?
     imports.filter(_.isInstanceOf[ResolvedUnqualifiedImport]).flatMap(imp =>
       { val rimp = imp.asInstanceOf[ResolvedUnqualifiedImport]
         rimp.signature.dataDefs.map(_.constructors).flatten.map( _.constructor -> rimp.name) ++
