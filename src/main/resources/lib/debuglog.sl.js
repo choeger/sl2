@@ -1,5 +1,5 @@
 /***********************************/
-// generated from: debuglog.sl
+// generated from: debuglog
 /***********************************/
 define(function(require, exports, module) {
     var $$std$prelude = require("std/prelude.sl")

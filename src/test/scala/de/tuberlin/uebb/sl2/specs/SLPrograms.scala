@@ -201,7 +201,7 @@ trait SLPrograms {
 
   var shadowedVars = """
   | DEF f = LET v = 10
-  |             x = (LET v = 20 IN \ x y . v * x) (LET v = 0-30 IN v) v
+  |             x = (LET v = 20 IN \ x y . v * x) (LET v = neg 30 IN v) v
   |         IN v + x
   """.stripMargin
 }
