@@ -1,1 +1,0 @@
-{"imports" : [{"name" : "P", "path" : "prelude"}], "signatures" : {"words" : {"type" : "P.List", "params" : [{"type" : ".String", "params" : []}]}, "conc" : [{"type" : "P.List", "params" : [{"type" : ".String", "params" : []}]}, {"type" : ".String", "params" : []}]}, "dataDefs" : []}

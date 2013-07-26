@@ -12,6 +12,9 @@ DEF EXTERN toString = {| function(i){return i.toString();} |}
 PUBLIC FUN fromString : String -> Real
 DEF EXTERN fromString = {| parseFloat |}
 
+PUBLIC FUN pi : Real
+DEF EXTERN pi = {| Math.PI |}
+
 -------------------------------------
 -- Arithmetics on Reals
 

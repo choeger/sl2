@@ -8,6 +8,7 @@
 \usepackage{listings}
 \usepackage{url}
 \usepackage{color}
+\usepackage{amssymb}
 
 % Declare the backslash from cmtt to use as terminal symbol in
 % grammar.
@@ -169,9 +170,85 @@ Darüber hinaus widmeten wir uns auch noch weiteren Themen:
 
 \section{Semantische Analyse}\label{sec:semantics}
 
-\TODO{Rico: Methode, Schwierigkeiten, Designentscheidungen}
+Aufgabe der semantischen Analyse ist es, den Kontext des vom Parser eingelesenen Syntaxbaums zu überprüfen. Durch die Erweiterung der Sprache SL um ein Modulsystem musste die Analyse angepasst und ausgebaut werden. Ohne das Modulsystem war der Kontext auf eine Quelldatei sowie fest einprogrammierte Konstrukte (z.B. Operatoren für ganze Zahlen) beschränkt.
+
+Da nun ein Modul auch andere Module importieren kann, erweitert sich der zu analysierende Kontext. Zum einen wurde die Grammatik um die \verb|IMPORT|-Anweisung ergänzt. Einem Modul ist es beispielsweise nicht erlaubt ein anderes Modul mehrfach zu importieren. Zum anderen können Datentypen und Funktionen aus dem importierten Modul verwendet werden. Für das Type-Checking muss daher die sogenannte Signatur des Imports bekannt sein. Diese umfasst Datendefinitionen und Funktionssignaturen.
 
 \subsection{Auflösung von Importen}
+
+Nachdem die abstrakte Syntax vom Parser eingelesen wurde, müssen die Importe aufgelöst werden. Andernfalls ist Type-Checking nicht möglich, welches vor der Spracherweiterung direkt im Anschluss des Parsings stattfand. Die Auflösung von Importen bezeichnet das Suchen und Laden von Signaturen von externen Modulen. Zuvor müssen die Import-Anweisungen allerdings selbst auf Korrektheit überprüft werden.
+
+\subsubsection{Import-Überprüfung}
+
+\TODO{Modulbezeichner richtiger Begriff?}
+\TODO{redundant?}
+\TODO{IMPORT EXTERN, Unqualifizierter Import?}
+
+Die Import-Anweisung ist im Grunde ein Paar aus Modulpfad und Modulbezeichner:
+
+\begin{verbatim}
+IMPORT "my/path/to/module-file" AS ModuleIde
+\end{verbatim}
+
+Der Pfad gibt dabei an, wo das Modul zu finden ist. Der Modulbezeichner ermöglicht die Verwendung von Datentypen und Funktionen des Importierten Moduls.
+
+Wir möchten verbieten, dass ein Modul mehrfach vom lokalen Modul importiert wird. Wir gehen dabei davon aus, dass ein Modul eineindeutig einem Pfad zugeordnet ist. Also überprüfen wir, ob jeder Pfad nur genau einmal vorkommt. Ebenso möchten wir nicht zulassen, dass ein Modulbezeichner für mehrere verschiedene Module verwendet wird.
+
+Zum Beispiel ist folgende Importliste nicht erlaubt, da hier zwei Mal derselbe Modulbezeichner ,,\verb|Duplicate|`` verwendet wird:
+
+\begin{verbatim}
+IMPORT "my/path/moduleA"    AS Duplicate
+IMPORT "other/path/moduleB" AS Duplicate
+IMPORT "my/path/moduleC"    AS Innocent
+\end{verbatim}
+
+Unsere Annahme, dass Module eindeutig über den Pfad identifiziert werden, kann in einigen Fällen jedoch unzureichend sein:
+
+\begin{verbatim}
+IMPORT "my/path/moduleA"         AS A1
+IMPORT "my/path/../path/moduleA" AS A2
+\end{verbatim}
+
+Laut unserer Grammatik \TODO{tolle grammatik oder verweis zur grammatik} wird der Pfad zu einem externen Modul als String definiert. Der Parser akzeptiert daher jede Art von gültigen Strings. Deshalb muss an dieser Stelle die Pfadsyntax überprüft werden. Grammatik \ref{grm:importpath} zeigt die Produktionsregeln für Pfade. Erlaubt sind relative Pfade bestehend aus beliebig vielen Verzeichnissen und dem Moduldateinamen am Ende. Als Trennungssymbol dient das Schrägstrichsymbol ,/`. Verzeichnisse dürfen Buchstaben, Zahlen, Minussymbole, Unterstriche und Punkte enthalten. Dies gilt auch für das Modul mit Ausnahme von Punkten. Der Modulname entspricht dem Dateinamen der Quelldatei ohne Endung ,,.sl``.
+
+\begin{grammarfigure}[grm:importpath]{Gültige Importpfade}
+  <Path>     ::= (<Dir> '/')* <Module>
+  <Dir>      ::= (<alphanum> | '-' | '\_' | '.')+
+  <Module>   ::= (<alphanum> | '-' | '\_')+
+  <alphanum> ::= 'a' | \cdots | 'z'
+            \alt 'A' | \cdots | 'Z'
+            \alt '0' | \cdots | '9'
+\end{grammarfigure}
+
+Dies sind Beispiele für korrekte Pfade:
+
+\begin{verbatim}
+IMPORT "moduleA"             AS A
+IMPORT "dir/moduleB"         AS B
+IMPORT ".hidden/dir/moduleC" AS C
+IMPORT "../module_D"         AS D
+IMPORT "123/moduleE"         AS E
+IMPORT "./module-6"          AS F
+\end{verbatim}
+
+Inkorrekt sind dagegen die folgenden:
+
+\begin{verbatim}
+IMPORT "moduleA.sl"             AS A
+IMPORT "dir/."                  AS B
+IMPORT "/absolute/path/moduleC" AS C
+IMPORT "../m.o.d.u.l.e.D"       AS D
+IMPORT "my//moduleE"            AS E
+\end{verbatim}
+
+\subsubsection{Laden der Signatur}
+
+Falls die Importe korrekt sind, werden die dazugehörigen Module-Dateien geladen. Ein Modul liegt dabei immer in zwei Dateien vor: Die Signatur (,,*.signatur``) und die in JavaScript übersetzte Implementierung  (,,*.js``). Können nicht alle benötigten Dateien gefunden werden, so kann der Kompiliervorgang nicht fortgesetzt werden.
+
+\TODO{Suchpfade}
+\TODO{std resource}
+
+Die Signatur-Datei enthält einen Teil des abstrakten Syntaxbaums des zu importierenden Moduls. Datentypdefinitionen und Funktionssignaturen sind hier in einer serialisierten Form abgespeichert. Das Format dieser Datei wird in Abschnitt \ref{sec:compSig} beschrieben.
 
 \subsection{Type-Checking}
 
@@ -287,7 +364,28 @@ in JavaScript?}
 gespeichert sind}
 
 \subsection{Externe Definitionen}
-\TODO{Das ist wohl eher für Ben...}
+Besonders beim Schreiben von Funktionsbibliotheken muss man häufig auf
+Java\-Script-Funktionen zugreifen, ohne dass man dabei in eine
+\verb|DOM|-Monade geraten will. Das ursprüngliche SL erlaubte nur
+JS-Code-Literale vom Typ \verb|DOM x|. Da es kein \verb|return| für
+\verb|DOM| gibt und auch keins geben soll, ist es damit nicht möglich,
+neue Funktionen in SL zu schreiben, die einen anderen Rückgabetyp als
+\verb|DOM| besitzen.
+
+Um dennoch das Prelude von SL und weitere Bibliotheken (Abschnitt~\ref{sec:libs})
+in SL verfassen zu können, haben wir durch \verb|DEF EXTERN| einen sehr
+definierten Platz geschaffen, an dem ein Java\-Script-Literal
+\verb.{|someJsCode()|}. ausgepackt werden darf. Die Übersetzung dazu ist
+vergleichsweise simpel:\\
+\verb.   DEF EXTERN bla = {| js |}.
+\quad $\leadsto$ \quad \verb|var bla = js;|
+
+Um auf auf der rechten Seite dieser Definition bequem selbstdefinierte
+Java\-Script-Funktionen anzugeben, bietete es sich an, diese in einem
+weiteren Modul zusammenzufassen und sie dann per \verb|IMPORT EXTERN|
+einzubinden. Die Übersetzung zu \verb|IMPORT EXTERN "<datei>"| ist dabei
+schlicht, dass an den Anfang des Kompilats der Inhalt der Datei
+\verb|"datei.js"| gesetzt wird.
 
 \section{Fehlermeldungen}
 \label{sec:errors}
@@ -532,6 +630,31 @@ Codegenerierung mehr.
 
 \section{Beispielprogramme und Tests}
 \label{sec:samples}
+
+\subsection{Beispielprogramme}
+
+Wir haben eine Reihe kleinerer Testprogramme geschrieben.
+
+\begin{description}
+ \item[\texttt{hello.sl}] Das minimale ,,Hello World``-Programm. Verwendet
+   nur \verb|debuglog|.
+ \item[\texttt{helloworld.sl}] Spielt mit diversen Grundlagen aus \verb|list|,
+   \verb|option| und \verb|dict|.
+ \item[\texttt{transitiveimports.sl}] Verwendet \verb|option|, ohne es direkt
+   zu importieren. Stattdessen werden \verb|dict| und \verb|list| benutzt.
+   (Das ist ein wichtiger Testfall!)
+ \item[\texttt{similarimports.sl}] Importiert eine neudefinierte \verb|Option|
+   und zeigt, dass sie nicht mit \verb|Option| aus \verb|std/option| clasht.
+ \item[\texttt{librarytest.sl}] Testet das Zusammenspiel einiger Funktionen aus
+   \verb|list| und \verb|dict| sowie \verb|real|. Macht außerdem vom lokalen
+   Überschreiben von Prelude-Bezeichnern Gebrauch.
+ \item[\texttt{boxsort.sl}] Größeres Beispiel, das mittels \verb|basicweb| eine
+   interaktive Website erzeugt. Macht starken Gebrauch von allen möglichen
+   Features aus den \verb|std|-Librarys.
+ \item[\texttt{koch.sl}] Modifizierte Version des ursprünglichen
+   Kochkurvenbeispiels. Verwendet Browseranzeige und \verb|timing|, um eine
+   Animation ausgehend von der Kochkurve zu zeichnen.
+\end{description}
 
 \section{Zusammenfassung}
 

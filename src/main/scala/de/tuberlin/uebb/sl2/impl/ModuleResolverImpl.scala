@@ -18,7 +18,6 @@ trait ModuleResolverImpl extends ModuleResolver {
         case _ =>
       }
       
-      //TODO: really deal with transitive imports and the like...
       val preludeImp = if (config.mainUnit.getName() != "prelude.sl")
          UnqualifiedImport("std/prelude") :: imports 
       else
@@ -51,7 +50,9 @@ trait ModuleResolverImpl extends ModuleResolver {
      *   module ::= [:alnum:-_]+
      */
     def validatePath(imp : Import) : Either[Error, Unit] = {
-      if (imp.path.matches("/?([a-zA-Z0-9-_.]+/)*[a-zA-Z0-9-_]+"))
+      if (imp.path.equals("prelude") || imp.path.equals("std/prelude"))
+    	return Left(ImportError("Prelude must not be imported explicitly.", imp.attribute))
+      else if (imp.path.matches("/?([a-zA-Z0-9-_.]+/)*[a-zA-Z0-9-_]+"))
         return Right()
       else
         return Left(InvalidPathError(imp.path, imp.attribute))
@@ -65,10 +66,10 @@ trait ModuleResolverImpl extends ModuleResolver {
       return Right()
     
     def checkUniqueness(imp : Import) : Either[Error, Unit] = {
-      if (imports.count(_.path == imp.path) == 1)
-        return Right()
-      else
+      if (imports.count(_.path == imp.path) != 1)
         return Left(DuplicatePathError(imp.path, imp.attribute))
+      else 
+        return Right()
     }
     
     imports.map(checkUniqueness).reduce(collectErrors)
@@ -107,7 +108,9 @@ trait ModuleResolverImpl extends ModuleResolver {
       }
       var paths = Set[String]()
       // ignore extern imports
-      for(resolvedImports <- errorMap(imports.filter( x => (x.isInstanceOf[UnqualifiedImport]) || (x.isInstanceOf[QualifiedImport])), collectImport(config)).right;
+      for(resolvedImports <- errorMap(imports.filter( x =>
+        	(x.isInstanceOf[UnqualifiedImport]) ||
+        	(x.isInstanceOf[QualifiedImport])), collectImport(config)).right;
           resolvedImport  <- resolvedImports) {
     	  paths = paths + resolvedImport
     	  println("paths="+paths)
@@ -141,11 +144,13 @@ trait ModuleResolverImpl extends ModuleResolver {
   }
 
   def findImportResource(path: String, attr: Attribute): Either[Error, File] = {
-    try {
-      Right(new File(getClass().getResource("/lib/"+path).toURI()))
-    } catch {
-      case _: NullPointerException => 
-        Left(ImportError("Could not find resource " + quote(path), attr))
+    val url = getClass().getResource("/lib/"+path);
+    if(url == null) {
+    	Left(ImportError("Could not find resource " + quote("/lib/"+path), attr))
+    } else {
+	    val files = List(new File(url.toURI()))
+	    files.find(_.canRead()).toRight(
+	      ImportError("Could not find resource " + quote(path)+ " at " + files.map(_.getCanonicalPath()).mkString("\n\t\t\t\tor "), attr))
     }
   }
   
