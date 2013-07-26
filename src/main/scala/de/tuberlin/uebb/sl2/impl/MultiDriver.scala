@@ -372,8 +372,7 @@ trait MultiDriver extends Driver {
     	  return Left(GenericError("Cannot compile: Standard library "+quote("/lib/")+" not found."))
       val preludeURL = getClass().getResource("/lib/")
       val stdURL = JsObject(List((JsName("std"), JsStr(preludeURL.toString))))
-      val stdPath = JsObject(List((JsName("std"), JsStr(preludeURL.getPath.substring(1)))))
-      println("creating "+mainJs)
+      val stdPath = JsObject(List((JsName("std"), JsStr(Paths.get(preludeURL.toURI).toString.replace("\\", "/")))))
 	    val mainWriter = new PrintWriter(mainJs)
 	    for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
 	      val imp = i.asInstanceOf[ResolvedExternImport]
