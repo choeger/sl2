@@ -276,7 +276,7 @@ IMPORT "d.i.r/module-g"          AS G
 
 \subsubsection{Laden der Signatur}
 
-Falls die Importe korrekt sind, werden die dazugehörigen Moduldateien geladen. Ein Modul liegt dabei immer in zwei Dateien vor: Die Signatur (,,*.signatur``) und die in JavaScript übersetzte Implementierung  (,,*.js``). Können nicht alle benötigten Dateien gefunden werden, so kann der Kompiliervorgang nicht fortgesetzt werden. Die Suche der Dateien erfolgt relativ zum Klassenpfad, Zielverzeichnis, \TODO{mainUnit?} und aktuellen Verzeichnis.
+Falls die Importe korrekt sind, werden die dazugehörigen Moduldateien geladen. Ein Modul liegt dabei immer in zwei Dateien vor: Die Signatur (,,*.signatur``) und die in JavaScript übersetzte Implementierung  (,,*.js``). Können nicht alle benötigten Dateien gefunden werden, so kann der Kompiliervorgang nicht fortgesetzt werden. Die Suche der Dateien erfolgt relativ zum Klassenpfad, Zielverzeichnis, \TODO{was ist die mainUnit?} und aktuellen Verzeichnis.
 
 Die Signatur-Datei enthält einen Teil des abstrakten Syntaxbaums des zu importierenden Moduls. Datentypdefinitionen und Funktionssignaturen sind hier in einer serialisierten Form abgespeichert. Das Format dieser Datei wird in Abschnitt \ref{sec:compSig} beschrieben.
 
@@ -474,8 +474,8 @@ Dagegen ist \verb|signatures| ein Hash, wie das Vorbild aus \verb|Program| welch
 In diesem Beispiel sehen wir auch, wie der Typ der Funktion \verb|foo| serialisiert wird. Es gibt drei Sorten von Typen:
 
 \begin{description}
- \item[Typvariablen] die durch einen beliebigen Typen ersetzt werden können.
- \item[Funktionstypen] welche prinzipiell eine Auflistung von Typen ist. Der Funktionstyp \verb|A -> B -> C| wird als Liste der Typen A, B und C dargestellt.
+ \item[Typvariable] die durch einen beliebigen Typen ersetzt werden kann.
+ \item[Funktionstyp] welcher prinzipiell eine Auflistung von Typen ist. Der Funktionstyp \verb|A -> B -> C| wird als Liste der Typen A, B und C dargestellt.
  \item[Typausdruck] ist ein konkreter singulärer Typ, welcher denselben Bezeichner wie in seiner \verb|DATA|-Definition beinhaltet. Außerdem können diese Parametertypen entgegennehmen, welche wiederum eine Liste von Typen ist.
 \end{description}
 
