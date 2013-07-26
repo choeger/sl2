@@ -57,8 +57,8 @@ trait TopologicalSorting
   }
   
 	/**
-	 * Sorts the nodes in the map from nodes to sets of their respective
-	 * required nodes topologically and returns the sorted sequence of nodes.
+	 * Sorts the modules in the map from modules to sets of their respective
+	 * required modules topologically and returns the sorted sequence of modules.
 	 */
 	def topoSort(predecessors: scala.collection.Map[Module, Set[Module]]):
 		Either[Error,Iterable[Module]] = {
@@ -66,11 +66,11 @@ trait TopologicalSorting
 	}
   
 	/**
-	 * Sorts the nodes in the map from nodes to sets of required nodes topologically.
+	 * Sorts the modules in the map from modules to sets of required modules topologically.
 	 * 
-	 * Recursively sort topologically: add the nodes to the set of done nodes
+	 * Recursively sort topologically: add the modules to the set of done modules 
 	 * that have no predecessors, remove them from the map of predecessors and
-	 * recurse until no nodes are left.
+	 * recurse until no modules are left. Return an error, if modules are left.
 	 */
 	def topoSort(predecessors: scala.collection.Map[Module, Set[Module]],
 	             done: Iterable[Module]): Either[Error,Iterable[Module]] = {
