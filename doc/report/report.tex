@@ -162,6 +162,73 @@ Darüber hinaus widmeten wir uns auch noch weiteren Themen:
 \TODO{Fritz: Syntaxanpassungen, Schwierigkeiten, Designentscheidungen}
 \subsection{Syntaxanpassungen}
 
+\subsubsection{Neue Grammatik für SL}
+
+Die Grammatik von Sl ist in der Abbildung \ref[grm:sl], die
+lexikalische Struktur ist in Abbildung \ref[grm:lex].
+
+\begin{grammarfigure}[grm:sl]{Grammatik von SL}
+<Program>   ::= <Toplevel>+
+<Toplevel>  ::= <Import> | <Signature> | <FunDef> | <DataDef>
+<Import>    ::= 'IMPORT' 'EXTERN' <string>
+           \alt 'IMPORT' <string> 'AS' <module>
+<Signature> ::= ['PUBLIC'] 'FUN' <var> '\colon' <Type>
+<Type>      ::= <BaseType> ('\arrow' <BaseType>)*
+<BaseType>  ::= <typevar> 
+           \alt <TypeExpr> 
+           \alt '\open' <Type> '\close'
+<TypeExpr>  ::= <TypeCon> <BaseType>*
+<DataDef>   ::= ['PUBLIC'] 'DATA' 'EXTERN' <string>
+           \alt ['PUBLIC'] 'DATA' <typecon> <typevar>* '\eq' <DataBody>
+<DataBody>  ::= <con> <TypeArg>* ('\bar' <con> <TypeArg>*)*
+<TypeArg>   ::= <typevar>
+           \alt <TypeCon>
+           \alt '\open' <Type> '\close'
+<FunDef>    ::= 'DEF' 'EXTERN' <var> '\eq' <JsQuote>
+           \alt 'DEF' 'EXTERN' <op> '\eq' <JsQuote>
+           \alt 'DEF' <var> <Pat>* '\eq' <Expr>
+           \alt 'DEF' <Pat> <op> <Pat> '\eq' <Expr>
+<Pat>       ::= <var>
+           \alt <Con>
+           \alt '\open' <Con> <Pat>* '\close'
+<Expr>      ::= 'IF' <Expr> 'THEN' <Expr> 'ELSE' <Expr>
+           \alt '\lam' <Pat>+ '.' <Expr>
+           \alt 'CASE' <Expr> <Alt>+
+           \alt 'LET' <LocalDef>+ 'IN' <Expr>
+           \alt <Expr> <Expr>
+           \alt '\open' <Expr> '\close'
+           \alt <Expr> <op> <Expr>
+           \alt <JsQuote> ['\colon' <Type>]
+           \alt <Var> | <Con> | <int> | <real> | <char> | <string>
+<Alt>       ::= 'OF' <PPat> 'THEN' <Expr>
+<PPat>      ::= <var> | <con> <Pat>*
+<LocalDef>  ::= <var> '\eq' <Expr>
+<JsQuote>   ::= '\bropen\bar' <string> '\bar\brclose'
+<Var>       ::= [<module> '.'] <var>
+<Con>       ::= [<module> '.'] <con>
+<TypeCon>   ::= [<module> '.'] <typecon>
+\end{grammarfigure}
+
+\begin{grammarfigure}[grm:lex]{Lexikalische Struktur von SL}
+<var>       ::= <lowercase> <alphanum>*
+<con>       ::= <uppercase> <alphanum>*
+<typevar>   ::= <lowercase> <alphanum>*
+<typecon>   ::= <uppercase> <alphanum>*
+<module>    ::= <uppercase> <alphanum>*
+<op>        ::= <singleop> | <multiop>+
+<singleop>  ::= '\exclamationOp' | '\paragraphOp' | '\percentOp' | '\ampOp' | '\divint' | '\questionOp' 
+           \alt '\addint' | '\mulint' | '\sharpOp' | '\subint' | '\ltint' | '\gtint'
+<multiop>   ::= <singleop> | '\eq'
+<lowercase> ::= 'a' | \cdots | 'z'
+<uppercase> ::= 'A' | \cdots | 'Z'
+<digit>     ::= '0' | \cdots | '9'
+<alphanum>  ::= <lowercase> | <uppercase> | <digit>
+<int>       ::= ['\subint'] <digit>+
+<real>      ::= ['\subint'] <realbody> [<exp>]
+<realbody>  ::= <digit>+ '.' <digit>* | '.' <digit>+
+<exp>       ::= 'e' <int> | 'E' <int>
+\end{grammarfigure}
+
 \subsubsection{Operatoren}
 
 In der ursprünglichen Version von SL wurde unterschieden zwischen
