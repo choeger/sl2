@@ -219,7 +219,7 @@ IMPORT "my/path/module-v"    AS Innocent
 
 Unsere Annahme, dass Module eindeutig über den Pfad identifiziert werden, kann in einigen Fällen jedoch unzureichend sein. Dies betrifft die Groß- und Kleinschreibung auf Windowssystemen sowie die Verwendung von ,,.`` und ,,..``. Daher verbieten wir die Verwendung von Punkten und Großbuchstaben.
 
-Neben dem regulären Import existiert auch noch der unqualifizierte Import. Dieser ist für den Programmierer unzugänglich. Er dient zum Einbinden des Preludes, sodass Funktionen wie Addition auch ohne Modulbezeichner verwendet werden können. Das Prelude wird implizit von jedem Modul importiert. Der unqualifizierte Import ist von der Prüfung von doppelten Modulbezeichnern ausgeschlossen, jedoch nicht von Tests auf Pfade.
+Neben dem regulären Import existiert auch noch der unqualifizierte Import. Dieser ist für den Programmierer unzugänglich. Er dient zum Einbinden des Preludes, sodass Funktionen wie Addition auch ohne Modulbezeichner verwendet werden können. Der unqualifizierte Import ist von der Prüfung von doppelten Modulbezeichnern ausgeschlossen, jedoch nicht von Tests auf Pfade
 
 Laut unserer Grammatik \TODO{tolle grammatik oder verweis zur grammatik} wird der Pfad zu einem externen Modul als String definiert. Der Parser akzeptiert daher jede Art von gültigen Strings. Deshalb muss an dieser Stelle die Pfadsyntax überprüft werden. Grammatik \ref{grm:importpath} zeigt die Produktionsregeln für Pfade. Erlaubt sind relative Pfade bestehend aus beliebig vielen Verzeichnissen und dem Moduldateinamen am Ende. Als Trennungssymbol dient das Schrägstrichsymbol ,/`. Verzeichnisse und Module dürfen Kleinbuchstaben, Zahlen, Minussymbole und Unterstriche enthalten. Der Modulname entspricht dem Dateinamen der Quelldatei ohne Endung ,,.sl``.
 
@@ -419,8 +419,6 @@ PUBLIC DATA MyType a = Ctor1 a | Ctor2
 PUBLIC FUN foo : MyType Int -> Int
 DEF foo x = ...
 \end{verbatim}
-
-Exportiert werden nur jene Funktionen und Datentypen, welche durch das Schlüsselwort \verb|PUBLIC| als öffentlich deklariert wurden. Dies erzwingt die Angabe einer Signatur für Funktionen, die exportiert werden sollen. Der Typ einer öffentlichen Funktion kann also nicht inferiert werden. Dadurch ist gewährleistet, dass die Schnittstellen des Moduls immer so sind, wie der Programmierer es erwartet. Für uns war allerdings entscheidend, dass wir auf inferierte Typen keinen leichten Zugriff haben. Das liegt daran, dass die abstrakte SL-Syntax zum Type-Checking in ELC übersetzt wird. Daher können wir nicht mehr ermitteln, welches ELC-Konstrukt zu welchem SL-Konstrukt gehört. Dieses Problem ist zwar lösbar, indem man explizite Verweise in den ELC-Baum angibt, wurde von uns aber nicht weiter verfolgt.
 
 Das Wurzelobjekt ist ein JSON-Hash der stets die drei Elemente \verb|imports|, \verb|signatures| und \verb|dataDefs| enthält. Dies sind auch die Bezeichner der korrespondierenden Felder aus der Klasse \verb|Program|, welches den abstrakten Syntaxbaum speichert.
 
@@ -851,7 +849,7 @@ Wir haben eine Reihe kleinerer Testprogramme geschrieben.
  \item[\texttt{moonWorld.sl}] Verwendet \texttt{hello.sl} und
    \texttt{sub/hello.sl}, um zu prüfen, ob die beiden Module getrennt
    kompiliert und eingebunden werden.
- \item[\texttt{cycleA.sl} und \texttt{cycleB.sl}] enhalten eine direkte
+ \item[\texttt{cycleA.sl} \textnormal{und} \texttt{cycleB.sl}] enhalten eine direkte
    zyklische Abhängigkeit, um zu testen, ob diese erkannt wird.
 \end{description}
 
