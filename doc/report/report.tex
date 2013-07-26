@@ -1,4 +1,4 @@
-\documentclass{llncs}
+\documentclass[runningheads]{llncs}
 
 \usepackage[utf8]{inputenc}
 \usepackage[german]{babel}
@@ -253,11 +253,53 @@ Die Syntax hierfür ist:
 Dabei ist zu beachten, dass im Gegensatz zu normalen Funktions-
 bzw. Operatordefinitionen keine Argumente angegeben werden dürfen.
 
-\TODO{Hier noch mehr!}
+Externe Imports ermöglichen es, dem Compiler mitzuteilen, dass er den
+Inhalt einer beliebigen \emph{JavaScript}-Datei bei der
+Codegenerierung vor die Ausgabe kopieren soll. Dadurch kann auf die
+in dieser Datei in \emph{JavaScript}-Blöcken zugegriffen werden.
+Dies ist besonders hilfreich in Kombination mit externen Definitionen,
+wobei der tatsächliche Inhalt der \emph{JavaScript}-Funktionen in der
+importen Datei liegt und in der externen Definition lediglich deren
+Name angegeben ist.  Das Modul \emph{std/prelude} ist etwa auf diese
+Weise geschrieben. Die Syntax für externe Importe ist:
+
+\begin{quote}
+\verb|IMPORT EXTERN| \emph{Pfad}
+\end{quote}
+
+Dabei ist \emph{Pfad} wieder ein Zeichenkettenliteral; die Endung
+\emph{.js} entfällt dabei.
+
+Externe Datentypen sind Datentypen ohne Konstruktoren. Dadurch können
+etwa verschiedene Typen von \emph{JavaScript}-Objekten dargestellt
+werden.  Die Basistypen \verb|Int| und \verb|String| gehören etwa in
+diese Kategorie.  Die Syntax lautet:
+
+\begin{quote}
+\verb|DATA EXTERN| \emph{Typname}
+\end{quote}
 
 \subsubsection{Sichtbarkeit}
 
+Funktionssignaturen und Datentypendefinitionen kann jetzt das Keyword
+\verb|PUBLIC| vorangestellt werden.  Dadurch werden die entsprechenden
+Funktionen bzw. Konstruktoren exportiert, sind also in anderen Modulen
+sichtbar.  Nicht als \verb|PUBLIC| markierte Datentypen werden
+ebenfalls exportiert, allerdings ohne ihre Konstruktoren.
+
 \subsection{Qualifizierte Bezeichner}
+Da wir Module im Allgemeinen qualifiziert importieren, muss auf
+importierte Bezeichner auch qualifiziert zugegriffen werden. Die
+entsprechende Syntax lautet:
+
+\begin{quote}
+\emph{Modulbezeichner}.\emph{Bezeichner}
+\end{quote}
+
+Der \emph{Modulbezeichner} ist ein großgeschriebener Bezeichner, wie
+er auch für Typen und Konstruktoren verwendet wird.  Der
+\emph{Bezeichner} ist ein gewöhnlicher SL-Typ-, Konstruktor- oder
+Funktionsbezeichner. 
 
 \subsection{Weitere Anpassungen der bestehenden Grammatik}
 \label{sec:syntaxAdjustments}
@@ -277,8 +319,6 @@ Nachdem die abstrakte Syntax vom Parser eingelesen wurde, müssen die Importe au
 \subsubsection{Import-Überprüfung}
 
 \TODO{Modulbezeichner richtiger Begriff?}
-\TODO{redundant?}
-\TODO{IMPORT EXTERN, Unqualifizierter Import?}
 
 Die Import-Anweisung ist im Grunde ein Paar aus Modulpfad und Modulbezeichner:
 
@@ -293,56 +333,50 @@ Wir möchten verbieten, dass ein Modul mehrfach vom lokalen Modul importiert wir
 Zum Beispiel ist folgende Importliste nicht erlaubt, da hier zwei Mal derselbe Modulbezeichner ,,\verb|Duplicate|`` verwendet wird:
 
 \begin{verbatim}
-IMPORT "my/path/moduleA"    AS Duplicate
-IMPORT "other/path/moduleB" AS Duplicate
-IMPORT "my/path/moduleC"    AS Innocent
+IMPORT "my/path/module-a"    AS Duplicate
+IMPORT "other/path/module-b" AS Duplicate
+IMPORT "my/path/module-v"    AS Innocent
 \end{verbatim}
 
-Unsere Annahme, dass Module eindeutig über den Pfad identifiziert werden, kann in einigen Fällen jedoch unzureichend sein:
+Unsere Annahme, dass Module eindeutig über den Pfad identifiziert werden, kann in einigen Fällen jedoch unzureichend sein. Dies betrifft die Groß- und Kleinschreibung auf Windowssystemen sowie die Verwendung von ,,.`` und ,,..``. Daher verbieten wir die Verwendung von Punkten und Großbuchstaben.
 
-\begin{verbatim}
-IMPORT "my/path/moduleA"         AS A1
-IMPORT "my/path/../path/moduleA" AS A2
-\end{verbatim}
+Neben dem regulären Import existiert auch noch der unqualifizierte Import. Dieser ist für den Programmierer unzugänglich. Er dient zum Einbinden des Preludes, sodass Funktionen wie Addition auch ohne Modulbezeichner verwendet werden können. Der unqualifizierte Import ist von der Prüfung von doppelten Modulbezeichnern ausgeschlossen, jedoch nicht von Tests auf Pfade
 
-Laut unserer Grammatik \TODO{tolle grammatik oder verweis zur grammatik} wird der Pfad zu einem externen Modul als String definiert. Der Parser akzeptiert daher jede Art von gültigen Strings. Deshalb muss an dieser Stelle die Pfadsyntax überprüft werden. Grammatik \ref{grm:importpath} zeigt die Produktionsregeln für Pfade. Erlaubt sind relative Pfade bestehend aus beliebig vielen Verzeichnissen und dem Moduldateinamen am Ende. Als Trennungssymbol dient das Schrägstrichsymbol ,/`. Verzeichnisse dürfen Buchstaben, Zahlen, Minussymbole, Unterstriche und Punkte enthalten. Dies gilt auch für das Modul mit Ausnahme von Punkten. Der Modulname entspricht dem Dateinamen der Quelldatei ohne Endung ,,.sl``.
+Laut unserer Grammatik \TODO{tolle grammatik oder verweis zur grammatik} wird der Pfad zu einem externen Modul als String definiert. Der Parser akzeptiert daher jede Art von gültigen Strings. Deshalb muss an dieser Stelle die Pfadsyntax überprüft werden. Grammatik \ref{grm:importpath} zeigt die Produktionsregeln für Pfade. Erlaubt sind relative Pfade bestehend aus beliebig vielen Verzeichnissen und dem Moduldateinamen am Ende. Als Trennungssymbol dient das Schrägstrichsymbol ,/`. Verzeichnisse und Module dürfen Kleinbuchstaben, Zahlen, Minussymbole und Unterstriche enthalten. Der Modulname entspricht dem Dateinamen der Quelldatei ohne Endung ,,.sl``.
 
 \begin{grammarfigure}[grm:importpath]{Gültige Importpfade}
-  <Path>     ::= (<Dir> '/')* <Module>
-  <Dir>      ::= (<alphanum> | '-' | '\_' | '.')+
-  <Module>   ::= (<alphanum> | '-' | '\_')+
-  <alphanum> ::= 'a' | \cdots | 'z'
-            \alt 'A' | \cdots | 'Z'
-            \alt '0' | \cdots | '9'
+  <Path>   ::= (<Dir> '/')* <Module>
+  <Dir>    ::= <char>+
+  <Module> ::= <char>+
+  <char>   ::= 'a' | \cdots | 'z'
+          \alt '0' | \cdots | '9'
+          \alt '-' | '\_'
 \end{grammarfigure}
 
 Dies sind Beispiele für korrekte Pfade:
 
 \begin{verbatim}
-IMPORT "moduleA"             AS A
-IMPORT "dir/moduleB"         AS B
-IMPORT ".hidden/dir/moduleC" AS C
-IMPORT "../module_D"         AS D
-IMPORT "123/moduleE"         AS E
-IMPORT "./module-6"          AS F
+IMPORT "module-a"     AS A
+IMPORT "dir/module-b" AS B
+IMPORT "123/module-c" AS C
+IMPORT "module_4"     AS D
 \end{verbatim}
 
 Inkorrekt sind dagegen die folgenden:
 
 \begin{verbatim}
-IMPORT "moduleA.sl"             AS A
-IMPORT "dir/."                  AS B
-IMPORT "/absolute/path/moduleC" AS C
-IMPORT "m.o.d.u.l.e.D"          AS D
-IMPORT "my//moduleE"            AS E
+IMPORT "MoDuLe"                  AS A
+IMPORT "module-b.sl"             AS B
+IMPORT "dir/."                   AS C
+IMPORT "/absolute/path/module-d" AS D
+IMPORT "m.o.d.u.l.e"             AS E
+IMPORT "./module-f"              AS F
+IMPORT "d.i.r/module-g"          AS G
 \end{verbatim}
 
 \subsubsection{Laden der Signatur}
 
-Falls die Importe korrekt sind, werden die dazugehörigen Moduldateien geladen. Ein Modul liegt dabei immer in zwei Dateien vor: Die Signatur (,,*.signatur``) und die in JavaScript übersetzte Implementierung  (,,*.js``). Können nicht alle benötigten Dateien gefunden werden, so kann der Kompiliervorgang nicht fortgesetzt werden.
-
-\TODO{Suchpfade}
-\TODO{std resource}
+Falls die Importe korrekt sind, werden die dazugehörigen Moduldateien geladen. Ein Modul liegt dabei immer in zwei Dateien vor: Die Signatur (,,*.signatur``) und die in JavaScript übersetzte Implementierung  (,,*.js``). Können nicht alle benötigten Dateien gefunden werden, so kann der Kompiliervorgang nicht fortgesetzt werden. Die Suche der Dateien erfolgt relativ zum Klassenpfad, Zielverzeichnis, \TODO{mainUnit?} und aktuellen Verzeichnis.
 
 Die Signatur-Datei enthält einen Teil des abstrakten Syntaxbaums des zu importierenden Moduls. Datentypdefinitionen und Funktionssignaturen sind hier in einer serialisierten Form abgespeichert. Das Format dieser Datei wird in Abschnitt \ref{sec:compSig} beschrieben.
 
@@ -352,30 +386,19 @@ Durch das Auflösen besteht nun Zugriff auf die Signaturen der Importe. Diese k�
 
 \subsubsection{Modulnormalisierung}
 
-Jedes Modul kann wiederum Module importieren. Demzufolge ist es auch möglich, dass zwei importierte Module A und B von einem dritten Modul ,,List`` Gebrauch machen. Im folgenden Beispiel importiert das Modul C diese Module:
+Jedes Modul kann wiederum Module importieren. Demzufolge ist es auch möglich, dass zwei importierte Module A und B von einem dritten Modul ,,List`` Gebrauch machen. Im folgenden Beispiel importiert das Modul C diese Module.
 
-\TODO{Module besser abbilden}
 
-\begin{figure}[H]
 \begin{verbatim}
+-- Module A --
 IMPORT "std/list" AS List
+PUPBLIC FUN foo : List.List -> List.List
 
-FUN foo : List.List -> List.List
-\end{verbatim}
-\caption{Modul A}
-\end{figure}
-
-\begin{figure}[H]
-\begin{verbatim}
+-- Module B --
 IMPORT "std/list" AS L
+PUBLIC DATA MyType = Ctor L.List
 
-DATA MyType = Ctor L.List
-\end{verbatim}
-\caption{Modul B}
-\end{figure}
-
-\begin{figure}[H]
-\begin{verbatim}
+-- Modul C --
 IMPORT "a" AS A
 IMPORT "b" AS B
 IMPORT "std/list" AS StdList
@@ -383,59 +406,42 @@ IMPORT "std/list" AS StdList
 FUN bar : B.MyType -> StdList.List
 DEF bar x = CASE x OF B.Ctor l THEN A.foo l
 \end{verbatim}
-\caption{Modul C}
-\end{figure}
 
 Hier würde der Type-Checker nicht wissen, dass der Typ \verb|List.List| aus Modul A derselbe ist wie \verb|L.List| in Modul C. Deshalb müssen die aufgelösten Importe normalisiert werden. Die Idee dahinter ist, dass jedem Modul genau ein Modulbezeichner zugeordnet wird. Dieser Bezeichner wird vom lokalen Modul, hier C, bestimmt. Das bedeutet, dass der Modulbezeichner für das Modul List durch \verb|StdList| ersetzt wird.
 
 Nach der Normalisierung sieht die abstrakte Syntax der Importierten Module also so aus:
 
-\begin{figure}[H]
 \begin{verbatim}
+-- Module A --
 IMPORT "std/list" AS StdList
 
-FUN foo : StdList.List -> StdList.List
-\end{verbatim}
-\caption{Normalisiertes Modul A}
-\end{figure}
+PUBLIC FUN foo : StdList.List -> StdList.List
 
-\begin{figure}[H]
-\begin{verbatim}
+-- Module B --
 IMPORT "std/list" AS StdList
 
-DATA MyType = Ctor StdList.List
+PUBLIC DATA MyType = Ctor StdList.List
 \end{verbatim}
-\caption{Normalisiertes Modul B}
-\end{figure}
 
 Diese Ersetzung ist möglich, da auch C das Modul List importiert. Anhand des Pfades \verb|"std/list"| kann dieses Modul auch in den anderen Modulen erkannt und der Bezeichner substituiert werden.
 
 Es kann jedoch auch der Fall eintreten, dass C das List-Modul unbekannt ist. In diesem Fall wird ein neuer Bezeichner generiert. Dieser hat die Form \verb|#<Nummer>| wobei \verb|<Nummer>| durch eine fortlaufende Nummer ersetzt wird. Durch dieses Vorgehen kann auch das folgende Beispielprogramm typgeprüft werden:
 
-\begin{figure}[H]
+
 \begin{verbatim}
+-- Module A --
 IMPORT "std/list" AS L
 IMPORT "std/option" AS O
 
-FUN foo : O.Option -> Int
-\end{verbatim}
-\caption{Unbekannter Import -- Modul A}
-\label{fig:unknownModA}
-\end{figure}
+PUBLIC FUN foo : O.Option -> Int
 
-\begin{figure}[H]
-\begin{verbatim}
+-- Module B --
 IMPORT "std/list" AS L
 IMPORT "std/option" AS O
 
-FUN bar : List.List -> O.Option
-\end{verbatim}
-\caption{Unbekannter Import -- Modul B}
-\label{fig:unknownModB}
-\end{figure}
+PUBLIC FUN bar : List.List -> O.Option
 
-\begin{figure}[H]
-\begin{verbatim}
+-- Modul C --
 IMPORT "a" AS A
 IMPORT "b" AS B
 IMPORT "std/list" AS L
@@ -443,19 +449,16 @@ IMPORT "std/list" AS L
 FUN baz : L.List -> Int
 DEF baz l = B.foo(A.bar(l))
 \end{verbatim}
-\caption{Unbekannter Import -- Modul C}
-\label{fig:unknownModC}
-\end{figure}
 
-Das Modul Option ist C unbekannt. Es kann also keine Funktionen oder Typen aus diesem Modul direkt verwenden. Dennoch ist es möglich die Funktionen \verb|foo| und \verb|bar| wie in Abbildung \ref{fig:unknownModC} aufzurufen. Während der Normalisierung wird der Modulbezeichner \verb|O| in A und B durch \verb|#1| ersetzt.
+Das Modul Option ist C unbekannt. Es kann also keine Funktionen oder Typen aus diesem Modul direkt verwenden. Dennoch ist es möglich die Funktionen \verb|foo| und \verb|bar| wie in Modul C aufzurufen. Während der Normalisierung wird der Modulbezeichner \verb|O| in A und B durch \verb|#1| ersetzt.
 
 \subsubsection{Modulkontext}
 
 Vor dem eigentlichen Type-Checking werden die Datentyp- und Funktionsdefinitionen überprüft. Einige der Tests mussten erweitert werden, um auch importierte Definitionen berücksichtigen zu können.
 
-\TODO{unqualified TypeConsDisjoint, DataConsDisjoint}
-
 Im Falle der Datentypdefinitionen gibt es die zwei Tests, \verb|checkNoUndefinedTypeCons| und \verb|checkTypeConsApp|, welche auch den Kontext von Importen beachten müssen. \verb|checkNoUndefinedTypeCons| überprüft ob die im Programm verwendeten Konstruktoren existieren. Bisher war dies auf den lokalen Kontext beschränkt. Da jedoch auch Konstruktoren aus anderen Modulen verwendet werden können sollen, werden jene zu der Menge der bekannten Konstruktoren hinzugefügt. Aus demselben Grund musste auch \verb|checkTypeConsApp| erweitert werden. Diese Funktion testet, ob genügend Parameter für einen Konstruktor angegeben wurden.
+
+Da Datendefinitionen von unqualifizierten Importen Probleme verursachen können, müssen diese in weiteren Tests betrachtet werden. Typbezeichner und Konstruktoren dürfen nicht mit lokalen Definitionen in Konflikt geraten. Deshalb werden jene importierten Datendefinitionen in den Tests \verb|checkTypeConsDisjoint| und \verb|unqualifiedImportedDataDefs| ebenfalls betrachtet
 
 Für den Type-Check ist es notwendig den initialen Kontext um den Modulkontext zu erweitern. Dazu muss der Modulkontext zunächst gebildet werden. Dies geschieht auf ähnliche Weise, wie auch der Kontext des lokalen Moduls aufgebaut wird. Alle Konstruktoren der Module erhalten ein Typschema und werden zusammen mit den Funktionen dem Kontext hinzugefügt.
 
@@ -504,7 +507,94 @@ Voraussetzungen dafür}
 
 \subsection{Signaturen}
 \label{sec:compSig}
-\TODO{Das ist wohl eher für Rico...}
+
+Wie bereits in Abschnitt \ref{sec:semantics} erläutert, ist es notwendig Signaturen für Module zu erzeugen. Dies ist ein neues Merkmal, welches vor Einführung des Modulsystems nicht erforderlich war. Die JavaScript-Datei, welche den übersetzten SL-Code enthält ist unzureichend um die Signatur eines Moduls auszulesen. Die Signatur umfasst die Funktionssignaturen, Datendefinitionen und eine Liste von Importen des Moduls. Mit diesen Informationen ist es später möglich eine Typüberprüfung durchzuführen und transitive Importe zu erfassen.
+
+Die Signatur wird als Datei abgespeichert. Dazu muss sie zunächst jedoch serialisiert werden. Es gab mehrere Alternativen, wie diese Serialisierung umgesetzt werden kann. Wir haben drei Möglichkeiten betrachtet:
+
+\begin{enumerate}
+ \item Die Signatur als SL-Code ausgeben und zum Deserialisieren erneut parsen.
+ \item Die in Java/Scala eingebaute Serialisierungsfunktion von Objekten verwenden.
+ \item Sie in ein JSON-Objekt umwandeln.
+\end{enumerate}
+
+Die erste Möglichkeit hat den Vorteil einfach lesbar und editierbar zu sein. Allerdings sind wir dabei auf die Ausdrucksmöglichkeiten von SL beschränkt. Dies könnte spätere Erweiterungen erschweren, wenn zum Beispiel Metadaten abgespeichert werden sollen.
+
+Die Möglichkeit in Java nahezu beliebige Objekte serialisieren und später wieder laden zu können wäre eine einfache und schnelle Möglichkeit gewesen einen Teil des Syntaxbaums als Datei abzuspeichern. Allerdings ist diese schwer zu lesen und von Hand zu editieren.
+
+Aufgrund der beiden Schwächen der ersten beiden Möglichkeiten haben wir uns für die dritte entschieden. Sie ermöglicht die erwünschten Freiheiten und bleibt dennoch von Hand editierbar. Die Implementierung war ebenfalls unproblematisch. Prinzipiell hätte man auch ein anderes bekanntes Format wie z.B. XML verwenden können. Der Vorteil von JSON ist jedoch, dass es Teil der JavaScript-Syntax ist und damit nativ von JavaScript eingelesen werden kann. Zwar haben wir dies in unserem Projekt noch in keiner Form ausgenutzt, kann später jedoch von Vorteil sein.
+
+Da die Signatur selbst ein Teil der abstrakten Syntax ist, haben wir uns deren Struktur als Beispiel für die JSON-Objektstruktur genommen. Diese Struktur ist am besten anhand eines Beispiels zu erläutern. Die Signatur des folgenden Moduls soll zu JSON serialisiert werden:
+
+\begin{verbatim}
+IMPORT "some/module" AS M
+
+PUBLIC DATA MyType a = Ctor1 a | Ctor2
+
+PUBLIC FUN foo : MyType Int -> Int
+DEF foo x = ...
+\end{verbatim}
+
+Das Wurzelobjekt ist ein JSON-Hash der stets die drei Elemente \verb|imports|, \verb|signatures| und \verb|dataDefs| enthält. Dies sind auch die Bezeichner der korrespondierenden Felder aus der Klasse \verb|Program|, welches den abstrakten Syntaxbaum speichert.
+
+\verb|imports| ist ein Array, welches alle Importfelder aus Modulpfad und -bezeichner beinhaltet:
+
+\begin{verbatim}
+"imports" : [
+  {
+    "name" : "M",
+    "path" : "some\/module"
+  }
+]
+\end{verbatim}
+
+Dagegen ist \verb|signatures| ein Hash, wie das Vorbild aus \verb|Program| welches eine \verb|Map[VarName, FunctionSig]| ist. In diesem Hash werden Bezeichner und Typ der Funktionen zugeordnet.
+
+\begin{verbatim}
+"signatures" : {
+  "foo" : [
+    {
+      "type" : ".MyType",
+      "params" : [{"type" : ".Int", "params" : []}]
+    },
+    {
+      "type" : ".Int",
+      "params" : []
+    }
+  ]
+}
+\end{verbatim}
+
+In diesem Beispiel sehen wir auch, wie der Typ der Funktion \verb|foo| serialisiert wird. Es gibt drei Sorten von Typen:
+
+\begin{description}
+ \item[Typvariablen] die durch einen beliebigen Typen ersetzt werden können.
+ \item[Funktionstypen] welche prinzipiell eine Auflistung von Typen ist. Der Funktionstyp \verb|A -> B -> C| wird als Liste der Typen A, B und C dargestellt.
+ \item[Typausdruck] ist ein konkreter singulärer Typ, welcher denselben Bezeichner wie in seiner \verb|DATA|-Definition beinhaltet. Außerdem können diese Parametertypen entgegennehmen, welche wiederum eine Liste von Typen ist.
+\end{description}
+
+Typvariablen werden in JSON als einfache Zeichenkette dargestellt. Funktionstypen sind Arrays, welche weitere Typen beinhalten. Der Typausdruck ist ein zwei-elementiger Hash mit den Werten \verb|type| für den Bezeichner und \verb|params| welcher eine Liste von Typen speichert. Da für jede Art von Typ ein anderer JSON-Objekttyp verwendet wird, sind die Typarten auch in JSON einfach voneinander zu unterscheiden.
+
+Zuletzt müssen noch die Datentypdefinitionen serialisiert werden. Diese werden wie Importe in einem Array aufgezählt. Eine einzelne Definition ist wiederum ein Hash, der die relevanten Felder der \verb|DataDef|-Klasse enthält. Dies sind \verb|ide| für den Typbezeichner, eine Liste \verb|tvars| aus Typvariablen und eine Liste von Konstruktoren \verb|constructors|. Ein Konstruktor besteht wiederum aus einem Bezeichner \verb|constructor| und eine Liste aus Typvariablen \verb|types|.
+
+\begin{verbatim}
+"dataDefs" : [
+  {
+    "ide" : "MyType",
+    "tvars" : ["a"],
+    "constructors" : [
+      {
+        "constructor" : "Ctor1",
+        "types" : ["a"]
+      },
+      {
+        "constructor" : "Ctor2",
+        "types" : []
+      }
+    ]
+  }
+]
+\end{verbatim}
 
 \subsection{require.js}
 \label{sec:compReq}
