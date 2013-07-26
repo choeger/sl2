@@ -79,8 +79,8 @@ object Main
           if(config.classpath == null) {
             config.classpath = config.sourcepath
           }
-        if(config.destination == null)
-          config.destination = config.sourcepath
+          if(config.destination == null)
+        	  config.destination = config.sourcepath
 	      val res = run(config)
 	      if (res.isLeft)
 	        res.left.map(x => println("Errors:\n" + x))

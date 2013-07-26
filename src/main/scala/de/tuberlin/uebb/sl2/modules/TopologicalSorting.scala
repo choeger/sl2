@@ -42,17 +42,17 @@ trait TopologicalSorting
           this.jsFile = new File(config.classpath, name+".sl.js")
       }
     }
-
-    def fromRight(ei: Either[Error, File]):File = ei match {
-      case Right(f) => return f
-      case Left(err) => throw err
+    
+    override def equals(obj: Any) = {
+      (obj != null &&
+       obj.isInstanceOf[Module] &&
+       obj.asInstanceOf[Module].name == this.name)
     }
-
+    
+    override def hashCode() = { name.hashCode }
+    
     override def toString() = {
-      "(Module "+quote(name)+" (compile="+compile+")"+/*
-      	" sourceFile="+quote(sourceFile.getCanonicalPath())+
-      	" signatureFile="+quote(signatureFile.getCanonicalPath())+
-      	" jsFile="+quote(jsFile.getCanonicalPath())+*/")\n"
+      "(Module "+quote(name)+" (compile="+compile+"))\n"
     }
   }
   
@@ -60,7 +60,8 @@ trait TopologicalSorting
 	 * Sorts the nodes in the map from nodes to sets of their respective
 	 * required nodes topologically and returns the sorted sequence of nodes.
 	 */
-	def topoSort(predecessors: Map[Module, Set[Module]]): Either[Error,Iterable[Module]] = {
+	def topoSort(predecessors: scala.collection.Map[Module, Set[Module]]):
+		Either[Error,Iterable[Module]] = {
 	  topoSort(predecessors, Seq())
 	}
   
@@ -71,15 +72,17 @@ trait TopologicalSorting
 	 * that have no predecessors, remove them from the map of predecessors and
 	 * recurse until no nodes are left.
 	 */
-	def topoSort(predecessors: Map[Module, Set[Module]],
+	def topoSort(predecessors: scala.collection.Map[Module, Set[Module]],
 	             done: Iterable[Module]): Either[Error,Iterable[Module]] = {
 		val (hasNoPredecessors, hasPredecessors) = predecessors.partition { _._2.isEmpty }
 		if (hasNoPredecessors.isEmpty) {
-			if (hasPredecessors.isEmpty)
+			if (hasPredecessors.isEmpty) {
 			  Right(done)
-			else
+			} else {
+			  println("Circular dependencies")
 			  Left(CircularDependencyError("Circular dependency between modules "+
 			      (for(key <- hasPredecessors.keys) yield key.sourceFile.getCanonicalPath).mkString(", ")))
+			}
 		} else {
 			val found = hasNoPredecessors.map { _._1 }
 			topoSort(hasPredecessors.mapValues { _ -- found }, done ++ found)

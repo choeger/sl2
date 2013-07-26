@@ -30,6 +30,8 @@ package de.tuberlin.uebb.sl2.impl
 
 import scala.language.implicitConversions
 import de.tuberlin.uebb.sl2.modules._
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.combinator.RegexParsers
@@ -59,7 +61,10 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
       }
     } catch {
       case err: Error => Left(err)
-      case e: Throwable => Left(ParseError("UNEXPECTED ERROR: " + e.getMessage(), AttributeImpl(NoLocation))) // TODO Use Attribute
+      case e: Throwable =>
+        val baos = new ByteArrayOutputStream()
+        e.printStackTrace(new PrintStream(baos))
+        Left(ParseError("UNEXPECTED ERROR: " + e.getMessage() + "\n" + baos.toString, AttributeImpl(NoLocation))) // TODO Use Attribute
     }
   }
 
@@ -71,7 +76,10 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
       }
     } catch {
       case err: Error => Left(err)
-      case e: Throwable => Left(ParseError("UNEXPECTED ERROR: " + e.getMessage(), AttributeImpl(NoLocation))) // TODO: Fix this
+      case e: Throwable =>
+        val baos = new ByteArrayOutputStream()
+        e.printStackTrace(new PrintStream(baos))
+        Left(ParseError("UNEXPECTED ERROR: " + e.getMessage() + "\n" + baos.toString, AttributeImpl(NoLocation))) // TODO: Fix this
     }
   }
 

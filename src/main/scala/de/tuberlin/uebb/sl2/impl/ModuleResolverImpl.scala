@@ -101,7 +101,6 @@ trait ModuleResolverImpl extends ModuleResolver {
    */
   def resolveDependencies(program: AST, config: Config) : Either[Error, Set[String]] = program match {
     case Program(imports, _, _, _, _, attribute) =>
-      println("imports="+imports)
       checkImports(imports) match {
         case Left(err) => return Left(err)
         case _ =>
@@ -113,7 +112,6 @@ trait ModuleResolverImpl extends ModuleResolver {
         	(x.isInstanceOf[QualifiedImport])), collectImport(config)).right;
           resolvedImport  <- resolvedImports) {
     	  paths = paths + resolvedImport
-    	  println("paths="+paths)
     	  }
       Right(paths)
     case _ => throw new RuntimeException("")
