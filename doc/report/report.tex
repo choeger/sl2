@@ -281,7 +281,7 @@ Jedes Modul kann wiederum Module importieren. Demzufolge ist es auch möglich, d
 \begin{verbatim}
 IMPORT "std/list" AS List
 
-FUN foo : List.List -> List.List
+PUPBLIC FUN foo : List.List -> List.List
 \end{verbatim}
 \caption{Modul A}
 \end{figure}
@@ -290,7 +290,7 @@ FUN foo : List.List -> List.List
 \begin{verbatim}
 IMPORT "std/list" AS L
 
-DATA MyType = Ctor L.List
+PUBLIC DATA MyType = Ctor L.List
 \end{verbatim}
 \caption{Modul B}
 \end{figure}
@@ -315,7 +315,7 @@ Nach der Normalisierung sieht die abstrakte Syntax der Importierten Module also 
 \begin{verbatim}
 IMPORT "std/list" AS StdList
 
-FUN foo : StdList.List -> StdList.List
+PUBLIC FUN foo : StdList.List -> StdList.List
 \end{verbatim}
 \caption{Normalisiertes Modul A}
 \end{figure}
@@ -324,7 +324,7 @@ FUN foo : StdList.List -> StdList.List
 \begin{verbatim}
 IMPORT "std/list" AS StdList
 
-DATA MyType = Ctor StdList.List
+PUBLIC DATA MyType = Ctor StdList.List
 \end{verbatim}
 \caption{Normalisiertes Modul B}
 \end{figure}
@@ -338,7 +338,7 @@ Es kann jedoch auch der Fall eintreten, dass C das List-Modul unbekannt ist. In 
 IMPORT "std/list" AS L
 IMPORT "std/option" AS O
 
-FUN foo : O.Option -> Int
+PUBLIC FUN foo : O.Option -> Int
 \end{verbatim}
 \caption{Unbekannter Import -- Modul A}
 \label{fig:unknownModA}
@@ -349,7 +349,7 @@ FUN foo : O.Option -> Int
 IMPORT "std/list" AS L
 IMPORT "std/option" AS O
 
-FUN bar : List.List -> O.Option
+PUBLIC FUN bar : List.List -> O.Option
 \end{verbatim}
 \caption{Unbekannter Import -- Modul B}
 \label{fig:unknownModB}
@@ -425,7 +425,94 @@ Voraussetzungen dafür}
 
 \subsection{Signaturen}
 \label{sec:compSig}
-\TODO{Das ist wohl eher für Rico...}
+
+Wie bereits in Abschnitt \ref{sec:semantics} erläutert, ist es notwendig Signaturen für Module zu erzeugen. Dies ist ein neues Merkmal, welches vor Einführung des Modulsystems nicht erforderlich war. Die JavaScript-Datei, welche den übersetzten SL-Code enthält ist unzureichend um die Signatur eines Moduls auszulesen. Die Signatur umfasst die Funktionssignaturen, Datendefinitionen und eine Liste von Importen des Moduls. Mit diesen Informationen ist es später möglich eine Typüberprüfung durchzuführen und transitive Importe zu erfassen.
+
+Die Signatur wird als Datei abgespeichert. Dazu muss sie zunächst jedoch serialisiert werden. Es gab mehrere Alternativen, wie diese Serialisierung umgesetzt werden kann. Wir haben drei Möglichkeiten betrachtet:
+
+\begin{enumerate}
+ \item Die Signatur als SL-Code ausgeben und zum Deserialisieren erneut parsen.
+ \item Die in Java/Scala eingebaute Serialisierungsfunktion von Objekten verwenden.
+ \item Sie in ein JSON-Objekt umwandeln.
+\end{enumerate}
+
+Die erste Möglichkeit hat den Vorteil einfach lesbar und editierbar zu sein. Allerdings sind wir dabei auf die Ausdrucksmöglichkeiten von SL beschränkt. Dies könnte spätere Erweiterungen erschweren, wenn zum Beispiel Metadaten abgespeichert werden sollen.
+
+Die Möglichkeit in Java nahezu beliebige Objekte serialisieren und später wieder laden zu können wäre eine einfache und schnelle Möglichkeit gewesen einen Teil des Syntaxbaums als Datei abzuspeichern. Allerdings ist diese schwer zu lesen und von Hand zu editieren.
+
+Aufgrund der beiden Schwächen der ersten beiden Möglichkeiten haben wir uns für die dritte entschieden. Sie ermöglicht die erwünschten Freiheiten und bleibt dennoch von Hand editierbar. Die Implementierung war ebenfalls unproblematisch. Prinzipiell hätte man auch ein anderes bekanntes Format wie z.B. XML verwenden können. Der Vorteil von JSON ist jedoch, dass es Teil der JavaScript-Syntax ist und damit nativ von JavaScript eingelesen werden kann. Zwar haben wir dies in unserem Projekt noch in keiner Form ausgenutzt, kann später jedoch von Vorteil sein.
+
+Da die Signatur selbst ein Teil der abstrakten Syntax ist, haben wir uns deren Struktur als Beispiel für die JSON-Objektstruktur genommen. Diese Struktur ist am besten anhand eines Beispiels zu erläutern. Die Signatur des folgenden Moduls soll zu JSON serialisiert werden:
+
+\begin{verbatim}
+IMPORT "some/module" AS M
+
+PUBLIC DATA MyType a = Ctor1 a | Ctor2
+
+PUBLIC FUN foo : MyType Int -> Int
+DEF foo x = ...
+\end{verbatim}
+
+Das Wurzelobjekt ist ein JSON-Hash der stets die drei Elemente \verb|imports|, \verb|signatures| und \verb|dataDefs| enthält. Dies sind auch die Bezeichner der korrespondierenden Felder aus der Klasse \verb|Program|, welches den abstrakten Syntaxbaum speichert.
+
+\verb|imports| ist ein Array, welches alle Importfelder aus Modulpfad und -bezeichner beinhaltet:
+
+\begin{verbatim}
+"imports" : [
+  {
+    "name" : "M",
+    "path" : "some\/module"
+  }
+]
+\end{verbatim}
+
+Dagegen ist \verb|signatures| ein Hash, wie das Vorbild aus \verb|Program| welches eine \verb|Map[VarName, FunctionSig]| ist. In diesem Hash werden Bezeichner und Typ der Funktionen zugeordnet.
+
+\begin{verbatim}
+"signatures" : {
+  "foo" : [
+    {
+      "type" : ".MyType",
+      "params" : [{"type" : ".Int", "params" : []}]
+    },
+    {
+      "type" : ".Int",
+      "params" : []
+    }
+  ]
+}
+\end{verbatim}
+
+In diesem Beispiel sehen wir auch, wie der Typ der Funktion \verb|foo| serialisiert wird. Es gibt drei Sorten von Typen:
+
+\begin{description}
+ \item[Typvariablen] die durch einen beliebigen Typen ersetzt werden können.
+ \item[Funktionstypen] welche prinzipiell eine Auflistung von Typen ist. Der Funktionstyp \verb|A -> B -> C| wird als Liste der Typen A, B und C dargestellt.
+ \item[Typausdruck] ist ein konkreter singulärer Typ, welcher denselben Bezeichner wie in seiner \verb|DATA|-Definition beinhaltet. Außerdem können diese Parametertypen entgegennehmen, welche wiederum eine Liste von Typen ist.
+\end{description}
+
+Typvariablen werden in JSON als einfache Zeichenkette dargestellt. Funktionstypen sind Arrays, welche weitere Typen beinhalten. Der Typausdruck ist ein zwei-elementiger Hash mit den Werten \verb|type| für den Bezeichner und \verb|params| welcher eine Liste von Typen speichert. Da für jede Art von Typ ein anderer JSON-Objekttyp verwendet wird, sind die Typarten auch in JSON einfach voneinander zu unterscheiden.
+
+Zuletzt müssen noch die Datentypdefinitionen serialisiert werden. Diese werden wie Importe in einem Array aufgezählt. Eine einzelne Definition ist wiederum ein Hash, der die relevanten Felder der \verb|DataDef|-Klasse enthält. Dies sind \verb|ide| für den Typbezeichner, eine Liste \verb|tvars| aus Typvariablen und eine Liste von Konstruktoren \verb|constructors|. Ein Konstruktor besteht wiederum aus einem Bezeichner \verb|constructor| und eine Liste aus Typvariablen \verb|types|.
+
+\begin{verbatim}
+"dataDefs" : [
+  {
+    "ide" : "MyType",
+    "tvars" : ["a"],
+    "constructors" : [
+      {
+        "constructor" : "Ctor1",
+        "types" : ["a"]
+      },
+      {
+        "constructor" : "Ctor2",
+        "types" : []
+      }
+    ]
+  }
+]
+\end{verbatim}
 
 \subsection{require.js}
 \label{sec:compReq}
