@@ -28,6 +28,7 @@ trait TopologicalSorting
       if(name.startsWith("std/")) {
           // load std/ library from resources directory
           this.name = name.replace("std/", "")
+
           val stdSource = getClass().getResource("/lib/"+this.name+".sl")
           if(stdSource == null)
             throw new IOException("Could not find source of standard library: "+quote("/lib/"+name))

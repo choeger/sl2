@@ -1,5 +1,5 @@
 /***********************************/
-// included from: C:\Users\Rico\Documents\GitHub\sl2\target\scala-2.10\classes\lib\_prelude.js
+// included from: /home/fpz/code/sl2/target/scala-2.10/classes/lib/_prelude.js
 /***********************************/
 /*
  * This basic module is necessary as an import to every SL
@@ -205,9 +205,26 @@ function $force(_arg0)
   if(((_arg0["_cid"] === _SUSPEND) && true))
   {
     var $f = _arg0["_var0"];
-    var $31 = $f;
-    var $30 = $Void;
-    var _return = $31($30);
+    var $38 = $f;
+    var $37 = $Void;
+    var _return = $38($37);
+    return _return
+  }
+  else 
+  {
+    throw "Pattern not exhaustive!"
+  }
+};
+function $neg(_arg0)
+{
+  if(true)
+  {
+    var $i = _arg0;
+    var $42 = $m;
+    var $41 = 0;
+    var $40 = $42($41);
+    var $39 = $i;
+    var _return = $40($39);
     return _return
   }
   else 
@@ -217,9 +234,9 @@ function $force(_arg0)
 };
 var $noop = function ()
 {
-  var $33 = $yield;
-  var $32 = $Void;
-  var $noop = $33($32);
+  var $44 = $yield;
+  var $43 = $Void;
+  var $noop = $44($43);
   return $noop
 }();
 function $id(_arg0)
@@ -248,17 +265,17 @@ function $s(_arg0)
         if(true)
         {
           var $x = _arg0;
-          var $38 = $f;
-          var $37 = $g;
-          var $36 = $x;
-          var $35 = $37($36);
-          var $34 = $38($35)
+          var $49 = $f;
+          var $48 = $g;
+          var $47 = $x;
+          var $46 = $48($47);
+          var $45 = $49($46)
         }
         else 
         {
           throw "Pattern for lambda expression did not match arguments"
         };
-        return $34
+        return $45
       };
       return _return
     }
@@ -316,13 +333,13 @@ function $d$e(_arg0)
     {
       var $x = _arg0;
       var $y = _arg1;
-      var $44 = $not;
-      var $43 = $e$e;
-      var $42 = $x;
-      var $41 = $43($42);
-      var $40 = $y;
-      var $39 = $41($40);
-      var _return = $44($39);
+      var $55 = $not;
+      var $54 = $e$e;
+      var $53 = $x;
+      var $52 = $54($53);
+      var $51 = $y;
+      var $50 = $52($51);
+      var _return = $55($50);
       return _return
     }
     else 
@@ -346,6 +363,7 @@ exports.$a = $a;
 exports.$g$e = $g$e;
 exports.$yield = $yield;
 exports.$intToChar = $intToChar;
+exports.$neg = $neg;
 exports.$m = $m;
 exports.$noop = $noop;
 exports.$a$e = $a$e;

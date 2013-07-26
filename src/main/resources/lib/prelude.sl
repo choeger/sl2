@@ -120,6 +120,9 @@ DEF EXTERN >= = {| _geq |}
 PUBLIC FUN > : Int -> Int -> Bool
 DEF EXTERN > = {| _greater |}
 
+PUBLIC FUN neg : Int -> Int
+DEF neg i = 0 - i
+
 PUBLIC FUN iNaN : Int
 DEF EXTERN iNaN = {| NaN |}
 -- iNaN /= iNaN !!

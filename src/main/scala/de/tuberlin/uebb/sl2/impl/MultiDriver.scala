@@ -71,7 +71,7 @@ trait MultiDriver extends Driver {
         scala.collection.mutable.Map[Module,Set[Module]]())    
     if(dependencies.isLeft) {
     	Left(dependencies.left.get)
-    } else {
+      } else {
     	// sort topologically
 	    val sortedModules = topoSort(dependencies.right.get)
 	    ensureDirExists(config.destination)
