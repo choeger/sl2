@@ -22,6 +22,14 @@ trait ModuleResolverSpec extends FunSpec with ShouldMatchers {
       checkImports(imports) should fail(InvalidPathError("", EmptyAttribute))
     }
     
+    it("Should refuse capital letter") {
+      val imports = List(
+        QualifiedImport("DONT/SCREAM", "Capital")
+      )
+      
+      checkImports(imports) should fail(InvalidPathError("DONT/SCREAM", EmptyAttribute))
+    }
+    
     it("Should refuse dots") {
       val imports = List(
         QualifiedImport("..", "Parent")
@@ -70,20 +78,20 @@ trait ModuleResolverSpec extends FunSpec with ShouldMatchers {
       checkImports(imports) should notFail
     }
     
-    it("Should accept directories with dots") {
+    it("Should refuse directories with dots") {
       val imports = List(
         QualifiedImport("my/.hidden/path", "Dot")
       )
       
-      checkImports(imports) should notFail
+      checkImports(imports) should fail(InvalidPathError("my/.hidden/path", EmptyAttribute))
     }
     
-    it("Should accept dot-only directory") {
+    it("Should refuse dot-only directory") {
       val imports = List(
         QualifiedImport("my/.../path", "Dots")
       )
       
-      checkImports(imports) should notFail
+      checkImports(imports) should fail(InvalidPathError("my/.../path", EmptyAttribute))
     }
   }
 

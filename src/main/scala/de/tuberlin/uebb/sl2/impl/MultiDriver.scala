@@ -228,7 +228,6 @@ trait MultiDriver extends Driver {
     // load input file
     val name = module.name
     // if no destination has been specified, the output goes to the folder of the input file.
-    // TODO: implement a test for this
     val destination = if (inputConfig.destination == null) module.sourceFile.getParentFile() else inputConfig.destination
     val config = inputConfig.copy(mainUnit = module.sourceFile, destination = destination)
     val source = scala.io.Source.fromFile(module.sourceFile)

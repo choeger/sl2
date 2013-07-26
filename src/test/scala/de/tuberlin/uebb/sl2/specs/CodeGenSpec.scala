@@ -265,16 +265,16 @@ trait CodeGenSpec
 
 
     it("Should compile mutually recursive even and odd function") {
-      ("""DEF even n = IF n == 0 THEN True ELSE odd (n-1)  
-         |DEF odd n = IF n == 1 THEN True ELSE even (n-1)
-         |PUBLIC FUN test: Void Int
+      ("""DEF even n = IF n == 0 THEN True ELSE odd (n - 1)  
+         |DEF odd n = IF n == 1 THEN True ELSE even (n - 1)
+         |PUBLIC FUN test: Bool
          |DEF test = even 22""".compiled.evaluated) should equal("true".evaluated)
     }
 
     it("Should compile mutually recursive even and odd in let expression") {
       ("""PUBLIC FUN test: a
-         |DEF test = LET even = \ n . IF n == 0 THEN True ELSE odd (n-1)  
-         |    odd = \ n . IF n == 1 THEN True ELSE even (n-1)  
+         |DEF test = LET even = \ n . IF n == 0 THEN True ELSE odd (n - 1)  
+         |    odd = \ n . IF n == 1 THEN True ELSE even (n - 1)  
          |    IN even 22 """.compiled.evaluated) should equal("true".evaluated)
     }
 
@@ -545,10 +545,10 @@ trait CodeGenSpec
     it("Should work on even larger input") {
       (sort+"\n"+
        """PUBLIC FUN test: a
-         |DEF test = quicksort (reverse (range 1000))""").compiled.evaluated should
+         |DEF test = quicksort (reverse (range 400))""").compiled.evaluated should
          equal((range+"""
                 |PUBLIC FUN test: a
-                |DEF test=range 1000""").compiled.evaluated)
+                |DEF test=range 400""").compiled.evaluated)
     }
   }
 

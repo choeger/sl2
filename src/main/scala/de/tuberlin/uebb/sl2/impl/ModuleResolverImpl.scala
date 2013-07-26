@@ -46,13 +46,14 @@ trait ModuleResolverImpl extends ModuleResolver {
      * The syntax is defined as follows:
      *
      *   path   ::= _/?(dir _/) module
-     *   dir    ::= [:alnum:-_.]+
-     *   module ::= [:alnum:-_]+
+     *   dir    ::= char+
+     *   module ::= char+
+     *   char   ::= [:lower:] | [:digit:] | [-_]
      */
     def validatePath(imp : Import) : Either[Error, Unit] = {
       if (imp.path.equals("prelude") || imp.path.equals("std/prelude"))
     	return Left(ImportError("Prelude must not be imported explicitly.", imp.attribute))
-      else if (imp.path.matches("/?([a-zA-Z0-9-_.]+/)*[a-zA-Z0-9-_]+"))
+      else if (imp.path.matches("/?([a-z0-9-_]+/)*[a-z0-9-_]+"))
         return Right()
       else
         return Left(InvalidPathError(imp.path, imp.attribute))
@@ -125,8 +126,8 @@ trait ModuleResolverImpl extends ModuleResolver {
       if (stdPrefix != path.substring(0, stdPrefix.length))
         return Left(GenericError("unqualified import " + path + " doesn't start with " + stdPrefix))
       for (
-        file <- findImportResource(imp.path.substring(stdPrefix.length) + ".sl.signature", attr).right;
-        jsFile <- findImportResource(imp.path.substring(stdPrefix.length) + ".sl.js", attr).right;
+        file <- findImportResource(imp.path.substring(stdPrefix.length) + ".sl.signature", config, attr).right;
+        jsFile <- findImportResource(imp.path.substring(stdPrefix.length) + ".sl.js", config, attr).right;
         signature <- importSignature(file).right
       ) yield ResolvedUnqualifiedImport(path, file, jsFile, signature, ui)
     case qi @ QualifiedImport(path, name, attr) =>
@@ -141,12 +142,15 @@ trait ModuleResolverImpl extends ModuleResolver {
       ) yield ResolvedExternImport(path, file, ei)
   }
 
-  def findImportResource(path: String, attr: Attribute): Either[Error, File] = {
-    val url = getClass().getResource("/lib/"+path);
-    if(url == null) {
+  def findImportResource(path: String, config: Config, attr: Attribute): Either[Error, File] = {
+    val url = getClass().getResource("/lib/");
+    val file = new File(new File(url.toURI()), path)
+    if(url == null && file.canRead()) {
     	Left(ImportError("Could not find resource " + quote("/lib/"+path), attr))
     } else {
-	    val files = List(new File(url.toURI()))
+	    val files = List(file,
+	        new File(config.classpath, path), // the last two paths are necessary to compile the std. libraries
+	        new File(config.destination, path))
 	    files.find(_.canRead()).toRight(
 	      ImportError("Could not find resource " + quote(path)+ " at " + files.map(_.getCanonicalPath()).mkString("\n\t\t\t\tor "), attr))
     }
@@ -155,7 +159,7 @@ trait ModuleResolverImpl extends ModuleResolver {
   def findImport(config: Config, path: String, attr: Attribute): Either[Error, File] = {
     val stdPrefix = "std/" // TODO: Do this less rigidly
     if (stdPrefix == path.substring(0, stdPrefix.length)) {
-      findImportResource(path.substring(stdPrefix.length), attr)
+      findImportResource(path.substring(stdPrefix.length), config, attr)
     } else {
       val files = List(new File(config.classpath, path),
         new File(config.destination, path),
