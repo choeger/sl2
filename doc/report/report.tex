@@ -109,7 +109,7 @@ Features:
    Während der Übersetzung eine Moduls \verb|code.sl| wird nicht nur eine
    \verb|code.js|, sondern auch eine \verb|code.signature| mit den
    Signaturinformationen angelegt. 
- \item[Import von Modulen] Module können importiert mittels \verb|IMPORT|
+ \item[Import von Modulen] Module können mittels \verb|IMPORT| importiert 
    werden. \\
    \verb|IMPORT "code" AS M| \quad macht die exportierten Definitionen aus
    \verb|code.sl| unter dem lokalen Modulbezeichner \verb|M| verfügbar. 
@@ -135,7 +135,7 @@ Features:
    gibt es auch noch die Möglichkeit, JavaScript-Code in ein Modul
    einzubinden.\\
    \verb|IMPORT EXTERN "_code"| \quad zum Beispiel bindet die Datei
-   \verb|_code.js| direkt mit in das Compilat mit ein.
+   \verb|_code.js| direkt mit in das Kompilat mit ein.
 \end{description}
 
 Darüber hinaus widmeten wir uns auch noch weiteren Themen:
@@ -184,12 +184,13 @@ Darüber hinaus widmeten wir uns auch noch weiteren Themen:
 \subsection{Grammatik}
 
 Die Grammatik von SL ist in der Abbildung~\ref{grm:sl}, die
-lexikalische Struktur ist in Abbildung~\ref{grm:lex}. Nicht erwähnt
-darin sind die Kommentare und Operator-Präzedenzen.  SL folgt bei den
-Kommentaren der Tradition von Haskell; es gibt also einerseits
-Zeilenkommentare, die mit \verb|--| eingeleitet werden, andererseits
-auch Blockkommentare, die von \verb:{-: und \verb:-}: eingeschlossen
-werden. Die Päzedenzen sind in der folgenden Tabelle aufgelistet:
+lexikalische Struktur ist in Abbildung~\ref{grm:lex} aufgelistet.
+Nicht erwähnt darin sind die Kommentare und Operator-Präzedenzen.  SL
+folgt bei den Kommentaren der Tradition von Haskell; es gibt also
+einerseits Zeilenkommentare, die mit \verb|--| eingeleitet werden,
+andererseits auch Blockkommentare, die von \verb:{-: und \verb:-}:
+eingeschlossen werden. Die Päzedenzen sind in der folgenden Tabelle
+aufgelistet:
 \begin{center}
 \begin{tabular}{clc}
 Operatoren & Beschreibung& Präzedenz \\
@@ -206,6 +207,7 @@ Operatoren & Beschreibung& Präzedenz \\
 \end{center}
 Eine höher Präzedenz bedeutet, dass der Operator stärker bindet.  Alle
 Operatoren sind linksassoziativ.
+
 \begin{grammarfigure}[grm:sl]{Grammatik von SL}
 <Program>   ::= <Toplevel>+
 <Toplevel>  ::= <Import> | <Signature> | <FunDef> | <DataDef>
@@ -284,12 +286,12 @@ sowohl auf Gleitkomma- als auch auf Ganzzahlen definiert, was in der
 Sprache dahingehend einzigartig war, dass es ansonsten weder unäre
 Operatoren gibt, noch überladene Funktionen/Operatoren, noch
 Bezeichner, die je nach Position (präfix oder infix) eine
-unterschidliche Funktion bezeichnen, wie in diesem Fall das
+unterschiedliche Funktion bezeichnen, wie in diesem Fall das
 Minuszeichen einerseits die Negation auf Gleitkomma- und Ganzzahlen
 und andererseits die Subtraktion von Ganzzahlen bezeichnete.
 
 Was die ungewöhnlich benannten Operatoren für Zeichenketten- und
-Gleitokmmaoperationen betrifft, so haben wir uns dafür entschieden, sie
+Gleitkommaoperationen betrifft, so haben wir uns dafür entschieden, sie
 aus der Sprache zu entfernen.  Dies verhindert auch Parserprobleme,
 wenn Bezeichner direkt hinter Operatoren geschrieben werden; so wurde
 etwa \verb|1+sum| bisher als \verb|1 +s um| geparst, was zu Verwirrung
@@ -309,7 +311,7 @@ Dezimalpunkt getrennt ist.  So sind beispielsweise die Schreibweisen
 \verb|5 * (-1)| und \verb|5 * -1| immer noch zulässig, nicht aber
 \verb|5 * -(1)|, \verb|5 * - 1| oder auch \verb|5 * (-x)|.
 Problematisch bei dieser Lösung ist allerdings, dass sie beim Parsen
-auch zu uninutitiven Ergebnissen führt.  Beispielsweise würde man
+auch zu unintuitiven Ergebnissen führt.  Beispielsweise würde man
 erwarten, dass der Ausdruck \verb|x-2| (ohne Leerschritte) als
 Subtraktion geparst wird, also gleichbedeutend mit \verb|x - 2|.
 Tatsächlich wird der Ausdruck aber als Applikation von x mit dem
@@ -327,7 +329,7 @@ andere Module zu importieren.  Dazu haben wir ein
 
 Dabei ist der \emph{Modulbezeichner} ein großgeschriebener
 SL-Bezeichner, der zur Qualifikation von importierten Bezeichnern
-verwendet wird.  Der \emph{Modulpfad} der Pfad der Moduldateien, ohne
+verwendet wird.  Der \emph{Modulpfad} ist der Pfad der Moduldateien, ohne
 Dateiendung.  Wenn das Modul etwa aus der Datei
 \emph{testmodule.sl} im aktuellen Verzeichnis kompiliert wurde, so
 heißt der \emph{Modulpfad} einfach \verb|"testmodule"|.  Beginnt der
@@ -399,7 +401,7 @@ die Ausgabe kopieren soll. Dadurch kann auf die in dieser Datei
 definierten Funktionen von JavaScript-Blöcken aus zugegriffen werden.
 Dies ist besonders hilfreich in Kombination mit externen Definitionen,
 wobei der tatsächliche Inhalt der JavaScript-Funktionen in der
-importen Datei liegt und in der externen Definition lediglich deren
+importierten Datei liegt und in der externen Definition lediglich deren
 Name angegeben ist.  Das Modul \emph{std/prelude} ist etwa auf diese
 Weise geschrieben. Die Syntax für externe Importe ist:
 
@@ -428,7 +430,7 @@ sichtbar.  Nicht als \verb|PUBLIC| markierte Datentypen werden
 ebenfalls exportiert, allerdings ohne ihre Konstruktoren.
 
 Eine alternative Notation für die Markierung von Exporten wäre ein
-explizites Export-Statement analog zum Import-Statenment gewesen, in
+explizites Export-Statement analog zum Import-Statement gewesen, in
 dem dann alle exportierten Bezeichner des Moduls aufgeführt werden.
 Uns hat die Annotation der Funktionssignaturen allerdings mehr
 zugesagt, da sie für exportierte, d.h. nach außen sichtbare Funktionen
@@ -497,7 +499,7 @@ der Entwicklung zu halten.  Zu Beginn unserer Arbeiten fehlte dem
 Combinator-Parser noch die Unterstützung für einige Sprachfeatures,
 etwa die Definition von eigenen Operatoren oder das Parsen von
 Gleitkomma-Literalen.  Auch unterschied sich das Verhalten der Parser
-in so manchem Detail, wie etwa der Behandluch von JavaScript-Blöcken
+in so manchem Detail, wie etwa der Behandlung von JavaScript-Blöcken
 mit Zeilenumbrüchen, oder dass er dem Operator \verb|>| im gegensatz
 zu allen anderen Vergleichsoperatoren niedrigste Präzedenz gegeben
 hat.  Wir haben nicht nur den Combinator-Parser in an alle unsere
@@ -1167,7 +1169,7 @@ if (typeof window === 'undefined') {
         //function to requirejs so that node modules
         //are loaded relative to the top-level JS file.
         nodeRequire: require,
-	paths: %%STD_PATH%%
+        paths: %%STD_PATH%%
     });
     
     requirejs([%%MODULE_PATHS_LIST%%], function(%%MODULE_NAMES_LIST%%) {
@@ -1175,7 +1177,7 @@ if (typeof window === 'undefined') {
     });
 } else {
     require.config({
-	paths: %%STD_URL%%
+        paths: %%STD_URL%%
     });
 
     /* in browsers*/ 
