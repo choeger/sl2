@@ -802,23 +802,25 @@ den \texttt{MultiDriver} gesteuert, der folgende Phasen durchläuft.
     
 \begin{verbatim}
 -- cycle1.sl --
-IMPORT "std/list" AS StdList
+IMPORT "cycle2" AS B
 
-PUBLIC FUN foo : StdList.List -> StdList.List
+PUBLIC FUN main: Int
+DEF main = 1
 
 -- cycle2.sl --
-IMPORT "std/list" AS StdList
+IMPORT "cycle1" AS A
 
-PUBLIC DATA MyType = Ctor StdList.List
+PUBLIC FUN main: Int
+DEF main = 2
 \end{verbatim}
     
 \item[Modul übersetzen] Nach der Linearisierung werden die zu
-    kompilierenden Module in der gefundenen Reihenfolge übersetzt. Für
+    kompilierenden Module in der ermittelten Reihenfolge übersetzt. Für
     jedes Module werden dabei folgenden Schritte durchgeführt.
     \begin{description}
     \item[Parsing] Der Syntaxbaum des Moduls wird erstellt (siehe
         Abschnitt \ref{sec:syntax}).
-    \item[Normalisierung der Modulbezeichner] Die Modulbezeichner
+    \item[Normalisierung der Modulbezeichner] Die Bezeichner der Module
         werden normalisiert (siehe Abschnitt \ref{sec:typeChecking}).
     \item[Typprüfung] Es wird eine Typprüfung durchgeführt (siehe
         Abschnitt \ref{sec:typeChecking}).
@@ -829,11 +831,11 @@ PUBLIC DATA MyType = Ctor StdList.List
         das zur Laufzeit das Module repräsentiert.
 
         Da unqualifizierte Imports kein Sprachbestandteil von SL sind
-        und nur \texttt{std/Prelude} standardmäßig implizit
+        und nur \texttt{std/prelude} standardmäßig implizit
         unqualifiziert importiert wird, wird dieser Schritt effektiv
         nur auf dieses Modul angewandt.
     \item[Code-Generierung] Die Code-Generierung ist Template-basiert.
-        Alle generierten Dateien wird relativ zum \texttt{<output
+        Alle generierten Dateien werden relativ zum \texttt{<output
         directory>} erzeugt.
         
         Für jedes zu kompilierende Modul wird eine Signatur-Datei
@@ -841,8 +843,8 @@ PUBLIC DATA MyType = Ctor StdList.List
         eine JavaScript-Datei (siehe Abschnitt \ref{sec:compReq})
         erstellt.
         
-        Für das JavaScript werden Templates werden aus dem
-        Ressourcenverzeichnis des Compilers geladen, die sich sich für
+        Für das JavaScript werden Templates aus dem
+        Ressourcenverzeichnis des Compilers geladen, welche sich sich für
         Scala Version 2.10 relativ zum SL-Projektverzeichnis unter
         \texttt{target/scala-2.10/classes/js/} befinden (die Originale
         befinden sich unter \texttt{src/main/js/}). Folgende Templates
@@ -850,15 +852,17 @@ PUBLIC DATA MyType = Ctor StdList.List
         
         \begin{description}
         \item[\texttt{module\_template.js}] Wird für jedes zu
-            kompilierende Modul verwendet, um den per PrettyPrinter
-            formatierten vom Compiler generierten JavaScript-Quellcode
-            so zu speichern, dass das Modul zur Laufzeit als
-            require.js-Modul geladen werden kann. Der Name der
+            kompilierende Modul verwendet, um den vom Compiler
+            generierten und per PrettyPrinter formatierten
+            JavaScript-Quellcode so zu speichern, dass das Modul zur
+            Laufzeit als \texttt{require.js}-Modul geladen werden kann. Der Name der
             aus dem Template generierten Datei enspricht dem Namen
             der Modul-Quelldatei mit dem Suffix \texttt{.js}, bspw.
-            \texttt{std/prelude.sl.js} für das Modul \texttt{std/prelude}.
+            \texttt{std/prelude.sl.js} für das aus der Datei
+            \texttt{srd/prelude.sl} erstellte Modul \texttt{std/prelude}.
         \item[\texttt{main\_template.js}] Wird zusätzlich für jedes
-            Modul verwendet, dass eine \texttt{main}-Funktion PUBLIC deklariert.
+            Modul verwendet, dass eine \texttt{main}-Funktion
+            mit dem Schlüsselwort \texttt{PUBLIC} deklariert.
             Mit dem Template wird eine Datei \texttt{main.js} erstellt,
             die das Modul lädt und seine \texttt{main}-Funktion aufruft.
         \end{description}
@@ -869,7 +873,7 @@ PUBLIC DATA MyType = Ctor StdList.List
         Zusätzlich werden noch folgende Dateien aus dem
         Ressourcenverzeichnis ins \texttt{<output directory>} kopiert,
         sofern eines der kompilierten Module eine \texttt{main}-Funktion
-        PUBLIC deklariert:
+        mit dem Schlüsselwort \texttt{PUBLIC} deklariert:
         
         \begin{description}
         \item[\texttt{index.html}] Ruft die \texttt{main}-Funktion des
@@ -896,15 +900,17 @@ require.js
 index.html
 \end{verbatim}
 
-        Da kein \texttt{<output directory>} angegeben wurden, befinden
-        sich die Dateien unterhalb von \texttt{src/main/sl/examples}.
+        Da kein \texttt{<output directory>} angegeben wurde, befinden
+        sich die erzeugten Dateien unterhalb von \texttt{src/main/sl/examples}.
         
         Zu beachten ist, dass, wenn mehr als ein Modul compiliert
         werden, das eine \texttt{main}-Methode deklariert, die Dateien
         \texttt{main.js}, \texttt{index.html} und \texttt{require.js}
-        für jedes Modul mit einer \texttt{main}-Methode erstellt
-        werden. Dadurch werden die Dateien während der Compilierung
-        überschrieben und nur das zuletzt compilierte Modul verfügt
+        für jedes Modul mit einer als \texttt{PUBLIC} deklarierten
+        \texttt{main}-Methode erstellt werden. Dadurch werden die
+        Dateien \texttt{main.js}, sowie \texttt{index.html} und
+        \texttt{require.js} während der Compilierung mehrfach generiert
+        bzw. kopiert und daher überschrieben. Nur das zuletzt compilierte Modul verfügt
         nach Abschluss des Compiler-Laufes über die entsprechenden
         Dateien. Dieses Problem kann umgangen werden, indem Module mit
         \texttt{main}-Methoden separat compiliert werden. Selbst wenn
@@ -1010,7 +1016,7 @@ Zuletzt müssen noch die Datentypdefinitionen serialisiert werden. Diese werden 
 \label{sec:compReq}
 
 Um die Module zur Laufzeit in JavaScript zu laden, wurde
-require.js\footnote{http://requirejs.org/ v. 2.1.6}
+require.js\footnote{http://requirejs.org/ (verwendet wird Version 2.1.6)}
 statt CommonJS\footnote{http://www.commonjs.org/} ausgewählt, da es im
 Gegensatz zum Modulsystem von node.js auch ohne größeren Aufwand
 sowohl im Browser als auch in node.js verfügbar ist.
@@ -1022,7 +1028,7 @@ für den Browser gleich mitgeliefert. In \texttt{node.js} muss
 kompilierte SL-Programme in \texttt{node.js} geladen und ausgeführt
 werden können.
 
-Mit dem über die Shell gestarteten node package manager (npm) kann
+Mit dem über die Kommandozeile gestarteten node package manager (npm) kann
 \texttt{require.js} mit folgendem Befehl in \texttt{node.js}
 installiert werden:
 
@@ -1039,7 +1045,7 @@ geschieht und in anderen Verzeichnissen wiederholt werden muss.
 In require.js stehen zwei Wege zur Verfügung, um Abhängigkeiten zwischen
 Modulen zu deklarieren und zur Laufzeit aufzulösen. In beiden Fällen
 wird eine von \texttt{require.js} bereitgestellte
-\texttt{define}-Funktion aufgerufen, der eine Funktion übergeben wird
+\texttt{define}-Funktion aufgerufen, der eine Funktion übergeben wird,
 die ein Modul-Objekt erstellt, für das Eigenschaften und Funktionen
 deklariert werden.
 
@@ -1061,9 +1067,9 @@ für die Erstellung gegenseitig abhängiger Module jeweils das
 andere Modul-Objekt als Parameter bei Erstellung des Moduls übergeben
 werden muss. Dieses Problem wird in require.js mittels
 Exports-Objekten gelöst, die beim Erstellen eines Moduls an die Funktion
-übergeben werden, die das Modul erstellt und später von anderen Modulen
-als Repräsentation des Moduls verwendet werden, wie im folgenden
-Beispiel
+übergeben werden, die das Modul erstellt und vor oder nach Erstellung
+des Moduls von anderen Modulen als Repräsentation des Moduls verwendet
+werden, wie im folgenden Beispiel
 
 \begin{verbatim}
 define(function(require, exports, module) {
@@ -1079,13 +1085,28 @@ Abhängigkeiten auflösen zu können. Dabei werden Module jeweils von
 der \texttt{require}-Funktion geladen, die das Export-Objekt
 zurückgibt, dem die Module bei ihrer Kontruktion (vor oder nach
 Ausführung der Funktion, die den \texttt{require}-Aufruf enthält)
-Funktionen und Parameter zuweisen. Die an \texttt{require} übergebenen
-Modulpfade werden absolut interpretiert (siehe auch das Beispiel
-\texttt{sub/relative.sl} in Abschnitt \ref{sec:sampleApps}).
+Funktionen und Parameter zuweisen. Der Aufruf der
+\texttt{require}-Funktion geschieht innerhalb der Funktion, die das
+Modul definiert. Diese Funktion ruft selbst keine Funktionen oder
+Parameter auf den von \texttt{require} zurückgelieferten Objekten auf,
+sondern stellt diese den von dem Modul deklarierten Funktionen zur
+Verfügung, die die Objekte verwenden, wenn sie aufgerufen werden --
+nachdem alle ggf. auch statisch zirkluär abhängigen Module geladen
+wurden. Dynamische zirkluräre Abhängigkeiten, die zu Endlosrekursion
+bei Funktionsaufrufen führen, können so allerdings nicht erkannt
+werden. Daher werden auch statische zyklische Abhängigkeiten zwischen
+Modulen durch den Compiler abgewiesen.
 
-Die Template-basierte Modulgenerierung funktioniert folgender Maßen.
-Die JavaScript-Dateien der einzelnen Module werden mit dem folgenden
-\texttt{module\_template.js} erstellt.
+Die an \texttt{require} übergebenen Modulpfade werden absolut
+interpretiert (siehe auch das Beispiel \texttt{sub/relative.sl} in
+Abschnitt \ref{sec:sampleApps}).
+
+Die Template-basierte Modulgenerierung wird im Folgenden am
+Beispielprogramm \texttt{src/main/examples/boxsort.sl} schrittweise
+erläutert.
+
+Die JavaScript-Dateien der einzelnen Module werden aus
+\texttt{module\_template.js}
 
 \begin{verbatim}
 define(function(require, exports, module) {
@@ -1093,10 +1114,13 @@ define(function(require, exports, module) {
 });
 \end{verbatim}
 
+erstellt.
+
 Das Beispielprogramm \texttt{src/main/sl/examples/boxsort.sl}
-importiert u.a. \texttt{std/debuglog}, deklariert eine \texttt{PUBLIC}
-deklarierte \texttt{main}-Funktion, sowie eine nicht \texttt{PUBLIC}
-deklarierte Funktion \texttt{getNode}:
+importiert u.a. \texttt{std/debuglog}, deklariert eine mit \texttt{PUBLIC}
+markierte \texttt{main}-Funktion, sowie eine nicht mit \texttt{PUBLIC}
+markierte Funktion \texttt{getNode} (Auslassungen im Quellcodeauszug sind
+mit \texttt{...} gekennzeichnet):
 
 \begin{verbatim}
 IMPORT "std/debuglog" AS Dbg
@@ -1104,7 +1128,7 @@ IMPORT "std/debuglog" AS Dbg
 
 PUBLIC FUN main : DOM Void
 DEF main = 
-	Web.document &= \ doc .
+    Web.document &= \ doc .
     ...
     
 DEF getNode (NodeWithNumber n1 i1) = n1
@@ -1113,7 +1137,7 @@ DEF getNode (NodeWithNumber n1 i1) = n1
 
 Folgender Ausschnitt aus der compilierten Datei \texttt{boxsort.sl.js}
 zeigt exemplarisch einige wichtige Aspekte der Codegenerierung für
-\texttt{require.js}
+\texttt{require.js}:
 
 \begin{verbatim}
 define(function(require, exports, module) {
@@ -1129,26 +1153,26 @@ define(function(require, exports, module) {
 
 \begin{enumerate}
 \item \texttt{std/prelude.sl} wird implizit importiert und durch den
-    Compiler mit dem konvertierten Modulpfad qualifiziert, da der
+    Compiler mit einem konvertierten Modulpfad qualifiziert, da der
     eigentliche Import unqualifiziert war. Dazu werden der Modulpfad
-    mit \$ präfigiert, sowie Vorkommen von / und \\ in Modulpfad
+    mit \$ präfigiert, sowie Vorkommen von / und \textbackslash ~ im Modulpfad
     durch \$ ersetzt.
-ersetzt, wenn Variablenbezeichner erzeugt werden
 \item \texttt{std/debuglog.sl} wurde explizit importiert, daher steht
     der Modulbezeichner als Variablenname zur Verfügung. Im Gegensatz
     zu Namen von Funktionen und Konstruktoren ist er nicht mit einem
     \$ präfigiert, sodass beide Namensräume getrennt sind.
-\item Für die Funktion \texttt{getNode} wurde nicht public deklariert
-    und wird daher nicht im \texttt{exports}-Objekt gespeichert. Sie
-    ist daher nicht für andere Module erreichbar, denen gegenüber das
+\item Die Funktion \texttt{getNode} wurde nicht mit \texttt{PUBLIC} markiert.
+    Sie wird daher nicht im \texttt{exports}-Objekt gespeichert und ist
+    nicht für andere Module erreichbar, denen gegenüber das
     \texttt{exports}-Objekt das Modul repräsentiert.
 \item Die Funktion \texttt{main} wurde hingegen \texttt{PUBLIC}
-    deklariert und wird daher auch \texttt{exports} hinzugefügt.
+    deklariert und wird daher auch \texttt{exports} hinzugefügt, sodass
+    andere Module sie aufrufen können.
 \end{enumerate}
 
-Damit \texttt{main} aus \texttt{boxsort.sl.js} aufgerufen werden kann,
-muss das Modul \texttt{boxsort.sl} geladen werden. Dies geschieht mit
-einer aus \texttt{main\_template.js} erstellten Datei:
+Damit \texttt{main} aus \texttt{boxsort.sl.js} in \texttt{node.js} und
+im Browser aufgerufen werden kann, muss das Modul \texttt{boxsort.sl}
+geladen werden. Dies geschieht mit einer aus \texttt{main\_template.js}
 
 \begin{verbatim}
 if (typeof window === 'undefined') {
@@ -1178,7 +1202,7 @@ if (typeof window === 'undefined') {
 }
 \end{verbatim}
 
-Das Template ist in zwei Teile untergliedert: im oberen Teil steht
+erstellten Datei. Das Template ist in zwei Teile untergliedert: im oberen Teil steht
 der Code, der ausgeführt wird, wenn die Datei in \texttt{node.js}
 aufgerufen wird. Der untere Teil wird im Browser ausgeführt.
 
@@ -1220,22 +1244,33 @@ if (typeof window === 'undefined') {
 Wichtig an dieser Datei sind vor allem die Pfad-Konfiguationen für
 den Präfix \texttt{std} des Prelude und der Standard-Bibliotheken.
 Die Konfiguration gilt für die gesamte Ausführung von require.js, also
-auch, wenn \texttt{boxsort.sl.js} ausgeführt wird, das u.a.
+auch, wenn nach \texttt{main.ja} \texttt{boxsort.sl.js} ausgeführt wird, das u.a.
 \texttt{std/prelude.sl} und \texttt{std/debuglog.sl} lädt. Die
-Pfad-Konfiguation gibt einen Ort an, von dem \texttt{require.js}
-das Prelude und die Standardbibliotheken lädt. Durch diesen Mechanismus
-müssen Prelude und Standardbibliotheken nur 1x zentral auf dem Server
-abgelegt werden. Das bedingt jedoch, dass die Pfade auf jedem Rechner,
-auf dem die Datei \texttt{main.js} ausgeführt werden soll, angepasst
-wird. In homogenen Umgebungen kann man statt dessen auch lokal immer
-den selben Pfad für die Standardbibliothek verwenden. Zu beachten
-ist dabei noch, dass für node.js ein absoluter Pfad, im Browser jedoch
-eine \texttt{file:}-URL verwendet wird.
+Pfad-Konfiguation gibt einen Ort an, von dem aus \texttt{require.js}
+das Prelude und die Standardbibliotheken lädt. Der Compiler generiert
+dabei einen lokal auf dem Rechner, auf dem er ausgeführt wurde,
+gültigen Pfad, der keine Zugriffsbeschränkungen für andere Benutzer
+berücksichtigt.
+
+Durch diesen Mechanismus müssen Prelude und Standardbibliotheken nur
+1 Mal zentral auf dem Server abgelegt werden. Das bedingt jedoch, dass
+die Pfade auf jedem Rechner, auf dem die Datei \texttt{main.js}
+ausgeführt werden soll, angepasst wird. In homogenen Umgebungen kann
+man statt dessen auch lokal immer den selben Pfad für die
+Standardbibliothek verwenden.
+
+Zu beachten ist hierbei, dass für node.js ein absoluter Pfad, im Browser jedoch
+eine \texttt{file:}-URL verwendet wird. In der Regel werden
+Browseranwendungen zudem von dritten Rechnern aus über einen Webserver
+aufgerufen, sodass das Prelude und die Standardbibliotheken auf einem
+Webserver verfügbar gemacht und per \texttt{http:}-URL eingebunden
+werden müssen.
 
 Die \texttt{index.html}-Datei, die \texttt{require.js} im Browser
 aufruft, wird lediglich kopiert und ist identisch für alle Module
-mit \texttt{main}-Methode. Sie kann jedoch im Nachhinein modifiziert
-werden, bspw. um eine Corporate Identity umzusetzen.
+mit \texttt{main}-Methode. Die generierte Datei oder das Template
+können jedoch modifiziert werden, bspw. um eine Corporate Identity
+oder die Einbindung in eine bestehende Webseite umzusetzen.
 
 \begin{verbatim}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
