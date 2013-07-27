@@ -407,6 +407,7 @@ trait CombinatorParser extends RegexParsers with Parsers with Parser with Syntax
     }
 
   private def prec(op: Any): Int = op match {
+    case ExVar(Syntax.Var(`gtLex`, _), a) => 1
     case ExVar(Syntax.Var(`ltLex`, _), a) => 1
     case ExVar(Syntax.Var(`leLex`, _), a) => 1
     case ExVar(Syntax.Var(`eqLex`, _), a) => 1
