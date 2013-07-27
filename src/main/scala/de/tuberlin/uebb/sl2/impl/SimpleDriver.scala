@@ -41,6 +41,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import scala.io.Source
 
+/*
+ * This file module has been superseded by the MultiDriver.	
+ */
 trait SimpleDriver extends Driver {
   self: Parser with CodeGenerator with Syntax with ProgramChecker with JsSyntax
   	with Errors with SignatureSerializer with DebugOutput with Configs
@@ -91,7 +94,6 @@ trait SimpleDriver extends Driver {
     } else if(!modulesDir.isDirectory()) {
       println(modulesDir+" is not a directory")
     }
-// INSTEAD: ADJUST MAIN TEMPLATE WITH PATHS -- IN PROGRESS
 /*    
     // copy .js and .signature of imported modules from classpath to modules/ directory
     for(i <- imports.filter(_.isInstanceOf[ResolvedModuleImport])) {
@@ -102,7 +104,7 @@ trait SimpleDriver extends Driver {
  */    
     val tarJs = new File(modulesDir, name + ".js")
     println("compiling "+name+" to "+tarJs)
-    // TODO: maybe CombinatorParser does not yet parse qualified imports correctly, like ParboiledParser did before?
+
     val moduleTemplate = Source.fromURL(getClass().getResource("/js/module_template.js")).getLines.mkString("\n")
     val moduleWriter = new PrintWriter(new File(modulesDir, name + ".js"))
     for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {

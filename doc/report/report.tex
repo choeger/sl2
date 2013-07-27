@@ -14,10 +14,18 @@
 % grammar.
 \DeclareTextSymbol{\BackslashTT}{T1}{"5C}
 
+% needed to have a table of contents with llncs...
+\setcounter{tocdepth}{2}
+\makeatletter
+\renewcommand*\l@author[2]{}
+\renewcommand*\l@title[2]{}
+\makeatletter
+
+
 \author{Benjamin Bisping, Rico Jasper, Sebastian Lohmeier,
-	Friedrich Moritz Psiorz}
-\title{Projektbericht: Erweiterung von SL um ein Modulsystem}
-\institute{Compilerbauprojekt SoSe 2013, Technische Universität Berlin}
+	Friedrich Psiorz}
+\title{Projektbericht: \textbf{Erweiterung von SL um ein Modulsystem}}
+\institute{Compilerbauprojekt SoSe 2013\\Technische Universität Berlin}
 
 \newcommand{\verbatiminput}[2][]{%
   \lstinputlisting[basewidth=0.5em,
@@ -64,14 +72,26 @@
 
 \maketitle
 
+\begin{abstract}
+Worum geht es hier?
+\end{abstract}
+
+\begingroup
+\let\clearpage\relax
+\tableofcontents
+\endgroup
 
 \section{Einleitung}
 
-\TODO{Hällü Wörld}
+Das World Wide Web hat heutzutage eine größere Bedeutung denn je und ist aus dem Alltag nicht mehr wegzudenken. Browser bieten die Möglichkeit eine breite Palette an Anwendungen auszuführen. Sogenannte ,,Rich Web Applications`` basieren zum Großteil auf dem Zusammenspiel von HTML, CSS und JavaScript. Praktisch alle modernen Browser unterstützen die Ausführung von JavaScript, welche hier als Programmiersprache dominiert. Somit sind Programmierer für Webapplikation de-facto dazu gezwungen JavaScript einzusetzen.
+
+Einige Programmierer würden jedoch eine funktionale Sprache mit strikter Typüberprüfung vorziehen. Solch eine Sprache kann eine höhere Robustheit und Sicherheit bieten. ,,Simple Language`` (SL) bietet die Möglichkeit Programme im funktionalen Stil für Plattformen zu entwickeln, die JavaScript ausführen. Denn in SL entwickelte Software kann in JavaScript übersetzt werden.
+
+Im Rahmen unseres Projekts haben wir die Sprache SL und den dazugehörigen Compiler weiterentwickelt. Das nachfolgende Kapitel bietet einen Überblick über die Änderungen und Ergänzungen. Die weitere Gliederung folgt den Verarbeitungsschritten eines Übersetzungsvorgangs des Compilers.
 
 \section{Überblick}
 
-Ziel des Projektes war es, SL um ein Modulsystem zu erweitertern. Dazu
+Ziel des Projektes war es, SL um ein Modulsystem zu erweitern. Dazu
 reicherten wir den Sprachumfang von SL mit einer Reihe von Konstrukten an. Für
 diese besprechen wir die Syntax genauer in Abschnitt~\ref{sec:syntax},
 die semantische Analyse in Abschnitt~\ref{sec:semantics} und die
@@ -160,7 +180,77 @@ Darüber hinaus widmeten wir uns auch noch weiteren Themen:
 \section{Syntax und Parser}
 \label{sec:syntax}
 
-\TODO{Fritz: Syntaxanpassungen, Schwierigkeiten, Designentscheidungen}
+\subsection{Grammatik}
+
+Die Grammatik von SL ist in der Abbildung~\ref{grm:sl}, die
+lexikalische Struktur ist in Abbildung~\ref{grm:lex}. Nicht erwähnt
+darin sind die Kommentare.  SL folgt bei den Kommentaren der Tradition
+von Haskell; es gibt also einerseits Zeilenkommentare,
+die  mit \verb|--| eingeleitet werden, andererseits auch Blockkommentare, die
+von \verb:{|: und \verb:|}: eingeschlossen werden.
+
+\begin{grammarfigure}[grm:sl]{Grammatik von SL}
+<Program>   ::= <Toplevel>+
+<Toplevel>  ::= <Import> | <Signature> | <FunDef> | <DataDef>
+<Import>    ::= 'IMPORT' 'EXTERN' <string>
+           \alt 'IMPORT' <string> 'AS' <module>
+<Signature> ::= ['PUBLIC'] 'FUN' <var> '\colon' <Type>
+<Type>      ::= <BaseType> ('\arrow' <BaseType>)*
+<BaseType>  ::= <typevar> 
+           \alt <TypeExpr> 
+           \alt '\open' <Type> '\close'
+<TypeExpr>  ::= <TypeCon> <BaseType>*
+<DataDef>   ::= ['PUBLIC'] 'DATA' 'EXTERN' <string>
+           \alt ['PUBLIC'] 'DATA' <typecon> <typevar>* '\eq' <DataBody>
+<DataBody>  ::= <con> <TypeArg>* ('\bar' <con> <TypeArg>*)*
+<TypeArg>   ::= <typevar>
+           \alt <TypeCon>
+           \alt '\open' <Type> '\close'
+<FunDef>    ::= 'DEF' 'EXTERN' <var> '\eq' <JsQuote>
+           \alt 'DEF' 'EXTERN' <op> '\eq' <JsQuote>
+           \alt 'DEF' <var> <Pat>* '\eq' <Expr>
+           \alt 'DEF' <Pat> <op> <Pat> '\eq' <Expr>
+<Pat>       ::= <var>
+           \alt <Con>
+           \alt '\open' <Con> <Pat>* '\close'
+<Expr>      ::= 'IF' <Expr> 'THEN' <Expr> 'ELSE' <Expr>
+           \alt '\lam' <Pat>+ '.' <Expr>
+           \alt 'CASE' <Expr> <Alt>+
+           \alt 'LET' <LocalDef>+ 'IN' <Expr>
+           \alt <Expr> <Expr>
+           \alt '\open' <Expr> '\close'
+           \alt <Expr> <op> <Expr>
+           \alt <JsQuote> ['\colon' <Type>]
+           \alt <Var> | <Con> | <int> | <real> | <char> | <string>
+<Alt>       ::= 'OF' <PPat> 'THEN' <Expr>
+<PPat>      ::= <var> | <con> <Pat>*
+<LocalDef>  ::= <var> '\eq' <Expr>
+<JsQuote>   ::= '\bropen\bar' <string> '\bar\brclose'
+<Var>       ::= [<module> '.'] <var>
+<Con>       ::= [<module> '.'] <con>
+<TypeCon>   ::= [<module> '.'] <typecon>
+\end{grammarfigure}
+
+\begin{grammarfigure}[grm:lex]{Lexikalische Struktur von SL}
+<var>       ::= <lowercase> <alphanum>*
+<con>       ::= <uppercase> <alphanum>*
+<typevar>   ::= <lowercase> <alphanum>*
+<typecon>   ::= <uppercase> <alphanum>*
+<module>    ::= <uppercase> <alphanum>*
+<op>        ::= <singleop> | <multiop>+
+<singleop>  ::= '\exclamationOp' | '\paragraphOp' | '\percentOp' | '\ampOp' | '\divint' | '\questionOp' 
+           \alt '\addint' | '\mulint' | '\sharpOp' | '\subint' | '\ltint' | '\gtint'
+<multiop>   ::= <singleop> | '\eq'
+<lowercase> ::= 'a' | \cdots | 'z'
+<uppercase> ::= 'A' | \cdots | 'Z'
+<digit>     ::= '0' | \cdots | '9'
+<alphanum>  ::= <lowercase> | <uppercase> | <digit>
+<int>       ::= ['\subint'] <digit>+
+<real>      ::= ['\subint'] <realbody> [<exp>]
+<realbody>  ::= <digit>+ '.' <digit>* | '.' <digit>+
+<exp>       ::= 'e' <int> | 'E' <int>
+\end{grammarfigure}
+
 \subsection{Syntaxanpassungen}
 
 \subsubsection{Operatoren}
@@ -179,12 +269,224 @@ unterschidliche Funktion bezeichnen, wie in diesem Fall das
 Minuszeichen einerseits die Negation auf Gleitkomma- und Ganzzahlen
 und andererseits die Subtraktion von Ganzzahlen bezeichnete.
 
+Was die ungewöhnlich benannten Operatoren für Zeichenketten- und
+Gleitokmmaoperationen betrifft, so haben wir uns dafür entschieden, sie
+aus der Sprache zu entfernen.  Dies verhindert auch Parserprobleme,
+wenn Bezeichner direkt hinter Operatoren geschrieben werden; so wurde
+etwa \verb|1+sum| bisher als \verb|1 +s um| geparst, was zu Verwirrung
+führen kann.  Der Operator für die String-Konkatenation heißt nun
+\verb|++|, die Gleitkommaoperationen sind nun in einem eigenen Modul
+untergebracht und müssen in Programmen entsprechend qualifiziert
+verwendet werden, z.B. schreibt man nun \verb|1.0 R.+ 2.5| statt
+\verb|1.0 +r 2.5|, falls das Modul \emph{std/real} als \verb|R|
+importiert wurde.
+
+Das unäre Minus haben wir komplett aus der Sprache entfernt.
+Stattdessen gibt es jetzt in der Prelude eine Funktion \verb|neg| für
+die Negation von Ganzzahlen; außerdem können nun Gleitkomma- und
+Ganzzahlliterale ein Minus als Vorzeichen enthalten, wenn dieses nicht
+durch Leerschritte oder Klammern von der ersten Ziffer bzw. dem
+Dezimalpunkt getrennt ist.  So sind beispielsweise die Schreibweisen
+\verb|5 * (-1)| und \verb|5 * -1| immer noch zulässig, nicht aber
+\verb|5 * -(1)|, \verb|5 * - 1| oder auch \verb|5 * (-x)|.
+Problematisch bei dieser Lösung ist allerdings, dass sie beim Parsen
+auch zu uninutitiven Ergebnissen führt.  Beispielsweise würde man
+erwarten, dass der Ausdruck \verb|x-2| (ohne Leerschritte) als
+Subtraktion geparst wird, also gleichbedeutend mit \verb|x - 2|.
+Tatsächlich wird der Ausdruck aber als Applikation von x mit dem
+Argument $-2$ geparst, gleichbedeutend mit als \verb|x (-2)|.
+
+\subsubsection{Import-Statements}
+
+Um das Modulsystem nutzen zu können, muss es eine Möglichkeit geben,
+andere Module zu importieren.  Dazu haben wir ein
+\emph{Import}-Statement eingebaut, mit der folgenden Syntax:
+
+\begin{quote}
+\verb|IMPORT| \emph{Modulpfad} \verb|AS| \emph{Modulbezeichner}
+\end{quote}
+
+Dabei ist der \emph{Modulbezeichner} ein großgeschriebener
+SL-Bezeichner, der zur Qualifikation von importierten Bezeichnern
+verwendet wird.  Der \emph{Modulpfad} der Pfad der Moduldateien, ohne
+Dateiendung.  Wenn das Modul etwa aus der Datei
+\emph{testmodule.sl} im aktuellen Verzeichnis kompiliert wurde, so
+heißt der \emph{Modulpfad} einfach \verb|"testmodule"|.  Beginnt der
+Modulpfad jedoch mit dem Präfix \emph{std/}, so wird das Modul in der
+Standardbibliothek gesucht.  Der \emph{Modulpfad} für das Listenmodul
+in der Standardbibliothek ist also \verb|"std/list"|.
+
+Die Sprache stellt nur Syntax für solche qualifizierten Importe zur
+Verfügung.  Der einzige unqualifizierte Import eines Moduls ist der
+implizite Import von \emph{std/prelude}, der automatisch bei jeder
+Kompilierung vorgenommen wird.
+
+Wir haben uns für das Design mit den qualifizierten Imports
+entschieden, da es bei komplexeren Projekten beim Verständnis des
+Codes stark hilft, wenn leicht nachvollzogen werden kann, aus welchem
+Modul eine bestimmte Funktion oder ein Typ stammt.  Eine alternative
+Möglichkeit, dieses Ziel zu erreichen, wäre beim Import alle zu
+importierenden Bezeichner einzeln aufzulisten. Dadurch wären zwar
+Ausdrücke sauberer lesbar, allerdings müsste dann bei jeder Verwendung
+einer neuen Funktion diese mühsam in der Importzeile hinzugefügt
+werden.  Außerdem lässt sich auch mit unserer Lösung ein ähnliches
+Ergebnis erreichen, wie das folgende Beispiel zeigt:
+\begin{verbatim}
+IMPORT "std/list" AS List
+DEF length = List.length
+\end{verbatim}
+Dies funktioniert allerdings nur für Funktionen, nicht für Typen oder
+Konstruktoren.  Eine dahingehende Erweiterung, vielleicht auch eine
+entsprechende Kurzschreibweise, wäre für die Zukunft sinnvoll.
+Ebenfalls wünschenswert wäre die Möglichkeit, das Modul
+\emph{std/prelude} qualifiziert zu importieren und dadurch den
+unqualifizierten Import zu überschreiben.  Dies wäre etwa sinnvoll für
+Anwendungen, die viel mit Gleitkommazahlen arbeiten und darum lieber
+die Operatoren \verb|+|, \verb|-|, \verb|*|, \verb|/| aus
+\emph{std/real} unqualifiziert verwenden würden. Es ist zwar jetzt
+schon möglich, so etwas zu schreiben wie
+\verb|DEF a + b = a Real.+ b|,
+aber dadurch wird es unmöglich, die Addition aus der Prelude im
+gleichen Modul zu verwenden.
+
+\subsubsection{Externe Definitionen, externe Imports und externe
+  Datentypen}
+Bei der Implementation von Modulen, insbesondere des Moduls
+\emph{std/prelude}, das Funktionen definiert, die vormals direkt in
+den Sprachkern eingebaut waren, wurden auch bestimmte
+Spracherweiterungen nötig.  Für all diese Erweiterungen verwenden wir
+das gleiche Keyword \verb|EXTERN|.  Dies soll signalisieren, dass es
+sich dabei um Features handelt, die nur nötig sind, wenn man mit
+SL-„externem“, d.h. JavaScript-Code arbeitet.
+
+Externe Definitionen erlauben den Aufruf von JavaScript-Code
+ohne Verwendung der DOM-Monade. Dadurch können Funktionen aus
+JavaScript verwendet werden, um die Primitiven von SL zu
+implementieren.  Der Programmierer hat bei Verwendung von externen
+Definitionen selbst darauf zu achten, dass die Funktion keine
+Nebeneffekte hat und dass die Funktion wirklich den in der Signatur
+angegebenen Typ hat, ohne dass der Compiler dies prüfen kann.
+Die Syntax hierfür ist:
+
+\verb|DEF EXTERN| \emph{Funtkions-/Operatorname} \verb:= {|:
+\emph{JavaScript-Code} \verb:|}:
+
+Dabei ist zu beachten, dass im Gegensatz zu normalen Funktions-
+bzw. Operatordefinitionen keine Argumente angegeben werden dürfen.
+
+Externe Imports ermöglichen es, dem Compiler mitzuteilen, dass er den
+Inhalt einer beliebigen JavaScript-Datei bei der
+Codegenerierung vor die Ausgabe kopieren soll. Dadurch kann auf die
+in dieser Datei in JavaScript-Blöcken zugegriffen werden.
+Dies ist besonders hilfreich in Kombination mit externen Definitionen,
+wobei der tatsächliche Inhalt der JavaScript-Funktionen in der
+importen Datei liegt und in der externen Definition lediglich deren
+Name angegeben ist.  Das Modul \emph{std/prelude} ist etwa auf diese
+Weise geschrieben. Die Syntax für externe Importe ist:
+
+\begin{quote}
+\verb|IMPORT EXTERN| \emph{Pfad}
+\end{quote}
+
+Dabei ist \emph{Pfad} wieder ein Zeichenkettenliteral; die Endung
+\emph{.js} entfällt dabei.
+
+Externe Datentypen sind Datentypen ohne Konstruktoren. Dadurch können
+etwa verschiedene Typen von JavaScript-Objekten dargestellt
+werden.  Die Basistypen \verb|Int| und \verb|String| gehören etwa in
+diese Kategorie.  Die Syntax lautet:
+
+\begin{quote}
+\verb|DATA EXTERN| \emph{Typname}
+\end{quote}
+
+\subsubsection{Sichtbarkeit}
+
+Funktionssignaturen und Datentypendefinitionen kann jetzt das Keyword
+\verb|PUBLIC| vorangestellt werden.  Dadurch werden die entsprechenden
+Funktionen bzw. Konstruktoren exportiert, sind also in anderen Modulen
+sichtbar.  Nicht als \verb|PUBLIC| markierte Datentypen werden
+ebenfalls exportiert, allerdings ohne ihre Konstruktoren.
+
+Eine alternative Notation für die Markierung von Exporten wäre ein
+explizites Export-Statement analog zum Import-Statenment gewesen, in
+dem dann alle exportierten Bezeichner des Moduls aufgeführt werden.
+Uns hat die Annotation der Funktionssignaturen allerdings mehr
+zugesagt, da sie für exportierte, d.h. nach außen sichtbare Funktionen
+die Angabe einer Signatur erzwingt.  Gerade bei nicht selbst
+geschriebenen Funktionen ist die Signatur elementar für das
+Verständnis, was der Zweck einer Funktion ist und wie sie verwendet
+werden kann; die Signatur anzugeben wäre in jedem Fall guter Stil.
+Das Keyword \verb|PUBLIC| zu verwenden lag für uns nahe, da es in
+ähnlicher Funktion auch in anderen bekannten Sprachen wie Java oder
+C++ verwendet wird und seine Bedeutung dadurch eventuell intuitiver
+verständlich ist.
+
 \subsection{Qualifizierte Bezeichner}
+Da wir Module im Allgemeinen qualifiziert importieren, muss auf
+importierte Bezeichner auch qualifiziert zugegriffen werden. Die
+entsprechende Syntax lautet:
+
+\begin{quote}
+\emph{Modulbezeichner}.\emph{Bezeichner}
+\end{quote}
+
+Der \emph{Modulbezeichner} ist ein großgeschriebener Bezeichner, wie
+er auch für Typen und Konstruktoren verwendet wird.  Der
+\emph{Bezeichner} ist ein gewöhnlicher SL-Typ-, Konstruktor- oder
+Funktionsbezeichner.  Namen sind immer nur einfach qualifiziert, da es
+in SL weder verschachtelte Modulnamen gibt, noch Datenstrukturen mit
+Feldnamen analog etwa zu Strukturen in C. Dadurch ist bei
+qualifizierten Bezeichnern immer auf den ersten ersten Blick
+ersichtlich, welcher Teil wofür steht.
+
+Bei der Auswahl von Namen sollte bereits beim Schreiben eines Moduls
+darauf geachtet werden, dass diese später einmal qualifiziert
+verwendet werden.  So könnte beispielsweise ein (imaginäres) Modul für
+die Verwendung von Dateien als \verb|File| importiert werden und dann
+Typen wie \verb|File.Name| oder \verb|File.Handle| oder Funktionen wie
+\verb|File.size| oder \verb|File.owner| bereitstellen.  Durch solch
+geschickte Auswahl von Namen kann der Nachteil des Overheads durch die
+obligatorische Qualifikation von Bezeichnern verringert oder gar ganz
+verhindert werden.
+
+Nachdem die Erweiterung der Syntax um die Qualifikationen teilweise
+ein komplexeres Unterfangen war, können jetzt qualifizierte Bezeichner
+tatsächlich an allen Stellen stehen, an denen auch unqualifizierte
+Bezeichner stehen können, außer natürlich auf der linken Seite von
+Definitionen und als Typ- oder Patternvariablen. Während es
+zwischenzeitlich nötig war, qualifizierte Bezeichner etwa als
+Feldtypen bei der Definition von Datenstrukturen zu klammern, ist dies
+nun nicht mehr erforderlich.
 
 \subsection{Weitere Anpassungen der bestehenden Grammatik}
 \label{sec:syntaxAdjustments}
 
-\subsection{Grammatik}
+\subsubsection{Präzedenz in Funktionssignaturen}
+
+Bisher wurde der Typ \verb|List a -> b| als \verb|List (a -> b)|
+interpretiert.  Wir haben diese unintuitive Präzedenz geändert zu
+\verb|(List a) -> b|.  Dies entspricht nicht nur unserer Intuition,
+sondern auch etwa der Präzedenz in Haskell, von dem SL seine
+Typ-Syntax abgeleitet zu haben scheint. 
+
+\subsubsection{Verbesserungen im Combinator-Parser}
+
+Während bisher hauptsächlich der Parboiled-Parser verwendet wurde, war
+es unser Ziel, beide Parser gleichwertig immer auf dem aktuellen Stand
+der Entwicklung zu halten.  Zu Beginn unserer Arbeiten fehlte dem
+Combinator-Parser noch die Unterstützung für einige Sprachfeatures,
+etwa die Definition von eigenen Operatoren oder das Parsen von
+Gleitkomma-Literalen.  Auch unterschied sich das Verhalten der Parser
+in so manchem Detail, wie etwa der Behandluch von JavaScript-Blöcken
+mit Zeilenumbrüchen.  Wir haben nicht nur den Combinator-Parser in
+an alle unsere Spracherweiterungen angepasst, sodass er gleichwertig
+mit dem Parboiled-Parser Programme korrekt parst, wir haben ihn sogar
+zu unserem primären Parser erhoben, da er beim Parsen jeder Produktion
+ein Attribut mit Dateiname sowie Zeilen- und Spaltennummer der Start-
+und Endposition zuweist.  Dies hat sich bei der Ausgabe von sinnvollen
+Fehlermeldungen als unverzichtbar herausgestellt (siehe
+\ref{sec:errors}).
 
 \section{Semantische Analyse}
 \label{sec:semantics}
@@ -199,7 +501,7 @@ Da nun ein Modul auch andere Module importieren kann, erweitert sich der zu anal
 Nachdem die abstrakte Syntax vom Parser eingelesen wurde, müssen die Importe aufgelöst werden. Andernfalls ist Type-Checking nicht möglich, welches vor der Spracherweiterung direkt im Anschluss des Parsings stattfand. Die Auflösung von Importen bezeichnet das Suchen und Laden von Signaturen von externen Modulen. Zuvor müssen die Import-Anweisungen allerdings selbst auf Korrektheit überprüft werden.
 
 \subsubsection{Import-Überprüfung}
-\label{sec:importCheck}
+\label{sec:semanticsimports}
 
 \TODO{Modulbezeichner richtiger Begriff?}
 
@@ -259,7 +561,7 @@ IMPORT "d.i.r/module-g"          AS G
 
 \subsubsection{Laden der Signatur}
 
-Falls die Importe korrekt sind, werden die dazugehörigen Moduldateien geladen. Ein Modul liegt dabei immer in zwei Dateien vor: Die Signatur (,,*.signatur``) und die in JavaScript übersetzte Implementierung  (,,*.js``). Können nicht alle benötigten Dateien gefunden werden, so kann der Kompiliervorgang nicht fortgesetzt werden. Die Suche der Dateien erfolgt relativ zum Klassenpfad, Zielverzeichnis, \TODO{mainUnit?} und aktuellen Verzeichnis.
+Falls die Importe korrekt sind, werden die dazugehörigen Moduldateien geladen. Ein Modul liegt dabei immer in zwei Dateien vor: Die Signatur (,,*.signatur``) und die in JavaScript übersetzte Implementierung  (,,*.js``). Können nicht alle benötigten Dateien gefunden werden, so kann der Kompiliervorgang nicht fortgesetzt werden. Die Suche der Dateien erfolgt relativ zum Klassenpfad, Zielverzeichnis, \TODO{was ist die mainUnit?} und aktuellen Verzeichnis.
 
 Die Signatur-Datei enthält einen Teil des abstrakten Syntaxbaums des zu importierenden Moduls. Datentypdefinitionen und Funktionssignaturen sind hier in einer serialisierten Form abgespeichert. Das Format dieser Datei wird in Abschnitt \ref{sec:compSig} beschrieben.
 
@@ -480,7 +782,7 @@ den \texttt{MultiDriver} gesteuert, der folgende Phasen durchläuft.
         Signature-Datei ist.
     \end{enumerate}
     Dabei ist zu beachten, dass die Identität eines Moduls durch seinen
-    Modulpfad gegeben ist (siehe Abschnitt \ref{sec:importCheck}) und durch ein nicht
+    Modulpfad gegeben ist (siehe Abschnitt \ref{sec:semanticsimports}) und durch ein nicht
     durch den Compiler erzwungenes Bennennungschema sichergestellt
     werden muss, dass Quell- und Signatur-Dateien mit dem selben
     Modulpfad zum gleichen Modul gehören.
@@ -662,8 +964,8 @@ Dagegen ist \verb|signatures| ein Hash, wie das Vorbild aus \verb|Program| welch
 In diesem Beispiel sehen wir auch, wie der Typ der Funktion \verb|foo| serialisiert wird. Es gibt drei Sorten von Typen:
 
 \begin{description}
- \item[Typvariablen] die durch einen beliebigen Typen ersetzt werden können.
- \item[Funktionstypen] welche prinzipiell eine Auflistung von Typen ist. Der Funktionstyp \verb|A -> B -> C| wird als Liste der Typen A, B und C dargestellt.
+ \item[Typvariable] die durch einen beliebigen Typen ersetzt werden kann.
+ \item[Funktionstyp] welcher prinzipiell eine Auflistung von Typen ist. Der Funktionstyp \verb|A -> B -> C| wird als Liste der Typen A, B und C dargestellt.
  \item[Typausdruck] ist ein konkreter singulärer Typ, welcher denselben Bezeichner wie in seiner \verb|DATA|-Definition beinhaltet. Außerdem können diese Parametertypen entgegennehmen, welche wiederum eine Liste von Typen ist.
 \end{description}
 
@@ -1010,9 +1312,8 @@ DATA EXTERN DOM a
 Stärker als andere Module bildet das Prelude Funktionen auf handgeschriebenen
 JavaScript-Code ab. Diese Abbildung wurde bisher durch eine hardcodierte
 Umwandlung im SL-Compiler realisiert. Dank \verb|IMPORT EXTERN| und
-\verb|DEF EXTERN| \textbf{VERWEIS EINBAUEN} kann das Prelude selbst
-spezifizieren, dass \verb|+| auf das JavaScript-Objekt \verb|_add|
-aus \verb|_prelude.js| abgebildet werden soll.
+\verb|DEF EXTERN| kann das Prelude selbst spezifizieren, dass \verb|+| auf das
+JavaScript-Objekt \verb|_add| aus \verb|_prelude.js| abgebildet werden soll.
 
 \begin{verbatim}
 IMPORT EXTERN "_prelude" 
@@ -1161,7 +1462,7 @@ einsetzt, sollte alles klar gehen.
 
 Wir schrieben auch eine kleine Bibliothek \verb|basicweb|, die einige der
 Input/Output-Möglichkeiten von Websites bereitstellt. Diese Bibliothek ergibt
-natürlich nur sinn, wenn das mit SL erzeugte JS-Script im Browser ausgeführt
+natürlich nur Sinn, wenn das mit SL erzeugte JS-Script im Browser ausgeführt
 wird.
 
 \begin{verbatim}
@@ -1200,7 +1501,7 @@ es erlauben, verschiedene Funktionen in Modulen zu sammeln und diese Module
 aufeinander aufbauen zu lassen.
 
 Es wird deutlich, dass die vorgeschlagenen \verb|EXTERN|-Konstrukte es
-erlauben, auch funktionale Bibliotheken wie \verb|dict.sl| ohne eingriffe
+erlauben, auch funktionale Bibliotheken wie \verb|dict.sl| ohne Eingriffe
 in den Compiler zu entwickeln. Die monadischen JavaScript-Literale sind
 mächtig genug, um Aspekte wie die Interaktion mit dem Browser in Modulen
 wie \verb|basicweb.sl| zusammenzufassen.
@@ -1213,10 +1514,42 @@ Codegenerierung mehr.
 \section{Beispielprogramme und Tests}
 \label{sec:samples}
 
+Im Laufe der Entwicklung und insbesondere am Ende haben wir uns um ausgiebige
+Tests der neuen und alten Features bemüht. Einige der dabei entdeckten
+Schwierigkeiten führten auch tatsächlich noch zu Designänderungen.
+
+Zum Beispiel traten beim Testen mehrmals Inkompatibilitäten zwischen Windows
+und Linux auf, die uns zu sehr restriktive Vorgaben für Import-Pfade
+(vgl. Abschnitt \ref{sec:semanticsimports}) brachten.
+
+Leider erlaubte es unsere Teamgröße nicht, eine Person exklusiv mit
+Qualitätssicherung zu betrauen. Dennoch stimmt uns der Umfang an stabil
+funktionierenden Tests und Beispielprogrammen zuversichtlich, dass unsere
+Implementierung eine gewisse Robustheit erreicht hat. Nachfolgend soll
+kurz ein Überblick über 
+
+\subsection{Unittests}
+
+Die ursprüngliche SL-Implementierung kam mit vielen Unittests daher.
+Angesichts der weitreichenden Änderungen, die besonders die qualifizierten
+Bezeichner im bestehenden Code bedeuteten, waren diese Tests uns eine große
+Hilfe beim konsistenten Einpflegen neuer Features. Wir mussten im Laufe der
+Entwicklung nahezu alle Unittests anpassen und haben auch viele erweitert.
+
+Eine 100\%-ige Abdeckung der neuen Modulfeatures haben wir dabei nicht erreicht.
+Das Zusammenspiel von diamond-haften Modulimporten, bestimmte Namenskonflikte
+und Modulabhängigkeiten ließen sich besser durch den Einsatz des Modulsystems
+bei der Entwicklung kleinerer Programme überprüfen.
+
 \subsection{Beispielprogramme}
 \label{sec:sampleApps}
 
-Wir haben eine Reihe kleinerer Testprogramme geschrieben.
+Im Produktumfang sind auch eine Reihe von \verb|.sl|-Dateien enthalten, die
+zur Dokumentation und zum Test der Funktionsweise von SL dienen. Die Programme
+liefen in aktuellen Versionen von Firefox und Chrome sowie unter Node.js
+(Die \verb|basicweb|-Abhängigen Programme funktionieren natürlich nicht unter
+Node.js). Wir haben sowohl Kompilierung als auch Ausführung unter Linux und
+Windows getestet.
 
 \begin{description}
  \item[\texttt{hello.sl}] Das minimale ,,Hello World``-Programm. Verwendet
@@ -1228,12 +1561,22 @@ Wir haben eine Reihe kleinerer Testprogramme geschrieben.
    (Das ist ein wichtiger Testfall!)
  \item[\texttt{similarimports.sl}] Importiert eine neudefinierte \verb|Option|
    und zeigt, dass sie nicht mit \verb|Option| aus \verb|std/option| clasht.
+ \item[\texttt{sub/hello.sl}] Gibt ,,Hello Moon!'' aus und wird von
+   \texttt{moonWorld.sl} verwendet, um das Einbinden verschieden
+   qualifizierter Module mit identischem einfachen Namen zu testen.
+ \item[\texttt{moonWorld.sl}] Verwendet \texttt{hello.sl} und
+   \texttt{sub/hello.sl}, um zu prüfen, ob die beiden Module getrennt
+   kompiliert und eingebunden werden.
+ \item[\texttt{cycleA.sl} \textnormal{und} \texttt{cycleB.sl}] enhalten eine
+   direkte zyklische Abhängigkeit, um zu testen, ob diese erkannt wird. Sie
+   bilden damit ausnahmsweise kein Beispielprogramm, sondern eben ein 
+   Nicht-Programm.
  \item[\texttt{librarytest.sl}] Testet das Zusammenspiel einiger Funktionen aus
    \verb|list| und \verb|dict| sowie \verb|real|. Macht außerdem vom lokalen
    Überschreiben von Prelude-Bezeichnern Gebrauch.
  \item[\texttt{boxsort.sl}] Größeres Beispiel, das mittels \verb|basicweb| eine
-   interaktive Website erzeugt. Macht starken Gebrauch von allen möglichen
-   Features aus den \verb|std|-Librarys.
+   interaktive Website erzeugt. Setzt alle möglichen Features aus den
+   \verb|std|-Librarys ein.
  \item[\texttt{koch.sl}] Modifizierte Version des ursprünglichen
    Kochkurvenbeispiels. Verwendet Browseranzeige und \verb|timing|, um eine
    Animation ausgehend von der Kochkurve zu zeichnen.
@@ -1250,9 +1593,75 @@ Wir haben eine Reihe kleinerer Testprogramme geschrieben.
    zyklische Abhängigkeit, um zu testen, ob diese erkannt wird.
 \end{description}
 
-\section{Zusammenfassung}
+\section{Zusammenfassung und Ausblick}
 
-\TODO{...}
+Wir haben viel geschafft, aber ganz fertig ist SL wohl noch nicht.
+
+\subsection{Was erreicht wurde}
+
+In der aktuellen Version von SL existiert ein überschaubares und stabiles
+Modulsystem. Dazu erweiterten wir den Sprachumfang um qualifizierte Bezeichner,
+Modulimporte und Exportdeklarationen.
+
+Mithilfe des Modulsystems und der neuen Einbindungsmöglichkeiten für externen
+Code, können auf JavaScript aufsetzende Bibliotheken geschrieben werden.
+Insbesondere konnten wir uns so der in den Compiler fest eingebauten
+Basisfunktionen entledigen und diese in einem gesonderten Prelude-Modul 
+zusammenfassen.
+
+Der Compiler gibt seine Ergebnisse nicht mehr bloß in der Konsole aus, sondern
+erzeugt separat kompilierte Module und Signaturen, die mithilfe von requirejs
+zur Laufzeit zusammengefasst werden können. Der Compiler übersetzt eigenständig
+auch benötigte Module und liefert das Erzeugte zusammen mit zur Ausführung
+benötigten Rahmendateien und einer \verb|index.html| aus. Das Kompilat lässt
+sich mit gängigen modernen Browsern und node.js ausführen.
+
+Bei einem Fehlschlag des Compile-Vorgangs geben die Fehlermeldungen jetzt,
+wenn möglich, auch genaue Stellen des Fehlers an.
+
+Die neuen Features wurden getestet und auch in komplexer zusammenarbeitenden
+Modulen eingesetzt. Während der Entwicklung konnten wir auch viele kleine
+Fehler in SL fixen.
+
+Insgesamt haben wir damit die am Anfang des Projekts im Pflichtenheft
+festgelegten Kriterien erfüllt und beispielsweise in Hinblick auf die
+Entwicklung von Bibliotheken auch übertroffen. Dennoch drängen sich einige
+Punkte auf, an denen die Entwicklung von SL fortgesetzt werden könnte.
+
+\subsection{Was noch erreicht werden kann}
+
+Aktuell müssen Importe qualifiziert sein. Auch wenn in unserem Team die
+Auffassung vorherrscht, dass das für wartbaren Sourcecode ohnehin der
+bessere Weg ist, könnten vielseitigere Import-Statements angestrebt werden
+zum Beispiel für unqualifizierte, selektive oder umbenennden Importe.
+Es könnte auch über ein Paketsystem mit paketweisem Import und gegebenenfalls
+hierarchischen qualifizierten Bezeichnern nachgedacht werden.
+
+Die derzeitige Implementierung verbietet zyklische Abhängikeiten zwischen
+Modulen. SLs Design würde jedoch erlauben, solche Zyklen durch einen
+mehrschrittigen Kompilierungsprozess aufzulösen. Darüberhinaus wäre es auch
+möglich, Module nicht nur ihre exportierten, sondern auch ihre benötigten
+Schnittstellen angeben zu lassen und erst zur Ausführung oder Distribution
+die angebotenen und benötigten Schnittstellen zusammenzuführen.
+
+Allgemein erwies sich die konsistente Ausgabe des Kompilats an einem
+geeigneten Ort als schwieriger als zuerst angenommen. Für eine sinnvoll
+automatisierbare Distribution müssten mehr Konfigurationen zur Einbettung
+der Ausgaben in HTML-Code und zur Konfiguration von requirejs am Ausgabeort
+angeboten werden.
+
+Wir konnten zwar deutliche Fortschritte bei den Fehlermeldungen verbuchen.
+Wie die meisten Systeme mit Typinferenz, kann SL sich aber nicht immer so
+ausdrücken, dass Leute, die das Typsystem nicht selbst entwickelten,
+etwas mit den Fehlermeldungen anfangen könnten. Hier wäre noch viel Arbeit
+nötig.
+
+Und zu guter letzt wären natürlich mehr und ausgereiftere Bibliotheken
+schön.
+
+Insgesamt bleiben also auch an den von uns bearbeiteten Features von SL
+noch genug Baustellen übrig für das nächste Compilerbauprojekt oder die
+nächste Abschlussarbeit. Und das muss ja auch sein.
 
 \end{document}
 
