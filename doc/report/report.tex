@@ -66,6 +66,7 @@
 \def\paragraphOp{\texttt{§}}
 \def\percentOp{\texttt{\%}}
 \def\ampOp{\texttt{\&}}
+\def\ampeq{\texttt{\&=}}
 \def\questionOp{\texttt{?}}
 \def\sharpOp{\texttt{\#}}
 \def\pipeOp{\texttt{|}}
@@ -184,11 +185,27 @@ Darüber hinaus widmeten wir uns auch noch weiteren Themen:
 
 Die Grammatik von SL ist in der Abbildung~\ref{grm:sl}, die
 lexikalische Struktur ist in Abbildung~\ref{grm:lex}. Nicht erwähnt
-darin sind die Kommentare.  SL folgt bei den Kommentaren der Tradition
-von Haskell; es gibt also einerseits Zeilenkommentare,
-die  mit \verb|--| eingeleitet werden, andererseits auch Blockkommentare, die
-von \verb:{|: und \verb:|}: eingeschlossen werden.
-
+darin sind die Kommentare und Operator-Präzedenzen.  SL folgt bei den
+Kommentaren der Tradition von Haskell; es gibt also einerseits
+Zeilenkommentare, die mit \verb|--| eingeleitet werden, andererseits
+auch Blockkommentare, die von \verb:{-: und \verb:-}: eingeschlossen
+werden. Die Päzedenzen sind in der folgenden Tabelle aufgelistet:
+\begin{center}
+\begin{tabular}{clc}
+Operatoren & Beschreibung& Präzedenz \\
+\hline
+\emph{kein}     & Funktionsapplikation        & 4\\
+\mulint, \divint & Multiplikation und Division & 3\\
+\addint, \subint & Addition und Subtraktion    & 2\\
+\gtint, \ltint, 
+\geint, \leint,
+\eqint, \neint  & Vergleichsoperatoren        & 1 \\
+\ampOp, \ampeq  & Bind-Operatoren             & 1 \\
+\emph{sonstige} & Andere Operatoren           & 0 \\
+\end{tabular}
+\end{center}
+Eine höher Präzedenz bedeutet, dass der Operator stärker bindet.  Alle
+Operatoren sind linksassoziativ.
 \begin{grammarfigure}[grm:sl]{Grammatik von SL}
 <Program>   ::= <Toplevel>+
 <Toplevel>  ::= <Import> | <Signature> | <FunDef> | <DataDef>
@@ -249,6 +266,8 @@ von \verb:{|: und \verb:|}: eingeschlossen werden.
 <real>      ::= ['\subint'] <realbody> [<exp>]
 <realbody>  ::= <digit>+ '.' <digit>* | '.' <digit>+
 <exp>       ::= 'e' <int> | 'E' <int>
+<char>      ::= '\squote' <anychar> '\squote'
+<string>    ::= '\verb|"|' <anychar>* '\verb|"|'
 \end{grammarfigure}
 
 \subsection{Syntaxanpassungen}
@@ -375,9 +394,9 @@ Dabei ist zu beachten, dass im Gegensatz zu normalen Funktions-
 bzw. Operatordefinitionen keine Argumente angegeben werden dürfen.
 
 Externe Imports ermöglichen es, dem Compiler mitzuteilen, dass er den
-Inhalt einer beliebigen JavaScript-Datei bei der
-Codegenerierung vor die Ausgabe kopieren soll. Dadurch kann auf die
-in dieser Datei in JavaScript-Blöcken zugegriffen werden.
+Inhalt einer beliebigen JavaScript-Datei bei der Codegenerierung vor
+die Ausgabe kopieren soll. Dadurch kann auf die in dieser Datei
+definierten Funktionen von JavaScript-Blöcken aus zugegriffen werden.
 Dies ist besonders hilfreich in Kombination mit externen Definitionen,
 wobei der tatsächliche Inhalt der JavaScript-Funktionen in der
 importen Datei liegt und in der externen Definition lediglich deren
@@ -479,13 +498,15 @@ Combinator-Parser noch die Unterstützung für einige Sprachfeatures,
 etwa die Definition von eigenen Operatoren oder das Parsen von
 Gleitkomma-Literalen.  Auch unterschied sich das Verhalten der Parser
 in so manchem Detail, wie etwa der Behandluch von JavaScript-Blöcken
-mit Zeilenumbrüchen.  Wir haben nicht nur den Combinator-Parser in
-an alle unsere Spracherweiterungen angepasst, sodass er gleichwertig
-mit dem Parboiled-Parser Programme korrekt parst, wir haben ihn sogar
-zu unserem primären Parser erhoben, da er beim Parsen jeder Produktion
+mit Zeilenumbrüchen, oder dass er dem Operator \verb|>| im gegensatz
+zu allen anderen Vergleichsoperatoren niedrigste Präzedenz gegeben
+hat.  Wir haben nicht nur den Combinator-Parser in an alle unsere
+Spracherweiterungen angepasst, sodass er gleichwertig mit dem
+Parboiled-Parser Programme korrekt parst, wir haben ihn sogar zu
+unserem primären Parser erhoben, da er beim Parsen jeder Produktion
 ein Attribut mit Dateiname sowie Zeilen- und Spaltennummer der Start-
 und Endposition zuweist.  Dies hat sich bei der Ausgabe von sinnvollen
-Fehlermeldungen als unverzichtbar herausgestellt (siehe
+Fehlermeldungen als unverzichtbar herausgestellt (siehe Abschnitt
 \ref{sec:errors}).
 
 \section{Semantische Analyse}
@@ -527,7 +548,7 @@ Unsere Annahme, dass Module eindeutig über den Pfad identifiziert werden, kann 
 
 Neben dem regulären Import existiert auch noch der unqualifizierte Import. Dieser ist für den Programmierer unzugänglich. Er dient zum Einbinden des Preludes, sodass Funktionen wie Addition auch ohne Modulbezeichner verwendet werden können. Der unqualifizierte Import ist von der Prüfung von doppelten Modulbezeichnern ausgeschlossen, jedoch nicht von Tests auf Pfade
 
-Laut unserer Grammatik \TODO{tolle grammatik oder verweis zur grammatik} wird der Pfad zu einem externen Modul als String definiert. Der Parser akzeptiert daher jede Art von gültigen Strings. Deshalb muss an dieser Stelle die Pfadsyntax überprüft werden. Grammatik \ref{grm:importpath} zeigt die Produktionsregeln für Pfade. Erlaubt sind relative Pfade bestehend aus beliebig vielen Verzeichnissen und dem Moduldateinamen am Ende. Als Trennungssymbol dient das Schrägstrichsymbol ,/`. Verzeichnisse und Module dürfen Kleinbuchstaben, Zahlen, Minussymbole und Unterstriche enthalten. Der Modulname entspricht dem Dateinamen der Quelldatei ohne Endung ,,.sl``.
+Laut unserer Grammatik (siehe Abb.~\ref{grm:sl} wird der Pfad zu einem externen Modul als String definiert. Der Parser akzeptiert daher jede Art von gültigen Strings. Deshalb muss an dieser Stelle die Pfadsyntax überprüft werden. Grammatik \ref{grm:importpath} zeigt die Produktionsregeln für Pfade. Erlaubt sind relative Pfade bestehend aus beliebig vielen Verzeichnissen und dem Moduldateinamen am Ende. Als Trennungssymbol dient das Schrägstrichsymbol ,/`. Verzeichnisse und Module dürfen Kleinbuchstaben, Zahlen, Minussymbole und Unterstriche enthalten. Der Modulname entspricht dem Dateinamen der Quelldatei ohne Endung ,,.sl``.
 
 \begin{grammarfigure}[grm:importpath]{Gültige Importpfade}
   <Path>   ::= (<Dir> '/')* <Module>
@@ -1273,7 +1294,112 @@ schlicht, dass an den Anfang des Kompilats der Inhalt der Datei
 
 \section{Fehlermeldungen}
 \label{sec:errors}
-\TODO{Fritz}
+
+Die Generierung von aussagekräftigen Fehlermeldungen ist unverzichtbar
+für das Kompilieren eines jeden Programms, das über den Umfang kleiner
+Beispiele hinausgeht.  Hilfreich ist eine Fehlermeldung dann, wenn aus
+ihr möglichst deutlich hervorgeht, um welche Art von Fehler es sich
+handelt und an welcher Stelle der Fehler am besten zu beheben ist.
+Leider waren die Fehlermeldungen des SL-Compilers bisher kaum
+hilfreich.  Weder stellten sie Informationen über den Ort des Fehlers
+bereit, noch war die Ausgabe in irgend einer konsistenten Weise
+Formatiert.  Zu sehen bekam man meist unformatierte Scala-Objekte, die
+kryptische Strings als Fehlermeldungen enthielten, oder gar direkt
+eine Exception mit Stacktrace.
+
+\subsection{Lokalisierung}
+Um Fehler finden und beheben zu können, stellen wir wenn möglich jeder
+Fehlermeldung eine kurze Positionsangabe voraus, aus der Dateiname und
+der Bereich der Datei, in dem der Fehler aufgetreten ist, ersichtlich
+werden.  Wir verwenden dazu das knappe Format
+\emph{Dateiname}:\emph{Zeilennummer}[:\emph{Spaltennummer}], wobei die
+\emph{Zeilen-} und \emph{Spaltennummer} einfache Zahlen oder auch
+Bereiche der Form \emph{Nummer}-\emph{Nummer} sein können.  Bei
+mehrzeiligen Fehlerbereichen entfällt die Angabe der Spalten.  Eine
+solche Lokalisierung erreichen wir, indem wir den Combinator- statt
+des Parboiled-Parsers verwenden, wodurch wir jedem Knoten in unserem
+abstrakten Syntaxbaum ein Attribut mit einer Position zuordnen können.
+
+\subsection{Syntaktische Fehler}
+Die für den Combinator-Parser verwendete Parsec-Bibliothek enthält
+bereits eine rudimentäre Fehlerbehandlung, die aber für unsere Zwecke
+nicht genügte.  Fehlern konnte zwar eine Zeile und eine Spalte
+zugeordnet werden, nicht aber ein ganzer Bereich, wie von uns
+vorgesehen, außerdem waren die Fehlermeldungen sehr kryptisch; auch
+erschien es uns unpassend, die ja bereits erstellten Attribute im
+Combinator-Parser nicht auch für Parserfehler zu verwenden.  Unsere
+Herangehensweise an das Problem war, zusätzliche Produktionen für
+häufige Fehler in den Parser einzubauen, die dann allerdings statt
+normal ein Ergebnis zurückzuliefern über Scalas Exception-Behandlung
+einen Fehler mit Attribut und genauer Beschreibung des Fehlers werfen.
+Teilweise entstehen dabei allerdings immer noch Parsec-Fehler, die
+dann einfach in unser internes Fehlerformat umgebaut und ebenfalls als
+Excptions geworfen werden.
+
+Im Ergebnis haben wir nun deutlich hilfreichere Parser-Fehlermeldungen
+als zuvor, sehen aber auch noch einige Schwächen. Es ist leider immer
+noch nicht möglich, mehr als einen Fehler im Parser zu erkennen, was
+bei mehreren Fehlern mehrmaliges Kompilieren notwendig macht.  Auch
+dringen teilweise immer noch die kryptischen Fehlermeldungen der
+Parsec-Bibliothek bis in die Ausgabe des Compilers vor.  Nützlich wäre
+wohl ein Redesign des gesamten Parsers, bei dem Fehlerbehandlung von
+vorn herein mitgedacht wird. Oft hätten wir uns auch für das
+Bereitstellen von sinnvollen Fehlern eine separate lexikalische
+Analysephase gewünscht, die bisher leider weder im Parboiled- noch im
+Combinator-Parser existiert.
+
+\subsection{Semantische Fehler}
+Der Typchecker produziert Fehlermeldungen, wenn er einen unbekannten
+Bezeichner findet, oder wenn bekannte Bezeichner mit dem falschen
+Typen verwendet werden.  Während Fehlermeldungen bei unbekannten
+bezeichnern aussagekräftig sind und auf den richtigen Bereich im
+Quelltext verweisen, sind Typfehler leider oft schwer
+nachvollziehbar.  Gerade durch die Fähigkeit von SL, Typen inferieren
+zu können, werden Fehler oft an ganz anderen Stellen vom Typchecker
+entdeckt, als dort, wo sie von der Programmiererin behoben werden
+müssen.  Erschwert wird das Problem zusätzlich noch dadurch, dass
+momentan lediglich die unterschiedlichen Typen angegben werden, nicht
+jedoch woher diese Typen hergeleitet wurden.
+
+Weitere semantische Fehler sind 
+\begin{itemize}
+\item die mehrfache Vergabe von Funktions-, Typ- und Konstruktor- und
+  Modulnamen,
+\item die mehrfache Vergabe des gleichen lokalen Variablen- oder
+  Typvariablennamen,
+\item der mehrfache Import ein- und desselben Moduls,
+\item unterschiedliche Aritäten bei verschiedenen Definitionen einer
+  Funktion oder ihrer Signatur,
+\item Signaturen ohne dazugehörige Definitionen und
+\item externe Definitionen ohne dazugehörige Signaturen.
+\end{itemize}
+All diese Fehler werden erkannt und entsprechend mitsamt Position im
+Quelltext ausgegeben.
+
+\subsection{Importfehler}
+Beim Importieren von Modulen müssen auch Dateien geöffnet
+werden.  Dabei können Fehler auftreten, wenn etwa die Datei nicht
+existiert oder nicht gelesen werden kann.  Ursachen dafür sind meist
+entweder eine falsche Angabe des Modulpfads im Import-Statement, oder
+dass ein Modul noch nicht kompiliert wurde.  Darum werden in der
+Fehlermeldung sowohl die Position des Import-Statements als auch der
+Pfad der Datei angegeben.
+
+Weitere Fehler, die beim Importieren auftreten, sind zyklische
+Abhängigkeiten von Modulen oder der Qualifizierte Import von
+\emph{std/prelude}.  Da wir diese Fälle bisher ausschließen, werden
+sie als Fehler erkannt und die Position des entsprechenden
+Import-Statements mit ausgegeben.  In Zukunft wäre es natürlich
+wünschenswert diese Fehler dadurch auszuschlißen, dass die
+entsprechenden Features von SL unterstützt werden.
+
+\subsection{Laufzeitfehler}
+Zur Laufzeit auftretende JavaScript-Fehler werden von uns in keiner
+Weise behandelt. Beim Schreiben von Code, insbesondere bei der
+Verwendung von JavaScript-Blöcken oder \verb|EXTERN|-Definitionen ist
+also darauf zu achten, dass möglicherweise auftretende
+JavaScript-Fehler frühzeitig abgefangen werden und dass die Typen
+tatsächlich mit den in der Signatur angegebenen Typen übereinstimmen.
 
 \section{Prelude und Bibliotheken}
 \label{sec:libs}
