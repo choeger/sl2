@@ -131,7 +131,6 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
   }
   
   private def normalizeConType(sub : ModuleVar => ModuleVar) : TConVar => TConVar = {
-    // TODO: obsolete? BaseTypes shouldn't be qualified anymore
     tcv => 
       if (BaseType.typeVars.contains(tcv)) {
         tcv

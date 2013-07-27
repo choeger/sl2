@@ -23,7 +23,7 @@
 
 
 \author{Benjamin Bisping, Rico Jasper, Sebastian Lohmeier,
-	Friedrich Moritz Psiorz}
+	Friedrich Psiorz}
 \title{Projektbericht: \textbf{Erweiterung von SL um ein Modulsystem}}
 \institute{Compilerbauprojekt SoSe 2013\\Technische Universität Berlin}
 
@@ -83,11 +83,15 @@ Worum geht es hier?
 
 \section{Einleitung}
 
-\TODO{Hällü Wörld}
+Das World Wide Web hat heutzutage eine größere Bedeutung denn je und ist aus dem Alltag nicht mehr wegzudenken. Browser bieten die Möglichkeit eine breite Palette an Anwendungen auszuführen. Sogenannte ,,Rich Web Applications`` basieren zum Großteil auf dem Zusammenspiel von HTML, CSS und JavaScript. Praktisch alle modernen Browser unterstützen die Ausführung von JavaScript, welche hier als Programmiersprache dominiert. Somit sind Programmierer für Webapplikation de-facto dazu gezwungen JavaScript einzusetzen.
+
+Einige Programmierer würden jedoch eine funktionale Sprache mit strikter Typüberprüfung vorziehen. Solch eine Sprache kann eine höhere Robustheit und Sicherheit bieten. ,,Simple Language`` (SL) bietet die Möglichkeit Programme im funktionalen Stil für Plattformen zu entwickeln, die JavaScript ausführen. Denn in SL entwickelte Software kann in JavaScript übersetzt werden.
+
+Im Rahmen unseres Projekts haben wir die Sprache SL und den dazugehörigen Compiler weiterentwickelt. Das nachfolgende Kapitel bietet einen Überblick über die Änderungen und Ergänzungen. Die weitere Gliederung folgt den Verarbeitungsschritten eines Übersetzungsvorgangs des Compilers.
 
 \section{Überblick}
 
-Ziel des Projektes war es, SL um ein Modulsystem zu erweitertern. Dazu
+Ziel des Projektes war es, SL um ein Modulsystem zu erweitern. Dazu
 reicherten wir den Sprachumfang von SL mit einer Reihe von Konstrukten an. Für
 diese besprechen wir die Syntax genauer in Abschnitt~\ref{sec:syntax},
 die semantische Analyse in Abschnitt~\ref{sec:semantics} und die
@@ -494,6 +498,7 @@ Da nun ein Modul auch andere Module importieren kann, erweitert sich der zu anal
 Nachdem die abstrakte Syntax vom Parser eingelesen wurde, müssen die Importe aufgelöst werden. Andernfalls ist Type-Checking nicht möglich, welches vor der Spracherweiterung direkt im Anschluss des Parsings stattfand. Die Auflösung von Importen bezeichnet das Suchen und Laden von Signaturen von externen Modulen. Zuvor müssen die Import-Anweisungen allerdings selbst auf Korrektheit überprüft werden.
 
 \subsubsection{Import-Überprüfung}
+\label{sec:semanticsimports}
 
 \TODO{Modulbezeichner richtiger Begriff?}
 
@@ -553,7 +558,7 @@ IMPORT "d.i.r/module-g"          AS G
 
 \subsubsection{Laden der Signatur}
 
-Falls die Importe korrekt sind, werden die dazugehörigen Moduldateien geladen. Ein Modul liegt dabei immer in zwei Dateien vor: Die Signatur (,,*.signatur``) und die in JavaScript übersetzte Implementierung  (,,*.js``). Können nicht alle benötigten Dateien gefunden werden, so kann der Kompiliervorgang nicht fortgesetzt werden. Die Suche der Dateien erfolgt relativ zum Klassenpfad, Zielverzeichnis, \TODO{mainUnit?} und aktuellen Verzeichnis.
+Falls die Importe korrekt sind, werden die dazugehörigen Moduldateien geladen. Ein Modul liegt dabei immer in zwei Dateien vor: Die Signatur (,,*.signatur``) und die in JavaScript übersetzte Implementierung  (,,*.js``). Können nicht alle benötigten Dateien gefunden werden, so kann der Kompiliervorgang nicht fortgesetzt werden. Die Suche der Dateien erfolgt relativ zum Klassenpfad, Zielverzeichnis, \TODO{was ist die mainUnit?} und aktuellen Verzeichnis.
 
 Die Signatur-Datei enthält einen Teil des abstrakten Syntaxbaums des zu importierenden Moduls. Datentypdefinitionen und Funktionssignaturen sind hier in einer serialisierten Form abgespeichert. Das Format dieser Datei wird in Abschnitt \ref{sec:compSig} beschrieben.
 
@@ -751,8 +756,8 @@ Dagegen ist \verb|signatures| ein Hash, wie das Vorbild aus \verb|Program| welch
 In diesem Beispiel sehen wir auch, wie der Typ der Funktion \verb|foo| serialisiert wird. Es gibt drei Sorten von Typen:
 
 \begin{description}
- \item[Typvariablen] die durch einen beliebigen Typen ersetzt werden können.
- \item[Funktionstypen] welche prinzipiell eine Auflistung von Typen ist. Der Funktionstyp \verb|A -> B -> C| wird als Liste der Typen A, B und C dargestellt.
+ \item[Typvariable] die durch einen beliebigen Typen ersetzt werden kann.
+ \item[Funktionstyp] welcher prinzipiell eine Auflistung von Typen ist. Der Funktionstyp \verb|A -> B -> C| wird als Liste der Typen A, B und C dargestellt.
  \item[Typausdruck] ist ein konkreter singulärer Typ, welcher denselben Bezeichner wie in seiner \verb|DATA|-Definition beinhaltet. Außerdem können diese Parametertypen entgegennehmen, welche wiederum eine Liste von Typen ist.
 \end{description}
 
@@ -915,9 +920,8 @@ DATA EXTERN DOM a
 Stärker als andere Module bildet das Prelude Funktionen auf handgeschriebenen
 JavaScript-Code ab. Diese Abbildung wurde bisher durch eine hardcodierte
 Umwandlung im SL-Compiler realisiert. Dank \verb|IMPORT EXTERN| und
-\verb|DEF EXTERN| \textbf{VERWEIS EINBAUEN} kann das Prelude selbst
-spezifizieren, dass \verb|+| auf das JavaScript-Objekt \verb|_add|
-aus \verb|_prelude.js| abgebildet werden soll.
+\verb|DEF EXTERN| kann das Prelude selbst spezifizieren, dass \verb|+| auf das
+JavaScript-Objekt \verb|_add| aus \verb|_prelude.js| abgebildet werden soll.
 
 \begin{verbatim}
 IMPORT EXTERN "_prelude" 
@@ -1066,7 +1070,7 @@ einsetzt, sollte alles klar gehen.
 
 Wir schrieben auch eine kleine Bibliothek \verb|basicweb|, die einige der
 Input/Output-Möglichkeiten von Websites bereitstellt. Diese Bibliothek ergibt
-natürlich nur sinn, wenn das mit SL erzeugte JS-Script im Browser ausgeführt
+natürlich nur Sinn, wenn das mit SL erzeugte JS-Script im Browser ausgeführt
 wird.
 
 \begin{verbatim}
@@ -1105,7 +1109,7 @@ es erlauben, verschiedene Funktionen in Modulen zu sammeln und diese Module
 aufeinander aufbauen zu lassen.
 
 Es wird deutlich, dass die vorgeschlagenen \verb|EXTERN|-Konstrukte es
-erlauben, auch funktionale Bibliotheken wie \verb|dict.sl| ohne eingriffe
+erlauben, auch funktionale Bibliotheken wie \verb|dict.sl| ohne Eingriffe
 in den Compiler zu entwickeln. Die monadischen JavaScript-Literale sind
 mächtig genug, um Aspekte wie die Interaktion mit dem Browser in Modulen
 wie \verb|basicweb.sl| zusammenzufassen.
@@ -1118,9 +1122,41 @@ Codegenerierung mehr.
 \section{Beispielprogramme und Tests}
 \label{sec:samples}
 
+Im Laufe der Entwicklung und insbesondere am Ende haben wir uns um ausgiebige
+Tests der neuen und alten Features bemüht. Einige der dabei entdeckten
+Schwierigkeiten führten auch tatsächlich noch zu Designänderungen.
+
+Zum Beispiel traten beim Testen mehrmals Inkompatibilitäten zwischen Windows
+und Linux auf, die uns zu sehr restriktive Vorgaben für Import-Pfade
+(vgl. Abschnitt \ref{sec:semanticsimports}) brachten.
+
+Leider erlaubte es unsere Teamgröße nicht, eine Person exklusiv mit
+Qualitätssicherung zu betrauen. Dennoch stimmt uns der Umfang an stabil
+funktionierenden Tests und Beispielprogrammen zuversichtlich, dass unsere
+Implementierung eine gewisse Robustheit erreicht hat. Nachfolgend soll
+kurz ein Überblick über 
+
+\subsection{Unittests}
+
+Die ursprüngliche SL-Implementierung kam mit vielen Unittests daher.
+Angesichts der weitreichenden Änderungen, die besonders die qualifizierten
+Bezeichner im bestehenden Code bedeuteten, waren diese Tests uns eine große
+Hilfe beim konsistenten Einpflegen neuer Features. Wir mussten im Laufe der
+Entwicklung nahezu alle Unittests anpassen und haben auch viele erweitert.
+
+Eine 100\%-ige Abdeckung der neuen Modulfeatures haben wir dabei nicht erreicht.
+Das Zusammenspiel von diamond-haften Modulimporten, bestimmte Namenskonflikte
+und Modulabhängigkeiten ließen sich besser durch den Einsatz des Modulsystems
+bei der Entwicklung kleinerer Programme überprüfen.
+
 \subsection{Beispielprogramme}
 
-Wir haben eine Reihe kleinerer Testprogramme geschrieben.
+Im Produktumfang sind auch eine Reihe von \verb|.sl|-Dateien enthalten, die
+zur Dokumentation und zum Test der Funktionsweise von SL dienen. Die Programme
+liefen in aktuellen Versionen von Firefox und Chrome sowie unter Node.js
+(Die \verb|basicweb|-Abhängigen Programme funktionieren natürlich nicht unter
+Node.js). Wir haben sowohl Kompilierung als auch Ausführung unter Linux und
+Windows getestet.
 
 \begin{description}
  \item[\texttt{hello.sl}] Das minimale ,,Hello World``-Programm. Verwendet
@@ -1132,28 +1168,96 @@ Wir haben eine Reihe kleinerer Testprogramme geschrieben.
    (Das ist ein wichtiger Testfall!)
  \item[\texttt{similarimports.sl}] Importiert eine neudefinierte \verb|Option|
    und zeigt, dass sie nicht mit \verb|Option| aus \verb|std/option| clasht.
- \item[\texttt{librarytest.sl}] Testet das Zusammenspiel einiger Funktionen aus
-   \verb|list| und \verb|dict| sowie \verb|real|. Macht außerdem vom lokalen
-   Überschreiben von Prelude-Bezeichnern Gebrauch.
- \item[\texttt{boxsort.sl}] Größeres Beispiel, das mittels \verb|basicweb| eine
-   interaktive Website erzeugt. Macht starken Gebrauch von allen möglichen
-   Features aus den \verb|std|-Librarys.
- \item[\texttt{koch.sl}] Modifizierte Version des ursprünglichen
-   Kochkurvenbeispiels. Verwendet Browseranzeige und \verb|timing|, um eine
-   Animation ausgehend von der Kochkurve zu zeichnen.
- \item[\texttt{sub/hello.sl}] Gibt "Hello Moon!" aus und wird von
+ \item[\texttt{sub/hello.sl}] Gibt ,,Hello Moon!'' aus und wird von
    \texttt{moonWorld.sl} verwendet, um das Einbinden verschieden
    qualifizierter Module mit identischem einfachen Namen zu testen.
  \item[\texttt{moonWorld.sl}] Verwendet \texttt{hello.sl} und
    \texttt{sub/hello.sl}, um zu prüfen, ob die beiden Module getrennt
    kompiliert und eingebunden werden.
- \item[\texttt{cycleA.sl} \textnormal{und} \texttt{cycleB.sl}] enhalten eine direkte
-   zyklische Abhängigkeit, um zu testen, ob diese erkannt wird.
+ \item[\texttt{cycleA.sl} \textnormal{und} \texttt{cycleB.sl}] enhalten eine
+   direkte zyklische Abhängigkeit, um zu testen, ob diese erkannt wird. Sie
+   bilden damit ausnahmsweise kein Beispielprogramm, sondern eben ein 
+   Nicht-Programm.
+ \item[\texttt{librarytest.sl}] Testet das Zusammenspiel einiger Funktionen aus
+   \verb|list| und \verb|dict| sowie \verb|real|. Macht außerdem vom lokalen
+   Überschreiben von Prelude-Bezeichnern Gebrauch.
+ \item[\texttt{boxsort.sl}] Größeres Beispiel, das mittels \verb|basicweb| eine
+   interaktive Website erzeugt. Setzt alle möglichen Features aus den
+   \verb|std|-Librarys ein.
+ \item[\texttt{koch.sl}] Modifizierte Version des ursprünglichen
+   Kochkurvenbeispiels. Verwendet Browseranzeige und \verb|timing|, um eine
+   Animation ausgehend von der Kochkurve zu zeichnen.
 \end{description}
 
-\section{Zusammenfassung}
+\section{Zusammenfassung und Ausblick}
 
-\TODO{...}
+Wir haben viel geschafft, aber ganz fertig ist SL wohl noch nicht.
+
+\subsection{Was erreicht wurde}
+
+In der aktuellen Version von SL existiert ein überschaubares und stabiles
+Modulsystem. Dazu erweiterten wir den Sprachumfang um qualifizierte Bezeichner,
+Modulimporte und Exportdeklarationen.
+
+Mithilfe des Modulsystems und der neuen Einbindungsmöglichkeiten für externen
+Code, können auf JavaScript aufsetzende Bibliotheken geschrieben werden.
+Insbesondere konnten wir uns so der in den Compiler fest eingebauten
+Basisfunktionen entledigen und diese in einem gesonderten Prelude-Modul 
+zusammenfassen.
+
+Der Compiler gibt seine Ergebnisse nicht mehr bloß in der Konsole aus, sondern
+erzeugt separat kompilierte Module und Signaturen, die mithilfe von requirejs
+zur Laufzeit zusammengefasst werden können. Der Compiler übersetzt eigenständig
+auch benötigte Module und liefert das Erzeugte zusammen mit zur Ausführung
+benötigten Rahmendateien und einer \verb|index.html| aus. Das Kompilat lässt
+sich mit gängigen modernen Browsern und node.js ausführen.
+
+Bei einem Fehlschlag des Compile-Vorgangs geben die Fehlermeldungen jetzt,
+wenn möglich, auch genaue Stellen des Fehlers an.
+
+Die neuen Features wurden getestet und auch in komplexer zusammenarbeitenden
+Modulen eingesetzt. Während der Entwicklung konnten wir auch viele kleine
+Fehler in SL fixen.
+
+Insgesamt haben wir damit die am Anfang des Projekts im Pflichtenheft
+festgelegten Kriterien erfüllt und beispielsweise in Hinblick auf die
+Entwicklung von Bibliotheken auch übertroffen. Dennoch drängen sich einige
+Punkte auf, an denen die Entwicklung von SL fortgesetzt werden könnte.
+
+\subsection{Was noch erreicht werden kann}
+
+Aktuell müssen Importe qualifiziert sein. Auch wenn in unserem Team die
+Auffassung vorherrscht, dass das für wartbaren Sourcecode ohnehin der
+bessere Weg ist, könnten vielseitigere Import-Statements angestrebt werden
+zum Beispiel für unqualifizierte, selektive oder umbenennden Importe.
+Es könnte auch über ein Paketsystem mit paketweisem Import und gegebenenfalls
+hierarchischen qualifizierten Bezeichnern nachgedacht werden.
+
+Die derzeitige Implementierung verbietet zyklische Abhängikeiten zwischen
+Modulen. SLs Design würde jedoch erlauben, solche Zyklen durch einen
+mehrschrittigen Kompilierungsprozess aufzulösen. Darüberhinaus wäre es auch
+möglich, Module nicht nur ihre exportierten, sondern auch ihre benötigten
+Schnittstellen angeben zu lassen und erst zur Ausführung oder Distribution
+die angebotenen und benötigten Schnittstellen zusammenzuführen.
+
+Allgemein erwies sich die konsistente Ausgabe des Kompilats an einem
+geeigneten Ort als schwieriger als zuerst angenommen. Für eine sinnvoll
+automatisierbare Distribution müssten mehr Konfigurationen zur Einbettung
+der Ausgaben in HTML-Code und zur Konfiguration von requirejs am Ausgabeort
+angeboten werden.
+
+Wir konnten zwar deutliche Fortschritte bei den Fehlermeldungen verbuchen.
+Wie die meisten Systeme mit Typinferenz, kann SL sich aber nicht immer so
+ausdrücken, dass Leute, die das Typsystem nicht selbst entwickelten,
+etwas mit den Fehlermeldungen anfangen könnten. Hier wäre noch viel Arbeit
+nötig.
+
+Und zu guter letzt wären natürlich mehr und ausgereiftere Bibliotheken
+schön.
+
+Insgesamt bleiben also auch an den von uns bearbeiteten Features von SL
+noch genug Baustellen übrig für das nächste Compilerbauprojekt oder die
+nächste Abschlussarbeit. Und das muss ja auch sein.
 
 \end{document}
 
