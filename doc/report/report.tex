@@ -653,9 +653,9 @@ Die lokalen Funktionssignaturen und -definitionen sowie die Signaturen aus den e
 \section{Codegenerierung}
 \label{sec:codegen}
 
-Der SL2-Compiler generiert Code, der unter node.js\footnote{http://nodejs.org/ - getestet mit Version 0.10.10} und im Browser\footnote{getestet mit Firefox, Chrome und Internet Explorer} ausgeführt werden kann. Bei einem Compileraufruf können jeweils mehrere
+Der neue SL-Compiler generiert Code, der unter node.js\footnote{http://nodejs.org/ - getestet mit Version 0.10.10} und im Browser\footnote{getestet mit Firefox, Chrome und Internet Explorer} ausgeführt werden kann. Bei einem Compileraufruf können jeweils mehrere
 Dateien angebenen werden (siehe Abschnitt \ref{sec:compInvoc}). Während
-der Compilierung werden aus dem \texttt{<classpathDirectory>} die
+der Compilierung werden aus dem \texttt{<classpath directory>} die
 Signatur-Dateien (siehe Abschnitt \ref{sec:compSig}) bereits
 kompilierter Module geladen. Anschließend werden die angegebenen
 \texttt{<module files>} sowie von diesem verwendete Module, kompiliert
@@ -665,9 +665,9 @@ kompilierten Module erstellt, wobei require.js (siehe Abschnitt
 \ref{sec:compReq}) verwendet wird, um die JavaScript-Dateien der
 Module zur Laufzeit zu laden.
 
-Sofern das beim Aufruf des Compilers angegebene
+Sofern die beim Aufruf des Compilers angegebenen
 \texttt{<module files>} eine Funktion namens
-\texttt{main} deklariert, werden für dieses noch eine
+\texttt{main} deklarieren, werden für diese noch eine
 \texttt{main.js}-Datei, eine Kopie von \texttt{require.js} und eine
 \texttt{index.html}-Datei erstellt,
 die den Aufruf der main-Funktion in node.js und im Browser erlauben
@@ -681,7 +681,7 @@ folgenden Schema -- mit eckigen Klammern \texttt{[ ]} umschlossene
 Parameter sind optional.
 
 \begin{verbatim}
-run-main de.tuberlin.uebb.sl2.impl.Main  [-d <output directory>]
+> run-main de.tuberlin.uebb.sl2.impl.Main  [-d <output directory>]
 [-cp <classpath directory>] -sourcepath <source directory>
 <module files>
 \end{verbatim}
@@ -708,7 +708,7 @@ run-main de.tuberlin.uebb.sl2.impl.Main  [-d <output directory>]
 
 Durch die Unterscheidung zwischen \texttt{<classpath
 directory>} und \texttt{<source directory>} kann dem Compiler sowohl
-eine Quelldatei als auch ein Kompilation eines Modules oder zweier
+eine Quelldatei als auch ein Kompilat eines Modules oder zweier
 gleichnamiger Module verfügbar sein. Abschnitt \ref{sec:compBuild}
 definiert, wie in einer solchen Situation vorgegangen wird.
 
@@ -730,12 +730,12 @@ classes\js\index.html to src\main\sl\examples\index.html
 copied C:\Users\monochromata\git\sl2\target\scala-2.10\
 classes\js\require.js to src\main\sl\examples\require.js
 compilation successful
-[success] Total time: 1 s, completed 21.07.2013 12:38:04
+[success] Total time: 1 s, completed 26.07.2013 18:38:04
 \end{verbatim}
 
 Die grundlegenden Funktionen und Datentypen im Prelude und in der
 Standardbibliothek (siehe Abschnitt \ref{sec:libs}) sind bereits
-fertig kompiliert im Compiler enthalten. Sofern sie angepasst werden
+fertig kompiliert im Compiler enthalten. Sofern sie angepasst werden,
 können sie mit folgenden Compileraufrufen neu kompiliert werden. Zu
 beachten ist dabei, dass Prelude erzeugt worden sein muss, bevor die
 Standardbibliotheken erzeugt werden.
@@ -771,15 +771,15 @@ den \texttt{MultiDriver} gesteuert, der folgende Phasen durchläuft.
     \begin{enumerate}
     \item die Quell-Datei des Moduls zu den an den Compiler
         übergebenen \texttt{<module files>} gehört, oder
-    \item eine Quell-Datei des Moduls im \texttt{<source directory>}
+    \item die Quell-Datei des Moduls im \texttt{<source directory>}
         vorhanden ist, jedoch keine Signatur-Datei des Moduls im
         \texttt{<classpath directory>} oder im \texttt{<output directory>}
         vorhanden ist, oder
-    \item eine Quell-Datei des Moduls im \texttt{<source directory>}
+    \item die Quell-Datei des Moduls im \texttt{<source directory>}
         vorhanden ist, ebenso wie eine Signatur-Datei des Moduls im
         \texttt{<classpath directory>} oder im \texttt{<output directory>}
         und die Quelldatei jünger als oder genauso alt wie die
-        Signature-Datei ist.
+        Signatur-Datei ist.
     \end{enumerate}
     Dabei ist zu beachten, dass die Identität eines Moduls durch seinen
     Modulpfad gegeben ist (siehe Abschnitt \ref{sec:semanticsimports}) und durch ein nicht
@@ -787,17 +787,31 @@ den \texttt{MultiDriver} gesteuert, der folgende Phasen durchläuft.
     werden muss, dass Quell- und Signatur-Dateien mit dem selben
     Modulpfad zum gleichen Modul gehören.
     
-    Für das Prelude und Bibliotheken unterhalb \texttt{std/} werden
+    Das Prelude und die Bibliotheken unterhalb \texttt{std/} werden
     abweichend von obiger Darstellung aus dem Ressourcenverzeichnis
-    des Compilers geladen, das sich sich für Scala Version 2.10
-    relativ zum SL2-Projektverzeichnis unter \texttt{target/scala-2.10/classes/lib/}
-    befindet. Das \texttt{std/} wird dabei durch \texttt{lib/} ersetzt.
+    des Compilers geladen, welches sich für Scala-Version 2.10
+    relativ zum SL-Projektverzeichnis unter \texttt{target/scala-2.10/classes/lib/}
+    befindet. Das Pfadpräfix \texttt{std/} wird dabei durch
+    \texttt{lib/} ersetzt.
 \item[Module linearisieren] Nachdem alle zu kompilierenden Module und
     die Import-Abhängigkeiten zwischen ihnen ermittelt wurden, werden
     die Module anhand ihrer Abhängigkeiten topologisch sortiert. Dabei
     werden auch zyklische Anhängigkeiten erkannt und die Compilierung
-    abgebrochen, sofern sie vorliegen (siehe \texttt{cycleA} und
-    \texttt{cycleB} in Abschnitt \ref{sec:sampleApps}).
+    abgebrochen, sofern sie vorliegen (siehe die folgenden Module
+    \texttt{cycle1} und \texttt{cycle2} aus Abschnitt \ref{sec:sampleApps}).
+    
+\begin{verbatim}
+-- cycle1.sl --
+IMPORT "std/list" AS StdList
+
+PUBLIC FUN foo : StdList.List -> StdList.List
+
+-- cycle2.sl --
+IMPORT "std/list" AS StdList
+
+PUBLIC DATA MyType = Ctor StdList.List
+\end{verbatim}
+    
 \item[Modul übersetzen] Nach der Linearisierung werden die zu
     kompilierenden Module in der gefundenen Reihenfolge übersetzt. Für
     jedes Module werden dabei folgenden Schritte durchgeführt.
@@ -814,7 +828,7 @@ den \texttt{MultiDriver} gesteuert, der folgende Phasen durchläuft.
         und Konstruktoren aus den JavaScript-Objekt gelesen werden können,
         das zur Laufzeit das Module repräsentiert.
 
-        Da unqualifizierte Imports kein Sprachbestandteil von SL2 sind
+        Da unqualifizierte Imports kein Sprachbestandteil von SL sind
         und nur \texttt{std/Prelude} standardmäßig implizit
         unqualifiziert importiert wird, wird dieser Schritt effektiv
         nur auf dieses Modul angewandt.
@@ -829,7 +843,7 @@ den \texttt{MultiDriver} gesteuert, der folgende Phasen durchläuft.
         
         Für das JavaScript werden Templates werden aus dem
         Ressourcenverzeichnis des Compilers geladen, die sich sich für
-        Scala Version 2.10 relativ zum SL2-Projektverzeichnis unter
+        Scala Version 2.10 relativ zum SL-Projektverzeichnis unter
         \texttt{target/scala-2.10/classes/js/} befinden (die Originale
         befinden sich unter \texttt{src/main/js/}). Folgende Templates
         sind verfügbar:
@@ -1002,10 +1016,10 @@ Gegensatz zum Modulsystem von node.js auch ohne größeren Aufwand
 sowohl im Browser als auch in node.js verfügbar ist.
 
 Da der Compiler die JavaScript-Datei von \texttt{require.js} mit ins
-Ausgabeverzeichnis kopiert, wird \texttt{require.js} bei SL2-Module
+Ausgabeverzeichnis kopiert, wird \texttt{require.js} bei SL-Module
 für den Browser gleich mitgeliefert. In \texttt{node.js} muss
 \texttt{require.js} allerdings noch installiert werden, damit
-kompilierte SL2-Programme in \texttt{node.js} geladen und ausgeführt
+kompilierte SL-Programme in \texttt{node.js} geladen und ausgeführt
 werden können.
 
 Mit dem über die Shell gestarteten node package manager (npm) kann
@@ -1059,7 +1073,7 @@ define(function(require, exports, module) {
 });
 \end{verbatim}
 
-Die Moduldefinition mit Exports-Objekten wurde in SL2
+Die Moduldefinition mit Exports-Objekten wurde in SL
 gewählt, um später die Möglichkeit zu haben, statische zirkuläre
 Abhängigkeiten auflösen zu können. Dabei werden Module jeweils von
 der \texttt{require}-Funktion geladen, die das Export-Objekt
@@ -1237,7 +1251,7 @@ werden, bspw. um eine Corporate Identity umzusetzen.
 </html>
 \end{verbatim}
 
-SL2-Module mit main-Methode werden im Browser ausgeführt, indem die
+SL-Module mit main-Methode werden im Browser ausgeführt, indem die
 vom Compiler generierte \texttt{index.html}-Datei im Browser geöffnet
 wird. Die Module werden in \texttt{node.js} mit folgendem Shell-Aufruf
 gestartet.
@@ -1561,13 +1575,16 @@ Windows getestet.
    (Das ist ein wichtiger Testfall!)
  \item[\texttt{similarimports.sl}] Importiert eine neudefinierte \verb|Option|
    und zeigt, dass sie nicht mit \verb|Option| aus \verb|std/option| clasht.
+ \item[\texttt{sub/relative.sl}] Wird verwendet, um zu zeigen, dass
+    \texttt{require.js} Modulpfade absolut statt relativ zum aktuellen
+    Modul interpretiert.
  \item[\texttt{sub/hello.sl}] Gibt ,,Hello Moon!'' aus und wird von
    \texttt{moonWorld.sl} verwendet, um das Einbinden verschieden
    qualifizierter Module mit identischem einfachen Namen zu testen.
  \item[\texttt{moonWorld.sl}] Verwendet \texttt{hello.sl} und
    \texttt{sub/hello.sl}, um zu prüfen, ob die beiden Module getrennt
    kompiliert und eingebunden werden.
- \item[\texttt{cycleA.sl} \textnormal{und} \texttt{cycleB.sl}] enhalten eine
+ \item[\texttt{cycle1.sl} \textnormal{und} \texttt{cycle2.sl}] enhalten eine
    direkte zyklische Abhängigkeit, um zu testen, ob diese erkannt wird. Sie
    bilden damit ausnahmsweise kein Beispielprogramm, sondern eben ein 
    Nicht-Programm.
@@ -1580,17 +1597,6 @@ Windows getestet.
  \item[\texttt{koch.sl}] Modifizierte Version des ursprünglichen
    Kochkurvenbeispiels. Verwendet Browseranzeige und \verb|timing|, um eine
    Animation ausgehend von der Kochkurve zu zeichnen.
- \item[\texttt{sub/hello.sl}] Gibt "Hello Moon!" aus und wird von
-   \texttt{moonWorld.sl} verwendet, um das Einbinden verschieden
-   qualifizierter Module mit identischem einfachen Namen zu testen.
- \item[\texttt{sub/relative.sl}] Wird verwendet, um zu zeigen, dass
-    \texttt{require.js} Modulpfade absolut statt relativ zum aktuellen
-    Modul interpretiert.
- \item[\texttt{moonWorld.sl}] Verwendet \texttt{hello.sl} und
-   \texttt{sub/hello.sl}, um zu prüfen, ob die beiden Module getrennt
-   kompiliert und eingebunden werden.
- \item[\texttt{cycleA.sl} \textnormal{und} \texttt{cycleB.sl}] enhalten eine direkte
-   zyklische Abhängigkeit, um zu testen, ob diese erkannt wird.
 \end{description}
 
 \section{Zusammenfassung und Ausblick}
