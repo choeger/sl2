@@ -145,11 +145,11 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
    */
   private def buildPathModuleMap(imports : List[ResolvedImport]) : Map[String, ModuleVar] = {
     // build map only from qualified imports
-    var unqualifiedPaths = imports.filter(_.isInstanceOf[ResolvedUnqualifiedImport]).map(imp => {
+    val unqualifiedPaths = imports.filter(_.isInstanceOf[ResolvedUnqualifiedImport]).map(imp => {
       val uqi = imp.asInstanceOf[ResolvedUnqualifiedImport]
       (uqi.path -> Syntax.LocalMod)
     }).toMap
-    var qualifiedPaths = imports.filter(_.isInstanceOf[ResolvedQualifiedImport]).map(imp => {
+    val qualifiedPaths = imports.filter(_.isInstanceOf[ResolvedQualifiedImport]).map(imp => {
       val rqi = imp.asInstanceOf[ResolvedQualifiedImport]
       
       // use path as key
