@@ -173,34 +173,24 @@ trait ModuleNormalizerImpl extends ModuleNormalizer {
       val imports = rui.signature.imports
       
       // map the imports of this imported module
-      var modPath = imports.filter(_.isInstanceOf[QualifiedImport]).map(imp => {
+      imports.filter(_.isInstanceOf[QualifiedImport]).map(imp => {
         val qi = imp.asInstanceOf[QualifiedImport]
-        
-        // use name as key
-        // use path as value
         (qi.name -> qi.path)
-      }).toMap
-      
+      }).toMap +
       // add a translation for local modules
-      modPath += (Syntax.LocalMod -> rui.path)
+      (Syntax.LocalMod -> rui.path)
       
-      modPath
     case rqi : ResolvedQualifiedImport =>
       val imports = rqi.signature.imports
       
       // map the imports of this imported module
-      var modPath = imports.filter(_.isInstanceOf[QualifiedImport]).map(imp => {
+      imports.filter(_.isInstanceOf[QualifiedImport]).map(imp => {
         val qi = imp.asInstanceOf[QualifiedImport]
-        
-        // use name as key
-        // use path as value
         (qi.name -> qi.path)
-      }).toMap
-      
+      }).toMap +
       // add a translation for local modules
-      modPath += (Syntax.LocalMod -> rqi.path)
+      (Syntax.LocalMod -> rqi.path)
       
-      modPath
     case _ : ResolvedExternImport => Map()
   }
 

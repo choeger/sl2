@@ -193,13 +193,13 @@ trait SLPrograms {
   """.stripMargin
 
 
-  var overlappingPatterns = """
+  val overlappingPatterns = """
   | DEF f a b c = 1 
   | DEF f a b c = 2
   """.stripMargin
 
 
-  var shadowedVars = """
+  val shadowedVars = """
   | DEF f = LET v = 10
   |             x = (LET v = 20 IN \ x y . v * x) (LET v = neg 30 IN v) v
   |         IN v + x

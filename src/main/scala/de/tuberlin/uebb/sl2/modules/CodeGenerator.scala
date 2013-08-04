@@ -153,7 +153,7 @@ trait CodeGenerator {
   def functionBodyToJs(args : List[JsName], allArgs : List[JsName], v : Var, funs : List[FunctionDef]) : JsStmt = args match {
     case Nil => {
       val l: List[(JsExpr, JsStmt)] = funs.map(f => {
-        var body = expToJs(f.expr, "_return") & new JsReturn(JsName("_return"))
+        val body = expToJs(f.expr, "_return") & new JsReturn(JsName("_return"))
         val jsp = (f.patterns.zip(allArgs)).map(x => patternToJs(x._1, x._2))
         val p = jsp.reduce((x, y) => x & y)
         val defs = JsStmtConcat(p.variables)

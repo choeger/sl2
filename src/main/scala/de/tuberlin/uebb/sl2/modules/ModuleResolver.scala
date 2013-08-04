@@ -1,6 +1,7 @@
 package de.tuberlin.uebb.sl2.modules
 
 import java.io.File
+import java.net.URL
 
 /**
  * A ModuleResolver is able to find and load the modules a program
@@ -52,4 +53,7 @@ trait ModuleResolver {
 
   def findImportResource(path: String, config: Config, attr: Attribute): Either[Error, File]
 
+  def standardLibName: String
+  def standardLibUrl: String
+  def getLibResource(path: String) = getClass().getResource(standardLibUrl + path)
 }

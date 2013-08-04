@@ -44,13 +44,13 @@ trait ModuleLinearization
    * (can either be from /std)
    */
   def moduleFromName(name: String, config: Config): Module = {
-    if (name.startsWith("std/")) {
+    if (name.startsWith(standardLibName+"/")) {
       // load std/ library from resources directory
-      val nameEnd = name.replace("std/", "")
-      val stdSource = getClass().getResource("/lib/" + nameEnd + ".sl")
+      val nameEnd = name.replace(standardLibName+"/", "")
+      val stdSource = getLibResource(nameEnd + ".sl")
       if (stdSource == null)
         throw new IOException("Could not find source of standard library: "
-          + quote("/lib/" + name))
+          + quote(standardLibUrl + name))
       Module(nameEnd,
         new File(stdSource.toURI()),
         new File(new URL(stdSource.toString + ".signature").toURI()),

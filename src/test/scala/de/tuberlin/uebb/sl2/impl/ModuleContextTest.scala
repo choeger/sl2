@@ -20,6 +20,7 @@ class ModuleContextTest extends
   with ModuleResolverImpl
   with ModuleNormalizerImpl
   with ModuleContextImpl
+  with DTCheckerImpl
   with SignatureJsonSerializer
 {
 
