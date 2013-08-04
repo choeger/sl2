@@ -64,7 +64,7 @@ object Main
     with ModuleResolverImpl
     with ModuleNormalizerImpl
     with ModuleContextImpl
-  	with TopologicalSorting {
+  	with ModuleLinearization {
 
   val usage = """Usage: <sl> [-d <destination directory>] [-cp <class-path-directory>] [-h] -sourcepath <source-path> source file(s)"""
   

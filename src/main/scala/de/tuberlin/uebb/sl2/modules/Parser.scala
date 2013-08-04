@@ -34,7 +34,12 @@ package de.tuberlin.uebb.sl2.modules
 trait Parser {
   this : Syntax with Errors => 
 
-  var fileName : String  
+  /**
+   * name of the file that is being parsed at the moment.
+   */
+  // SL-SoSe13-Team: needs to be a "var" because of the strange design design
+  //     not to abstract the parsing process into a separate object...
+  var fileName : String
     
   def parseAst(in : String) : Either[Error, AST]
 
