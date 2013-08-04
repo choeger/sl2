@@ -66,26 +66,34 @@ object Main
     with ModuleContextImpl
   	with ModuleLinearization {
 
-  val usage = """Usage:B <sl> [-d <destination directory>] [-cp <class-path-directory>] -sourcepath <source-path> source file(s)"""
-
+  val usage = """Usage: <sl> [-d <destination directory>] [-cp <class-path-directory>] [-h] -sourcepath <source-path> source file(s)"""
+  
+  val help = usage + """
+  -sourcepath root directory for compilation (source files relative 
+       from here)
+  -d   specifies where to put compiled files (defaults to sourcepath)
+  -cp  where to look for signatures of files not available from
+       sourcepath (defaults to sourcepath)
+  -h   display this help"""
+    
   def main(args: Array[String]) {
-    if (args.isEmpty)
+    if (args.isEmpty) {
       println(usage)
-    else {
+    } else if (args.contains("-h")) {
+      println(help)
+    } else {
       val config = parseArguments(args.toList)
-      if(config.sourcepath == null || config.sources == null || config.sources.isEmpty) {
+      if (config.sourcepath == null || config.sources == null || config.sources.isEmpty) {
         println(usage)
       } else {
-          if(config.classpath == null) {
-            config.classpath = config.sourcepath
-          }
-          if(config.destination == null)
-        	  config.destination = config.sourcepath
-	      val res = run(config)
-	      if (res.isLeft)
-	        res.left.map(x => println("Errors:\n" + x))
-	      else
-	        res.right.map(x => println(x))
+        val runConfig = config.copy(
+          classpath = Option(config.classpath).getOrElse(config.sourcepath),
+          destination = Option(config.destination).getOrElse(config.sourcepath))
+        val res = run(runConfig)
+        if (res.isLeft)
+          res.left.map(x => println("Errors:\n" + x))
+        else
+          res.right.map(x => println(x))
       }
     }
   }

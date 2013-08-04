@@ -4,17 +4,14 @@ import scala.util.parsing.json._
 import de.tuberlin.uebb.sl2.modules.{ SignatureSerializer, Syntax, Errors }
 
 trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Errors {
-  
-  var serializerLocation: Location = NoLocation
 
   def serialize(ast : AST) : String = ast2Json(ast).toString
   
   def deserialize(jsonString : String, location : Location = NoLocation) : AST = {
-    serializerLocation = location
     JSON.parseFull(jsonString) match {
       case Some(result) =>
         val jsonAst = result.asInstanceOf[JsonImportAst]
-        json2Ast(jsonAst)
+        json2Ast(jsonAst, location)
       case None => null
     }
   }
@@ -124,31 +121,32 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Error
   private def   datas2Json(datas   : List[DataDef]            ) : JsonExportDataDefList        = JSONArray (datas  .map(  data2Json))
   private def   ctors2Json(ctors   : List[ConstructorDef]     ) : JsonExportConstructorDefList = JSONArray (ctors  .map(  ctor2Json))
 
-  private def json2Imports(jsonImports : JsonImportImportList        ) : List[Import]              = jsonImports.map(json2Import)
-  private def json2Sigs   (jsonSigs    : JsonImportFunctionSigMap    ) : Map[VarName, FunctionSig] = jsonSigs   .map(json2Sig   )
-  private def json2Types  (jsonTypes   : JsonImportAstTypeList       ) : List[ASTType]             = jsonTypes  .map(json2Type  )
-  private def json2Datas  (jsonDatas   : JsonImportDataDefList       ) : List[DataDef]             = jsonDatas  .map(json2Data  )
-  private def json2Ctors  (jsonCtors   : JsonImportConstructorDefList) : List[ConstructorDef]      = jsonCtors  .map(json2Ctor  )
+  private def json2Imports(jsonImports : JsonImportImportList                             ) : List[Import]              = jsonImports.map(json2Import           )
+  private def json2Sigs   (jsonSigs    : JsonImportFunctionSigMap    , location : Location) : Map[VarName, FunctionSig] = jsonSigs   .map(json2Sig (_, location))
+  private def json2Types  (jsonTypes   : JsonImportAstTypeList                            ) : List[ASTType]             = jsonTypes  .map(json2Type             )
+  private def json2Datas  (jsonDatas   : JsonImportDataDefList       , location : Location) : List[DataDef]             = jsonDatas  .map(json2Data(_, location))
+  private def json2Ctors  (jsonCtors   : JsonImportConstructorDefList, location : Location) : List[ConstructorDef]      = jsonCtors  .map(json2Ctor(_, location))
 
   // actual (de)serialization implementation starts here
   
   private def ast2Json(ast : AST) : JsonExportAst = ast match { case Program(imports, sigs, _, _, datas, _) =>
     val exportedSigs = sigs.filter{
         case (_, FunctionSig(_,modi,_)) => PublicModifier == modi}
-    var root : Map[String, Any] = Map()
-    root += ("imports"    -> imports2Json(imports     ))
-    root += ("signatures" ->    sigs2Json(exportedSigs))
-    root += ("dataDefs"   ->   datas2Json(datas       ))
+    val root : Map[String, Any] = Map(
+      "imports"    -> imports2Json(imports     ),
+      "signatures" ->    sigs2Json(exportedSigs),
+      "dataDefs"   ->   datas2Json(datas       )
+    )
     
     JSONObject(root)
   }
   
-  private def json2Ast(jsonAst : JsonImportAst) : AST = {
+  private def json2Ast(jsonAst : JsonImportAst, location : Location) : AST = {
     val jsonImports = jsonAst.get("imports"   ).get.asInstanceOf[JsonImportImportList    ]
     val jsonSigs    = jsonAst.get("signatures").get.asInstanceOf[JsonImportFunctionSigMap]
     val jsonDatas   = jsonAst.get("dataDefs"  ).get.asInstanceOf[JsonImportDataDefList   ]
     
-    Program(json2Imports(jsonImports), json2Sigs(jsonSigs), Map(), Map(), json2Datas(jsonDatas))
+    Program(json2Imports(jsonImports), json2Sigs(jsonSigs, location), Map(), Map(), json2Datas(jsonDatas, location))
   }
   
   private def import2Json(_import : Import) : JsonExportImport = _import match {
@@ -175,18 +173,19 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Error
     (varName2Json(ide), type2Json(funSig.typ))
   }
     
-  private def json2Sig(jsonSig : (JsonImportVarName, JsonImportFunctionSig)) : (VarName, FunctionSig) = {
-    var (fun, sig) = jsonSig
+  private def json2Sig(jsonSig : (JsonImportVarName, JsonImportFunctionSig), location : Location) : (VarName, FunctionSig) = {
+    val (fun, sig) = jsonSig
     
-    (json2VarName(fun), FunctionSig(json2Type(sig), DefaultModifier, AttributeImpl(serializerLocation)))
+    (json2VarName(fun), FunctionSig(json2Type(sig), DefaultModifier, AttributeImpl(location)))
   }
 
   private def type2Json(typ : ASTType) : JsonExportAstType = typ match {
     case TyVar(ide, _) => typeVarName2Json(ide)
     case TyExpr(con, params, _) =>
-      var map : Map[String, Any] = Map()
-      map += ("type"   -> tConVar2Json(con   ))
-      map += ("params" -> types2Json  (params))
+      val map : Map[String, Any] = Map(
+        "type"   -> tConVar2Json(con   ),
+        "params" -> types2Json  (params)
+      )
       
       JSONObject(map)
     case FunTy(types, _) => types2Json(types)
@@ -203,39 +202,49 @@ trait SignatureJsonSerializer extends SignatureSerializer with Syntax with Error
   }
 
   private def data2Json(data : DataDef) : JsonExportDataDef = {
-    var map : Map[String, Any] = Map()
-    map += ("ide"   -> tConVarName2Json (data.ide         ))
-    map += ("tvars" -> typeVarNames2Json(data.tvars       ))
-    // the constructors of private types are not exported.
-    if (data.modifier == PublicModifier) {
-      map += ("constructors" -> ctors2Json       (data.constructors))
-    } else {
-      map += ("constructors" -> JSONArray(List()))
-    }
+    val map : Map[String, Any] = Map(
+      "ide"          -> tConVarName2Json (data.ide         ),
+      "tvars"        -> typeVarNames2Json(data.tvars       ),
+      "constructors" -> {
+        // the constructors of private types are not exported.
+        if (data.modifier == PublicModifier)
+          ctors2Json(data.constructors)
+        else
+          JSONArray(List())
+      }
+    )
+    
     JSONObject(map)
   }
     
-  private def json2Data(jsonData : JsonImportDataDef) : DataDef = {
+  private def json2Data(jsonData : JsonImportDataDef, location : Location) : DataDef = {
     val jsonIde   = jsonData.get("ide"         ).get.asInstanceOf[JsonImportTConVarName       ]
     val jsonTvars = jsonData.get("tvars"       ).get.asInstanceOf[JsonImportTypeVarNameList   ]
     val jsonCtors = jsonData.get("constructors").get.asInstanceOf[JsonImportConstructorDefList]
     
-    DataDef(json2TConVarName(jsonIde), json2TypeVarNames(jsonTvars), json2Ctors(jsonCtors), DefaultModifier, AttributeImpl(serializerLocation))
+    DataDef(
+      json2TConVarName (jsonIde            ),
+      json2TypeVarNames(jsonTvars          ),
+      json2Ctors       (jsonCtors, location),
+      DefaultModifier,
+      AttributeImpl(location)
+    )
   }
 
   private def ctor2Json(ctor : ConstructorDef) : JsonExportConstructorDef = {
-    var map : Map[String, Any] = Map()
-    map += ("constructor" -> conVarName2Json(ctor.constructor))
-    map += ("types"       -> types2Json     (ctor.types      ))
+    val map : Map[String, Any] = Map(
+      "constructor" -> conVarName2Json(ctor.constructor),
+      "types"       -> types2Json     (ctor.types      )
+    )
     
     JSONObject(map)
   }
   
-  private def json2Ctor(jsonCtor : JsonImportConstructorDef) : ConstructorDef = {
+  private def json2Ctor(jsonCtor : JsonImportConstructorDef, location : Location) : ConstructorDef = {
     val jsonIde   = jsonCtor.get("constructor").get.asInstanceOf[JsonImportConVarName ]
     val jsonTypes = jsonCtor.get("types"      ).get.asInstanceOf[JsonImportAstTypeList]
     
-    ConstructorDef(json2ConVarName(jsonIde), json2Types(jsonTypes), AttributeImpl(serializerLocation))
+    ConstructorDef(json2ConVarName(jsonIde), json2Types(jsonTypes), AttributeImpl(location))
   }
 
 }
