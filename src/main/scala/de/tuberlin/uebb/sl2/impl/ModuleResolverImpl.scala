@@ -18,7 +18,7 @@ trait ModuleResolverImpl extends ModuleResolver {
         case _ =>
       }
       
-      val preludeImp = if (config.mainUnit.getName() != "prelude.sl")
+      val preludeImp = if (config.mainName != "prelude.sl")
          UnqualifiedImport("std/prelude") :: imports 
       else
          imports
@@ -144,8 +144,9 @@ trait ModuleResolverImpl extends ModuleResolver {
 
   def findImportResource(path: String, config: Config, attr: Attribute): Either[Error, File] = {
     val url = getClass().getResource("/lib/");
-    val file = new File(new File(url.toURI()), path)
-    if(url == null && file.canRead()) {
+    val file = new File(new File(url.toURI()), path) // TODO: wirft NPE, wenn url==null
+    if(url == null || file.canRead()) { // TODO: was ist denn das für eine Bedingung?
+        // TODO: Will need to modify all uses of ResolvedUnqualifiedImport, for they may stem from JAR file or from path
     	Left(ImportError("Could not find resource " + quote("/lib/"+path), attr))
     } else {
 	    val files = List(file,
@@ -163,7 +164,7 @@ trait ModuleResolverImpl extends ModuleResolver {
     } else {
       val files = List(new File(config.classpath, path),
         new File(config.destination, path),
-        new File(config.mainUnit.getParentFile(), path),
+        new File(config.mainParent, path),
         new File(path))
       files.find(_.canRead()).toRight(
         ImportError("Could not find " + quote(path) + " at " + files.map(_.getCanonicalPath()).mkString("\n\t\t\t\tor "), attr))

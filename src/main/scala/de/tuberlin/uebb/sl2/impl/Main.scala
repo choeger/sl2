@@ -64,7 +64,7 @@ object Main
     with ModuleResolverImpl
     with ModuleNormalizerImpl
     with ModuleContextImpl
-  	with TopologicalSorting {
+  	with ModuleLinearization {
 
   val usage = """Usage:B <sl> [-d <destination directory>] [-cp <class-path-directory>] -sourcepath <source-path> source file(s)"""
 
@@ -101,5 +101,5 @@ object Main
     case Nil => defaultConfig
   }
   
-  val defaultConfig: Config = Config(null, List(), null, new File(""), null)
+  val defaultConfig: Config = Config(null, List(), null, "", new File(""), null)
 }

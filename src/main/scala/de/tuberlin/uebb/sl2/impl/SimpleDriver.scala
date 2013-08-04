@@ -59,7 +59,7 @@ trait SimpleDriver extends Driver {
     val name = file.getName()
     // if no destination has been specified, the output goes to the folder of the input file.
     val destination = if (inpCfg.destination == null) file.getParentFile() else inpCfg.destination
-    val config = inpCfg.copy(mainUnit = file, destination = destination)
+    val config = inpCfg.copy(mainName = file.getName, mainParent = file.getParentFile, destination = destination)
     val source = scala.io.Source.fromFile(file)
     val code = source.mkString
     source.close()

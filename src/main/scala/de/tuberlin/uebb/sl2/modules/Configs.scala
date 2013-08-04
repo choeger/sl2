@@ -7,6 +7,7 @@ trait Configs {
     val sourcepath: File,
     val sources: List[String],
     var classpath: File,
-    val mainUnit: File,
+    val mainName: String,
+    val mainParent: File,
     var destination: File)
 }
