@@ -4,9 +4,27 @@ import java.io.File
 
 trait Configs {
   case class Config(
+    /**
+     * where to look for source files
+     */
     val sourcepath: File,
+    /**
+     * which source files at source path to compile
+     */
     val sources: List[String],
-    var classpath: File,
+    /**
+     * where to look for compiled versions of imported modules
+     * (this should usually be the destination directory.
+     * if its not, manual changes to the requirejs-config might
+     * be needed.)
+     */
+    val classpath: File,
+    /**
+     * the main file compiled
+     */
     val mainUnit: File,
-    var destination: File)
+    /**
+     * where to put the compiled files from source.
+     */
+    val destination: File)
 }
