@@ -59,7 +59,7 @@ trait MultiDriver extends Driver {
   	with Configs
   	with ModuleResolver
   	with ModuleNormalizer
-  	with TopologicalSorting =>
+  	with ModuleLinearization =>
 	
   override def run(config: Config): Either[Error, String] = {
     // load all (indirectly) required modules
@@ -125,17 +125,17 @@ trait MultiDriver extends Driver {
   def findModule(importedBy: Module, name: String, config: Config):Either[Error,Module] = {
     try {
 	    val module = new Module(name, config)
-	    if(!module.signatureFile.canRead()) {
+	    if(!module.signature.canRead) {
 	    	// no signature file exists
-	    	if(module.sourceFile.canRead()) {
+	    	if(module.source.canRead) {
 	    		module.compile = true
 	    	    Right(module)
 	    	} else {
 	    		Left(FilesNotFoundError("Module "+name+" imported by "+importedBy.name+" not found: ",
-	    				module.sourceFile, module.signatureFile))
+	    				module.source.path, module.signature.path))
 	    	}
-	    } else if(module.sourceFile.canRead() &&
-	              module.sourceFile.lastModified() >= module.signatureFile.lastModified()) {
+	    } else if(module.source.canRead() &&
+	              module.source.lastModified() >= module.signature.lastModified()) {
 	    	// a signature file exists, as well as a source file
 	        module.compile = true
 	        Right(module)
@@ -153,11 +153,11 @@ trait MultiDriver extends Driver {
    */
   def findModuleFromSource(name: String, config: Config): Either[Error,Module] = {
     val module = new Module(name, config)
-	if(module.sourceFile.canRead()) {
+	if(module.source.canRead()) {
 	    module.compile = true
 	    Right(module)
 	} else {
-		Left(FileNotFoundError(module.sourceFile))
+		Left(FileNotFoundError(module.source.path))
 	}
   }
   
@@ -204,12 +204,10 @@ trait MultiDriver extends Driver {
   
   def getDependencies(module: Module, config: Config): Either[Error, Set[Module]] = {
     // load input file
-    val source = scala.io.Source.fromFile(module.sourceFile)
-    val code = source.mkString
-    source.close()
+    val code = module.source.contents
 
     // parse the syntax
-    fileName = module.sourceFile.getName
+    fileName = module.source.path
     val ast = parseAst(code)
     
     // resolve dependencies
@@ -227,12 +225,9 @@ trait MultiDriver extends Driver {
   def handleSource(module: Module, inputConfig: Config) = {
     // load input file
     val name = module.name
-    // if no destination has been specified, the output goes to the folder of the input file.
-    val destination = if (inputConfig.destination == null) module.sourceFile.getParentFile() else inputConfig.destination
-    val config = inputConfig.copy(mainUnit = module.sourceFile, destination = destination)
-    val source = scala.io.Source.fromFile(module.sourceFile)
-    val code = source.mkString
-    source.close()
+    val destination = inputConfig.destination
+    val config = inputConfig.copy(mainName = module.source.filename, mainParent = module.source.parent, destination = destination)
+    val code = module.source.contents
 
     // parse the syntax
     fileName = name
