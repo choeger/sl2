@@ -349,9 +349,11 @@ trait MultiDriver extends Driver {
     // create main.js only if a main function is declared
     if(program.isInstanceOf[Program] && program.asInstanceOf[Program].functionDefs.contains("main")) {
       val mainJs = new File(config.destination, "main.js")
-      if(getClass().getResource("/lib/") == null)
-    	  return Left(GenericError("Cannot compile: Standard library "+quote("/lib/")+" not found."))
       val preludeURL = getClass().getResource("/lib/")
+      if(preludeURL == null)
+    	  return Left(GenericError("Cannot compile: Standard library "+quote("/lib/")+" not found."))
+      // TODO: there is a principle problem here: if the prelude is contained in a JAR file, it is not
+      // accessible from the Browser/node.js and will need to be copied
       val stdURL = JsObject(List((JsName("std"), JsStr(preludeURL.toString))))
       val stdPath = JsObject(List((JsName("std"), JsStr(Paths.get(preludeURL.toURI).toString.replace("\\", "/")))))
 	    val mainWriter = new PrintWriter(mainJs)
