@@ -7,25 +7,28 @@ import java.io.File
  * references.
  */
 trait ModuleResolver {
-  this: Syntax with Errors with Configs =>
+  this: Syntax
+  with AbstractFile
+  with Errors
+  with Configs =>
 
   sealed abstract class ResolvedImport(
       val path:String,
-      val file:File,
+      val file:AbstractFile,
       val ast:Import)
   
   sealed abstract class ResolvedModuleImport(
       val name:String,
       override val path:String,
-      override val file:File,
-      val jsFile:File,
+      override val file:AbstractFile,
+      val jsFile:AbstractFile,
       val signature:Program,
       override val ast:Import) extends ResolvedImport(path, file, ast)
       
   case class ResolvedUnqualifiedImport(
       override val path: String,
-      override val file: File,
-      override val jsFile: File,
+      override val file: AbstractFile,
+      override val jsFile: AbstractFile,
       override val signature: Program,
       override val ast: UnqualifiedImport) extends ResolvedModuleImport(
           "$$"+path.replace('/', '$'), path, file, jsFile, signature, ast)
@@ -33,15 +36,15 @@ trait ModuleResolver {
   case class ResolvedQualifiedImport(
       override val name: ModuleVar,
       override val path: String,
-      override val file: File,
-      override val jsFile: File,
+      override val file: AbstractFile,
+      override val jsFile: AbstractFile,
       override val signature: Program,
       override val ast: QualifiedImport)
     extends ResolvedModuleImport(name, path, file, jsFile, signature, ast)
     
   case class ResolvedExternImport(
       override val path: String,
-      override val file: File,
+      override val file: AbstractFile,
       override val ast: ExternImport)
     extends ResolvedImport(path, file, ast)
     
@@ -50,6 +53,6 @@ trait ModuleResolver {
   
   def checkImports(imports : List[Import]) : Either[Error, Unit]
 
-  def findImportResource(path: String, config: Config, attr: Attribute): Either[Error, File]
+  def findImportResource(path: String, config: Config, attr: Attribute): Either[Error, AbstractFile]
 
 }

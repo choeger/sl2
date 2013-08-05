@@ -109,9 +109,9 @@ trait SimpleDriver extends Driver {
     val moduleWriter = new PrintWriter(new File(modulesDir, name + ".js"))
     for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
       val imp = i.asInstanceOf[ResolvedExternImport]
-      val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
+      val includedCode = imp.file.contents
       moduleWriter.println("/***********************************/")
-      moduleWriter.println("// included from: "+imp.file.getCanonicalPath())
+      moduleWriter.println("// included from: "+imp.file.path)
       moduleWriter.println("/***********************************/")
       moduleWriter.println(includedCode)
       moduleWriter.println("/***********************************/")
@@ -143,9 +143,9 @@ trait SimpleDriver extends Driver {
       val paths = JsObject(List((JsName("std"), JsStr(getClass().getResource("/lib/").toString))))
       for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
 	val imp = i.asInstanceOf[ResolvedExternImport]
-	val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
+	val includedCode = imp.file.contents
 	mainWriter.println("/***********************************/")
-	mainWriter.println("// included from: "+imp.file.getCanonicalPath())
+	mainWriter.println("// included from: "+imp.file.path)
 	mainWriter.println("/***********************************/")
 	mainWriter.println(includedCode)
 	mainWriter.println("/***********************************/")

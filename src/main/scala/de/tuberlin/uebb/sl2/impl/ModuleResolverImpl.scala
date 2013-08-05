@@ -5,7 +5,11 @@ import java.io.File
 import scala.io.Source
 
 trait ModuleResolverImpl extends ModuleResolver {
-  this: Syntax with Errors with Configs with SignatureSerializer =>
+  this: Syntax
+  with AbstractFile
+  with Errors
+  with Configs
+  with SignatureSerializer =>
 
   case class ImportError(what: String, where: Attribute) extends Error {
     override def toString = where.toString + ": " + what + "\n"
@@ -142,40 +146,37 @@ trait ModuleResolverImpl extends ModuleResolver {
       ) yield ResolvedExternImport(path, file, ei)
   }
 
-  def findImportResource(path: String, config: Config, attr: Attribute): Either[Error, File] = {
+  def findImportResource(path: String, config: Config, attr: Attribute): Either[Error, AbstractFile] = {
     val url = getClass().getResource("/lib/");
-    val file = new File(new File(url.toURI()), path) // TODO: wirft NPE, wenn url==null
-    if(url == null || file.canRead()) { // TODO: was ist denn das für eine Bedingung?
-        // TODO: Will need to modify all uses of ResolvedUnqualifiedImport, for they may stem from JAR file or from path
+    val file = createFile(url, path)
+    if(url == null || !file.canRead()) {
     	Left(ImportError("Could not find resource " + quote("/lib/"+path), attr))
     } else {
 	    val files = List(file,
-	        new File(config.classpath, path), // the last two paths are necessary to compile the std. libraries
-	        new File(config.destination, path))
-	    files.find(_.canRead()).toRight(
-	      ImportError("Could not find resource " + quote(path)+ " at " + files.map(_.getCanonicalPath()).mkString("\n\t\t\t\tor "), attr))
+	        createFile(config.classpath, path), // the last two paths are necessary to compile the std. libraries
+	        createFile(config.destination, path))
+	    files.find(_.canRead).toRight(
+	      ImportError("Could not find resource " + quote(path)+ " at " + files.map(_.path).mkString("\n\t\t\t\tor "), attr))
     }
   }
   
-  def findImport(config: Config, path: String, attr: Attribute): Either[Error, File] = {
+  def findImport(config: Config, path: String, attr: Attribute): Either[Error, AbstractFile] = {
     val stdPrefix = "std/" // TODO: Do this less rigidly
     if (stdPrefix == path.substring(0, stdPrefix.length)) {
       findImportResource(path.substring(stdPrefix.length), config, attr)
     } else {
-      val files = List(new File(config.classpath, path),
-        new File(config.destination, path),
-        new File(config.mainParent, path),
-        new File(path))
+      val files = List(createFile(config.classpath, path),
+        createFile(config.destination, path),
+        createFile(config.mainParent, path),
+        createFile(new File("."), path))
       files.find(_.canRead()).toRight(
-        ImportError("Could not find " + quote(path) + " at " + files.map(_.getCanonicalPath()).mkString("\n\t\t\t\tor "), attr))
+        ImportError("Could not find " + quote(path) + " at " + files.map(_.path).mkString("\n\t\t\t\tor "), attr))
     }
   }
 
-  def importSignature(file: File): Either[Error, Program] = {
-    val source = scala.io.Source.fromFile(file.getCanonicalPath())
-    val json = source.mkString
-    source.close()
-    val signature = deserialize(json, FileLocation(file.getName(), null, null))
+  def importSignature(file: AbstractFile): Either[Error, Program] = {
+    val json = file.contents
+    val signature = deserialize(json, FileLocation(file.filename, null, null))
     if (null == signature) {
       Left(ImportError("Failed to load signature " + file, EmptyAttribute))
     } else {

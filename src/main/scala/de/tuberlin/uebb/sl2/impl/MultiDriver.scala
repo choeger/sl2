@@ -45,10 +45,11 @@ import scala.io.Source
 
 /**
  * A driver that is able to compile more than one source file
- * at a time, using topological sorting to
+ * at a time, using topological sorting
  */
 trait MultiDriver extends Driver {
   self: Parser
+    with AbstractFile
   	with CodeGenerator
   	with Syntax
   	with ProgramChecker
@@ -67,8 +68,7 @@ trait MultiDriver extends Driver {
     val errors = modules.filter(_.isLeft)
     if(errors.size > 0)
     	return Left(ErrorList(errors.map(_.left.get)))
-    val dependencies = loadDependencies(modules, config,
-        scala.collection.mutable.Map[Module,Set[Module]]())    
+    val dependencies = loadDependencies(modules, config, Map())    
     if(dependencies.isLeft) {
     	Left(dependencies.left.get)
       } else {
@@ -94,19 +94,8 @@ trait MultiDriver extends Driver {
     }
   }
   
-  def findModules(importedBy: Module, names: Set[String], config:Config):Either[Error,Set[Module]] = {
-    var modules:Either[Error,Set[Module]] = Right(Set[Module]())
-    for (name <- names) {
-	      if(modules.isRight) {
-	    	  val module = findModule(importedBy, name, config)
-	    	  if(module.isLeft) {
-	    	    modules = Left(module.left.get)
-	    	  } else {
-	    	    modules = Right(modules.right.get + module.right.get)
-	    	  }
-	      }
-      }
-    modules
+  def findModules(importedBy: Module, names: List[String], config:Config):Either[Error,List[Module]] = {
+    errorMap(names, findModule(importedBy, _: String, config))
   }
   
   /**
@@ -124,12 +113,11 @@ trait MultiDriver extends Driver {
    */
   def findModule(importedBy: Module, name: String, config: Config):Either[Error,Module] = {
     try {
-	    val module = new Module(name, config)
+	    val module = moduleFromName(name, config)
 	    if(!module.signature.canRead) {
 	    	// no signature file exists
 	    	if(module.source.canRead) {
-	    		module.compile = true
-	    	    Right(module)
+	    	    Right(module.copy(compile = true))
 	    	} else {
 	    		Left(FilesNotFoundError("Module "+name+" imported by "+importedBy.name+" not found: ",
 	    				module.source.path, module.signature.path))
@@ -137,8 +125,7 @@ trait MultiDriver extends Driver {
 	    } else if(module.source.canRead() &&
 	              module.source.lastModified() >= module.signature.lastModified()) {
 	    	// a signature file exists, as well as a source file
-	        module.compile = true
-	        Right(module)
+	        Right(module.copy(compile = true))
 	    } else {
 	    	// a signature, but no source file exists: load from signature
 	    	Right(module)
@@ -152,10 +139,9 @@ trait MultiDriver extends Driver {
    * Create a module to be compiled from its source file.
    */
   def findModuleFromSource(name: String, config: Config): Either[Error,Module] = {
-    val module = new Module(name, config)
-	if(module.source.canRead()) {
-	    module.compile = true
-	    Right(module)
+    val module = moduleFromName(name, config)
+	if(module.source.canRead) {
+	    Right(module.copy(compile = true))
 	} else {
 		Left(FileNotFoundError(module.source.path))
 	}
@@ -163,46 +149,46 @@ trait MultiDriver extends Driver {
   
   /**
    * Resolves the direct and transient dependencies of the given modules
-   * if they are not yet a key in the given dependencies map.
    */
   def loadDependencies(modules: List[Either[Error,Module]], config: Config,
-      dependencies: scala.collection.mutable.Map[Module,Set[Module]]):
-      Either[Error,scala.collection.mutable.Map[Module,Set[Module]]] = {
-    var deps:Either[Error,scala.collection.mutable.Map[Module,Set[Module]]] = Right(dependencies)
-    for (module <- modules; mod <- module.right) {
-	      if(!deps.isLeft)
-	        deps = loadDependencies(mod, config, deps.right.get)
-      }
-    deps
+      dependencies: Map[Module,Set[Module]]):
+      Either[Error,Map[Module,Set[Module]]] = modules match {
+    case Left(e) :: rt => Left(e)
+    case Right(m) :: rt => {
+      val newDeps = loadModuleDependencies(m, config, dependencies)
+      newDeps.right.flatMap(loadDependencies(rt, config, _))
+    }
+    case Nil => Right(dependencies)
   }
-  
+
   /**
    * Resolves the direct and transient dependencies of the given module,
    * if it is not yet a key in the given dependencies map and if it is to
    * be compiled.
    */
-  def loadDependencies(module: Module, config: Config,
-      dependencies: scala.collection.mutable.Map[Module,Set[Module]]):
-      Either[Error,scala.collection.mutable.Map[Module,Set[Module]]] = {
+  def loadModuleDependencies(module: Module, config: Config,
+      dependencies: Map[Module,Set[Module]]):
+      Either[Error, Map[Module,Set[Module]]] = {
     if((dependencies contains module) || !module.compile) {
       Right(dependencies)
     } else {
-      val deps = getDependencies(module, config)
+      val deps = getDirectDependencies(module, config)
       if(deps.isLeft) {
         Left(deps.left.get)
       } else {
-    	  val depsR = deps.right.get.filter(_.compile) // ignore dependencies that need no compilation
-	      dependencies += module -> depsR
-	      for (dep <- Right(depsR).right;
-	    	   de <- dep) {
-	        val result = loadDependencies(de, config, dependencies)
-	        if(result.isLeft) return result }
-	      Right(dependencies)
-      } 
+        val depsR = deps.right.get.filter(_.compile) // ignore dependencies that need no compilation
+        (Right(dependencies + (module -> depsR)).
+            asInstanceOf[Either[Error, Map[Module,Set[Module]]]] /: depsR) {
+          (currDeps, mod) => currDeps.right.flatMap(loadModuleDependencies(mod, config, _))
+        }
+      }
     }
   }
   
-  def getDependencies(module: Module, config: Config): Either[Error, Set[Module]] = {
+  /**
+   * finds out the depencies of a given compilation unit
+   */
+  def getDirectDependencies(module: Module, config: Config): Either[Error, Set[Module]] = {
     // load input file
     val code = module.source.contents
 
@@ -214,8 +200,8 @@ trait MultiDriver extends Driver {
     for (
       mod <- ast.right;
       imports <- resolveDependencies(mod, config).right;
-      x <- findModules(module, imports, config).right
-    ) yield x
+      x <- findModules(module, imports.toList, config).right
+    ) yield x.toSet
   }
   
   def handleModuleSource(config: Config)(module: Module) = {
@@ -301,9 +287,9 @@ trait MultiDriver extends Driver {
     val moduleWriter = new PrintWriter(stringWriter)
     for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
       val imp = i.asInstanceOf[ResolvedExternImport]
-      val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
+      val includedCode = imp.file.contents
       moduleWriter.println("/***********************************/")
-      moduleWriter.println("// included from: "+imp.file.getCanonicalPath())
+      moduleWriter.println("// included from: "+imp.file.path)
       moduleWriter.println("/***********************************/")
       moduleWriter.println(includedCode)
       moduleWriter.println("/***********************************/")
@@ -332,9 +318,9 @@ trait MultiDriver extends Driver {
     val moduleWriter = new PrintWriter(tarJs)
     for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
       val imp = i.asInstanceOf[ResolvedExternImport]
-      val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
+      val includedCode = imp.file.contents
       moduleWriter.println("/***********************************/")
-      moduleWriter.println("// included from: "+imp.file.getCanonicalPath())
+      moduleWriter.println("// included from: "+imp.file.path)
       moduleWriter.println("/***********************************/")
       moduleWriter.println(includedCode)
       moduleWriter.println("/***********************************/")
@@ -371,9 +357,9 @@ trait MultiDriver extends Driver {
 	    val mainWriter = new PrintWriter(mainJs)
 	    for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
 	      val imp = i.asInstanceOf[ResolvedExternImport]
-	      val includedCode = Source.fromFile(imp.file).getLines.mkString("\n")
+	      val includedCode = imp.file.contents
 	      mainWriter.println("/***********************************/")
-	      mainWriter.println("// included from: "+imp.file.getCanonicalPath())
+	      mainWriter.println("// included from: "+imp.file.path)
 	      mainWriter.println("/***********************************/")
 	      mainWriter.println(includedCode) 
 	      mainWriter.println("/***********************************/")
