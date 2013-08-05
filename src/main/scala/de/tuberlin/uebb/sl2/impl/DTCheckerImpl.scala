@@ -186,22 +186,22 @@ trait DTCheckerImpl extends DTChecker
     def checkTypeVarUsage(dataDef: DataDef) = {
       val lhsTypeVars = dataDef.tvars.toSet
       val rhsTypeVars = dataDef.constructors.flatMap(_.types).flatMap(selectTypeVars).toSet
-      var message = ""
 
       if (dataDef.constructors.isEmpty || lhsTypeVars == rhsTypeVars) {
         Right()
       } else {
-        // Undefined type variables in the constructor definitions
-        if (lhsTypeVars subsetOf rhsTypeVars) {
-          val undefinedTypeVars = rhsTypeVars diff lhsTypeVars
-          message = "Undefined type variable(s) in type " + quote(dataDef.ide) + ": " + quote(undefinedTypeVars)
-        } // Unused typed variables in the data type definition
-        else {
-          val unusedTypeVars = lhsTypeVars diff rhsTypeVars
-          message = "Unused type variable(s) in type " + quote(dataDef.ide) + ": " + quote(unusedTypeVars)
-          // Note that for data defs with no constructors it is acceptable to have unused type vars,
-          // as these types are constrcuted using EXTERN features.
-        }
+        val message =
+          // Undefined type variables in the constructor definitions
+          if (lhsTypeVars subsetOf rhsTypeVars) {
+            val undefinedTypeVars = rhsTypeVars diff lhsTypeVars
+            "Undefined type variable(s) in type " + quote(dataDef.ide) + ": " + quote(undefinedTypeVars)
+          } // Unused typed variables in the data type definition
+          else {
+            val unusedTypeVars = lhsTypeVars diff rhsTypeVars
+            "Unused type variable(s) in type " + quote(dataDef.ide) + ": " + quote(unusedTypeVars)
+            // Note that for data defs with no constructors it is acceptable to have unused type vars,
+            // as these types are constrcuted using EXTERN features.
+          }
         Left(AttributedError(message, dataDef.attribute))
       }
     }
@@ -269,27 +269,21 @@ trait DTCheckerImpl extends DTChecker
   /**
    * Calculate the types of the data constructors, i.e., the initial context.
    */
-  def dataConTypes(dataDefs: List[DataDef]): Context = {
-    // remark: when you modify this method you probably
-    // should also modify ModuleContextImpl:buildModuleContext
-	
-    var context: Context = Map.empty
-
-    for (
+  def dataConTypes(dataDefs: List[DataDef], module: ModuleVar = Syntax.LocalMod): Context = {
+    val ctx = for (
       dataDef <- dataDefs;
       conDef <- dataDef.constructors
-    ) {
-      val resultType = TypeConstructor(Syntax.TConVar(dataDef.ide), dataDef.tvars map TypeVariable)
+    ) yield {
+      val resultType = TypeConstructor(Syntax.TConVar(dataDef.ide, module), dataDef.tvars map TypeVariable)
       val argTypes = conDef.types map astToType
       val conType = argTypes.:+(resultType) reduceRight FunctionType
 
       // Generalize type over its free variables
       val conTypeScheme = TypeScheme(conType.freeVars, conType)
-
-      context = context + (Syntax.ConVar(conDef.constructor) -> conTypeScheme)
+      (Syntax.ConVar(conDef.constructor, module) -> conTypeScheme)
     }
 
-    context
+    ctx.toMap
   }
 
   /**

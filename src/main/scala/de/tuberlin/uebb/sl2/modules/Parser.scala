@@ -37,7 +37,7 @@ trait Parser {
   /**
    * name of the file that is being parsed at the moment.
    */
-  // SL-SoSe13-Team: needs to be a "var" because of the strange design design
+  // SL-SoSe13-Team: needs to be a "var" because of the strange design decision
   //     not to abstract the parsing process into a separate object...
   var fileName : String
     

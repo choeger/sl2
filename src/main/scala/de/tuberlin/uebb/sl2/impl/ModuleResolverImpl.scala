@@ -3,6 +3,7 @@ package de.tuberlin.uebb.sl2.impl
 import de.tuberlin.uebb.sl2.modules._
 import java.io.File
 import scala.io.Source
+import java.net.URL
 
 trait ModuleResolverImpl extends ModuleResolver {
   this: Syntax
@@ -11,6 +12,9 @@ trait ModuleResolverImpl extends ModuleResolver {
   with Configs
   with SignatureSerializer =>
 
+  def standardLibName = "std"
+  def standardLibUrl = "/lib/" 
+    
   case class ImportError(what: String, where: Attribute) extends Error {
     override def toString = where.toString + ": " + what + "\n"
   }
@@ -23,7 +27,7 @@ trait ModuleResolverImpl extends ModuleResolver {
       }
       
       val preludeImp = if (config.mainName != "prelude.sl")
-         UnqualifiedImport("std/prelude") :: imports 
+         UnqualifiedImport(standardLibName+"/prelude") :: imports 
       else
          imports
       errorMap(preludeImp, resolveImport(config))
@@ -55,7 +59,7 @@ trait ModuleResolverImpl extends ModuleResolver {
      *   char   ::= [:lower:] | [:digit:] | [-_]
      */
     def validatePath(imp : Import) : Either[Error, Unit] = {
-      if (imp.path.equals("prelude") || imp.path.equals("std/prelude"))
+      if (imp.path.equals("prelude") || imp.path.equals(standardLibName+"/prelude"))
     	return Left(ImportError("Prelude must not be imported explicitly.", imp.attribute))
       else if (imp.path.matches("/?([a-z0-9-_]+/)*[a-z0-9-_]+"))
         return Right()
@@ -106,19 +110,13 @@ trait ModuleResolverImpl extends ModuleResolver {
    */
   def resolveDependencies(program: AST, config: Config) : Either[Error, Set[String]] = program match {
     case Program(imports, _, _, _, _, attribute) =>
-      checkImports(imports) match {
-        case Left(err) => return Left(err)
-        case _ =>
-      }
-      var paths = Set[String]()
-      // ignore extern imports
-      for(resolvedImports <- errorMap(imports.filter( x =>
+      for(
+        _ <- checkImports(imports).right;
+        // ignore extern imports
+        resolvedImports <- errorMap(imports.filter( x =>
         	(x.isInstanceOf[UnqualifiedImport]) ||
-        	(x.isInstanceOf[QualifiedImport])), collectImport(config)).right;
-          resolvedImport  <- resolvedImports) {
-    	  paths = paths + resolvedImport
-    	  }
-      Right(paths)
+        	(x.isInstanceOf[QualifiedImport])), collectImport(config)).right) 
+    	yield resolvedImports.toSet
     case _ => throw new RuntimeException("")
   }
 
@@ -126,7 +124,7 @@ trait ModuleResolverImpl extends ModuleResolver {
   
   def resolveImport(config: Config)(imp: Import): Either[Error, ResolvedImport] = imp match {
     case ui @ UnqualifiedImport(path, attr) => 
-      val stdPrefix = "std/" // TODO: Do this less rigidly
+      val stdPrefix = standardLibName + "/" // TODO: Do this less rigidly
       if (stdPrefix != path.substring(0, stdPrefix.length))
         return Left(GenericError("unqualified import " + path + " doesn't start with " + stdPrefix))
       for (
@@ -147,10 +145,10 @@ trait ModuleResolverImpl extends ModuleResolver {
   }
 
   def findImportResource(path: String, config: Config, attr: Attribute): Either[Error, AbstractFile] = {
-    val url = getClass().getResource("/lib/");
+    val url = getLibResource("")
     val file = createFile(url, path)
-    if(url == null || !file.canRead()) {
-    	Left(ImportError("Could not find resource " + quote("/lib/"+path), attr))
+    if(url == null && !file.canRead()) {
+    	Left(ImportError("Could not find resource " + quote(standardLibUrl+path), attr))
     } else {
 	    val files = List(file,
 	        createFile(config.classpath, path), // the last two paths are necessary to compile the std. libraries
@@ -161,7 +159,7 @@ trait ModuleResolverImpl extends ModuleResolver {
   }
   
   def findImport(config: Config, path: String, attr: Attribute): Either[Error, AbstractFile] = {
-    val stdPrefix = "std/" // TODO: Do this less rigidly
+    val stdPrefix = standardLibName + "/" // TODO: Do this less rigidly
     if (stdPrefix == path.substring(0, stdPrefix.length)) {
       findImportResource(path.substring(stdPrefix.length), config, attr)
     } else {

@@ -40,4 +40,6 @@ trait DTChecker {
     * the initial context containing all data constructors.
     */
   def checkDataTypes(in: AST, imports : List[ResolvedImport]): Either[Error, Context]
+  
+  def dataConTypes(dataDefs: List[DataDef], module: ModuleVar = Syntax.LocalMod): Context
 }

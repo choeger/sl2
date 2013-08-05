@@ -50,14 +50,12 @@ trait SignatureSerializerSpec extends FunSpec with ShouldMatchers with Parboiled
   // A more proper implementation may normalizes both signatures before matching.
   case class SignatureMatcher(expected : AST) extends Matcher[AST] {
     def apply(delivered : AST) = {
-      var result = true
-      // TODO compare import
-      expected match {
+      val result = expected match {
         case Program(parsedImports, parsedSig, _, _, parsedData, _) => delivered match {
           case Program(deserializedImports, deserializedSig, _, _, deserializedData, _) =>
-            result &&= compareImports(parsedImports, deserializedImports)
-            result &&= compareSigs   (parsedSig    , deserializedSig    )
-            result &&= compareDatas  (parsedData   , deserializedData   )
+             compareImports(parsedImports, deserializedImports) &&
+            compareSigs   (parsedSig    , deserializedSig    ) &&
+            compareDatas  (parsedData   , deserializedData   )
           }
       }
       
