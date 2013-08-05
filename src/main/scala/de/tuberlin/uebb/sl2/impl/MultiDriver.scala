@@ -32,15 +32,18 @@ import scala.collection.mutable.ListBuffer
 import scala.text.Document
 import scala.text.DocText
 import de.tuberlin.uebb.sl2.modules._
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
 import java.io.IOException
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.net.URI
+import java.net.URL
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import scala.io.Source
 
 /**
@@ -348,14 +351,12 @@ trait MultiDriver extends Driver {
     
     // create main.js only if a main function is declared
     if(program.isInstanceOf[Program] && program.asInstanceOf[Program].functionDefs.contains("main")) {
-      val mainJs = new File(config.destination, "main.js")
-      val preludeURL = getClass().getResource("/lib/")
-      if(preludeURL == null)
-    	  return Left(GenericError("Cannot compile: Standard library "+quote("/lib/")+" not found."))
-      // TODO: there is a principle problem here: if the prelude is contained in a JAR file, it is not
-      // accessible from the Browser/node.js and will need to be copied
-      val stdURL = JsObject(List((JsName("std"), JsStr(preludeURL.toString))))
-      val stdPath = JsObject(List((JsName("std"), JsStr(Paths.get(preludeURL.toURI).toString.replace("\\", "/")))))
+        val mainJs = new File(config.destination, "main.js")
+        val libURL = getLibURL(config)
+        if(libURL.isLeft)
+          return Left(libURL.left.get)
+    	val stdURL = JsObject(List((JsName("std"), JsStr(libURL.right.get.toString))))
+    	val stdPath = JsObject(List((JsName("std"), JsStr(Paths.get(libURL.right.get.toURI).toString.replace("\\", "/")))))
 	    val mainWriter = new PrintWriter(mainJs)
 	    for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
 	      val imp = i.asInstanceOf[ResolvedExternImport]
@@ -385,6 +386,44 @@ trait MultiDriver extends Driver {
     }
     
     return Right("compilation successful")
+  }
+  
+  def getLibURL(config: Config):Either[Error,URL] = {
+	  val libURL = getClass().getResource("/lib/")
+      if(libURL == null) {
+    	  Left(GenericError("Cannot compile: Standard library "+quote("/lib/")+" not found."))
+      } else {
+	      val libFile = createFile(libURL)
+	      println("libURL="+libURL)
+	      println("libFile="+libFile)
+	      if(libFile.isInstanceOf[BottledFile]) {
+	        val jarName = libFile.asInstanceOf[BottledFile].jarFile
+	        val jar = new java.util.jar.JarFile(jarName)
+	        val libEntry = jar.getJarEntry("/lib/")
+	        val entries = jar.entries
+	        while(entries.hasMoreElements()) {
+	          val entry = entries.nextElement()
+	          if(entry.getName.matches("^lib/.*\\.(signature|js)$")) {
+	        	  val pathOption = scalax.file.Path(new URI(config.destination.toURI.toString+entry.getName))
+	        	  if(pathOption.isDefined && !pathOption.get.exists) {
+	        	    println("Copying "+jarName+"!"+entry.getName()+" to "+pathOption.get.path)
+	        	    pathOption.get.createFile(true, true)
+	        	    val reader = new BufferedReader(new InputStreamReader(jar.getInputStream(entry)))
+	        	    var line:String = reader.readLine()
+	        	    while(line != null) {
+	        	    	pathOption.get.write(line)
+	        	    	line = reader.readLine()
+	        	    }
+	        	    reader.close()
+	        	  }
+	          }
+	        }
+	        println(jar.entries)
+	        Right(new File(config.destination, "/lib/").toURI.toURL)
+	      } else {
+	        Right(new File(libFile.path).toURI.toURL)
+	      }
+      }
   }
   
   def copy(from: Path, to: Path) = {
