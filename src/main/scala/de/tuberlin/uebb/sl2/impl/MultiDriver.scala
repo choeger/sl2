@@ -46,6 +46,8 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import scala.io.Source
+import scalax.io.JavaConverters._
+import scalax.io._
 
 /**
  * A driver that is able to compile more than one source file
@@ -127,7 +129,7 @@ trait MultiDriver extends Driver {
 	    				module.source.path, module.signature.path))
 	    	}
 	    } else if(module.source.canRead() &&
-	              module.source.lastModified() >= module.signature.lastModified()) {
+	              module.source.lastModified() > module.signature.lastModified()) {
 	    	// a signature file exists, as well as a source file
 	        Right(module.copy(compile = true))
 	    } else {
@@ -393,8 +395,6 @@ trait MultiDriver extends Driver {
     	  Left(GenericError("Cannot compile: Standard library "+quote("/lib/")+" not found."))
       } else {
 	      val libFile = createFile(libURL)
-	      println("libURL="+libURL)
-	      println("libFile="+libFile)
 	      if(libFile.isInstanceOf[BottledFile]) {
 	        val jarName = libFile.asInstanceOf[BottledFile].jarFile
 	        val jar = new java.util.jar.JarFile(jarName)
@@ -408,7 +408,6 @@ trait MultiDriver extends Driver {
 	        	      new URI(config.destination.toURI.toString+entry.getName))
 	          }
 	        }
-	        println(jar.entries)
 	        Right(new File(config.destination, "/lib/").toURI.toURL)
 	      } else {
 	        Right(new File(libFile.path).toURI.toURL)
@@ -426,12 +425,7 @@ trait MultiDriver extends Driver {
 	  if(pathOption.isDefined && !pathOption.get.exists) {
 	    println("Copying "+inLabel+" to "+pathOption.get.path)
 	    pathOption.get.createFile(true, true)
-	    val reader = new BufferedReader(new InputStreamReader(in))
-	    var line:String = null
-	    while({line = reader.readLine(); line != null}) {
-	    	pathOption.get.append(line+"\n")
-	    }
-	    reader.close()
+	    pathOption.get.doCopyFrom(Resource.fromInputStream(in))
 	  }
   }
 

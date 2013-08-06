@@ -85,7 +85,7 @@ trait ModuleLinearization
         Right(done)
       } else {
         Left(CircularDependencyError("Circular dependency between modules " +
-          (for (key <- hasPredecessors.keys) yield key.source.toString).mkString(", ")))
+          (for (key <- hasPredecessors.keys) yield key.source.path).mkString(", ")))
       }
     } else {
       val found = hasNoPredecessors.map { _._1 }

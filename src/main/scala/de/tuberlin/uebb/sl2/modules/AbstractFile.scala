@@ -33,7 +33,7 @@ trait AbstractFile {
     }
     
     def path() = {
-      path.toString
+      path.path
     }
     
     def canRead() = {
@@ -65,9 +65,7 @@ trait AbstractFile {
     
     def filename() = {
       val f = url.getFile
-      val file = f.substring(f.lastIndexOf("!")+1)
-      println("BottledFile.name()="+file)
-      file
+      f.substring(f.lastIndexOf("!")+1)
     }
     
     def parent() = {
@@ -80,8 +78,7 @@ trait AbstractFile {
     
     def jarFile() = {
       val f = url.getFile
-      val jarFile = f.substring(5, f.lastIndexOf("!"))
-      jarFile
+      f.substring(5, f.lastIndexOf("!"))
     }
     
     def canRead() = {
