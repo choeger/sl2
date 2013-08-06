@@ -782,13 +782,11 @@ den \texttt{MultiDriver} gesteuert, der folgende Phasen durchläuft.
         übergebenen \texttt{<module files>} gehört, oder
     \item die Quell-Datei des Moduls im \texttt{<source directory>}
         vorhanden ist, jedoch keine Signatur-Datei des Moduls im
-        \texttt{<classpath directory>} oder im \texttt{<output directory>}
-        vorhanden ist, oder
+        \texttt{<classpath directory>} vorhanden ist, oder
     \item die Quell-Datei des Moduls im \texttt{<source directory>}
         vorhanden ist, ebenso wie eine Signatur-Datei des Moduls im
-        \texttt{<classpath directory>} oder im \texttt{<output directory>}
-        und die Quelldatei jünger als oder genauso alt wie die
-        Signatur-Datei ist.
+        \texttt{<classpath directory>} und die Quelldatei jünger als
+        die Signatur-Datei ist.
     \end{enumerate}
     Dabei ist zu beachten, dass die Identität eines Moduls durch seinen
     Modulpfad gegeben ist (siehe Abschnitt \ref{sec:semanticsimports}) und durch ein nicht
