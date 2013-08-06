@@ -34,6 +34,7 @@ import scala.text.DocText
 import de.tuberlin.uebb.sl2.modules._
 import java.io.BufferedReader
 import java.io.File
+import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.IOException
 import java.io.PrintWriter
@@ -379,10 +380,8 @@ trait MultiDriver extends Driver {
 	    mainWriter.close()
 	    
 	    // copy index.html, require.js to config.destination
-	    copy(Paths.get(getClass().getResource("/js/index.html").toURI()),
-	        Paths.get(config.destination.getPath, "index.html"))
-	    copy(Paths.get(getClass().getResource("/js/require.js").toURI()),
-	        Paths.get(config.destination.getPath, "require.js"))
+	    copyResource("/js/index.html", new File(config.destination.getPath, "index.html").toURI)
+	    copyResource("/js/require.js", new File(config.destination.getPath, "require.js").toURI)
     }
     
     return Right("compilation successful")
@@ -404,18 +403,9 @@ trait MultiDriver extends Driver {
 	        while(entries.hasMoreElements()) {
 	          val entry = entries.nextElement()
 	          if(entry.getName.matches("^lib/.*\\.(signature|js)$")) {
-	        	  val pathOption = scalax.file.Path(new URI(config.destination.toURI.toString+entry.getName))
-	        	  if(pathOption.isDefined && !pathOption.get.exists) {
-	        	    println("Copying "+jarName+"!"+entry.getName()+" to "+pathOption.get.path)
-	        	    pathOption.get.createFile(true, true)
-	        	    val reader = new BufferedReader(new InputStreamReader(jar.getInputStream(entry)))
-	        	    var line:String = reader.readLine()
-	        	    while(line != null) {
-	        	    	pathOption.get.write(line)
-	        	    	line = reader.readLine()
-	        	    }
-	        	    reader.close()
-	        	  }
+	        	  copyResource(jar.getInputStream(entry),
+	        	      jarName+"!"+entry.getName(),
+	        	      new URI(config.destination.toURI.toString+entry.getName))
 	          }
 	        }
 	        println(jar.entries)
@@ -426,19 +416,23 @@ trait MultiDriver extends Driver {
       }
   }
   
-  def copy(from: Path, to: Path) = {
-    if(!to.getParent.toFile.exists) {
-    	if(!to.getParent.toFile.mkdirs) {
-    	  // TODO: return an error
-    	  println("Could not create directory: "+to.getParent)
-    	}
-    } else if (to.getParent.toFile.exists && !to.getParent.toFile.isDirectory) {
-    	// TODO: return an error
-      println("Not a directory: "+to.getParent)
-    }
-    val target = Files.copy(from, to, StandardCopyOption.REPLACE_EXISTING)
-    println("copied "+from+" to "+to);
-    target
+  def copyResource(resourceName: String, to: URI):Unit = {
+    copyResource(getClass().getResourceAsStream(resourceName),
+        resourceName, to)
+  }
+  
+  def copyResource(in: InputStream, inLabel: String, out: URI):Unit = {
+	  val pathOption = scalax.file.Path(out)
+	  if(pathOption.isDefined && !pathOption.get.exists) {
+	    println("Copying "+inLabel+" to "+pathOption.get.path)
+	    pathOption.get.createFile(true, true)
+	    val reader = new BufferedReader(new InputStreamReader(in))
+	    var line:String = null
+	    while({line = reader.readLine(); line != null}) {
+	    	pathOption.get.append(line+"\n")
+	    }
+	    reader.close()
+	  }
   }
 
   def mergeAst(a: Program, b: Program): Either[Error, Program] =
