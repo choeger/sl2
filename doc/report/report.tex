@@ -794,6 +794,18 @@ den \texttt{MultiDriver} gesteuert, der folgende Phasen durchläuft.
     werden muss, dass Quell- und Signatur-Dateien mit dem selben
     Modulpfad zum gleichen Modul gehören.
     
+    Wie oben beschrieben, werden nur direkt von einem zu
+    kompilierenden Modul importierte Module darauf hin überprüft,
+    ob sie kompiliert werden müssen. Bei Modulen \texttt{A},
+    \texttt{B} und \texttt{C}, die sich in dieser Reihenfolge
+    importieren, führt das bei Änderungen an \texttt{C} dazu, dass
+    diese nicht erkannt werden, wenn der Compiler für \texttt{A}
+    aufgerufen wird. Ebenso wird bei einem Aufruf des Compilers für
+    \texttt{C} nicht erkannt, ob ggf. auch \texttt{B} oder \texttt{A}
+    neu kompiliert werden müssen. In diesem Fall müssen die Kompilate
+    von \texttt{A}, \texttt{B} und \texttt{C} gelöscht werden, sodass
+    ein sauberer Build durchgeführt werden kann.
+    
     Das Prelude und die Bibliotheken unterhalb \texttt{std/} werden
     abweichend von obiger Darstellung aus dem Ressourcenverzeichnis
     des Compilers geladen, welches sich für Scala-Version 2.10
