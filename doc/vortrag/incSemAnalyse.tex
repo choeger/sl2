@@ -2,5 +2,70 @@
 
 \begin{frame}
 \frametitle{Semantische Analyse}
-Rico
+
+\begin{enumerate}
+\item Auflösung von Importen
+\item Modulnormalisierung
+\item Datentypen und Funktionen überprüfen
+\item Type-Checking
+\end{enumerate}
+
+\end{frame}
+
+
+\begin{frame}[containsverbatim=true]
+\frametitle{Import-Überprüfung}
+
+\begin{itemize}
+\item Import-Anweisung: Paar aus Pfad und Bezeichner
+	\begin{verbatim}
+	IMPORT "path/to/module" AS MyModule
+	\end{verbatim}
+\item eineindeutige Modul-Bezeichner-Zuordnung
+\item Annahme: genau ein Pfad identifiziert ein Modul
+\item erlaubte Pfade:
+	\begin{itemize}
+	\item Kleinbuchstaben
+	\item Zahlen
+	\item Minus (-) und Unterstrich (\_)
+	\item relative Pfade
+	\end{itemize}
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[containsverbatim=true]
+\frametitle{Modulnormalisierung}
+
+\begin{itemize}
+\item keine Modulübergreifende Modul-Bezeichner-Zuordnung
+	\begin{itemize}
+	\item Modul A: \verb+IMPORT "std/list" AS L+
+	\item Modul B: \verb+IMPORT "std/list" AS List+
+	\end{itemize}
+\item Normalisierung erforderlich
+	\begin{itemize}
+	\item Modul C:
+		\begin{verbatim}
+		IMPORT "std/list" AS StdList
+		IMPORT "modul_a" AS A
+		IMPORT "modul_b" AS B
+		\end{verbatim}
+	\item Substitution von \verb+L+ bzw. \verb+List+ durch \verb+StdList+
+	\end{itemize}
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Kontextprüfung}
+
+\begin{itemize}
+\item Berücksichtigung von importierten Datentypen und Funktionen
+\item initialer Kontext um Modulkontext erweitert
+\item Type-Checker weitestgehend unverändert
+\end{itemize}
+
 \end{frame}

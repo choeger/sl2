@@ -5,3 +5,47 @@
     - Rico - Signaturen
     - Sebastian - Codegenerierung
 \end{frame}
+
+
+\begin{frame}
+\frametitle{Modulsignatur}
+
+\begin{itemize}
+\item Signatur für semantische Analyse erforderlich
+\item Inhalt:
+	\begin{itemize}
+	\item Importliste
+	\item Datendefinitionen
+	\item Funktionssignaturen
+	\end{itemize}
+\item Mögliche Signaturformate:
+	\begin{itemize}
+	\item native Serialisierung
+	\item SL
+	\item JSON
+	\end{itemize}
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[containsverbatim=true]
+\frametitle{Modulsignatur - JSON}
+
+\begin{verbatim}
+IMPORT "some/module" AS M
+\end{verbatim}
+
+JSON:
+
+\begin{lstlisting}
+"imports" : [
+  {
+    "name" : "M",
+    "path" : "some\/module"
+  }
+]
+\end{lstlisting}
+
+
+\end{frame}
