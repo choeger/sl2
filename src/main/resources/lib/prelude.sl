@@ -134,6 +134,9 @@ DEF EXTERN isNaN = {| isNaN |}
 PUBLIC FUN ++ : (String -> String -> String)
 DEF EXTERN ++ = {| _adds |}
 
+PUBLIC FUN strEq : String -> String -> Bool
+DEF EXTERN strEq = {| _eq |}
+
 -------------------------------------
 -- Basic Conversions
 

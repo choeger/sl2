@@ -8,6 +8,10 @@ PUBLIC FUN head : List a -> a
 DEF head (Cons ft rt) = ft
 DEF head Nil = error "Cannot select head from empty list."
 
+PUBLIC FUN headOption : List a -> Option.Option a
+DEF headOption (Cons ft rt) = Option.Some ft
+DEF headOption Nil = Option.None
+
 PUBLIC FUN tail : List a -> List a
 DEF tail (Cons ft rt) = rt
 DEF tail Nil = Nil
