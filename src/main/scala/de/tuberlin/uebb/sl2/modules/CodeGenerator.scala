@@ -89,7 +89,7 @@ trait CodeGenerator {
           //create anonymous function for partial application
           val args = (for (i <- k to 1 by -1) yield JsName("_arg" + i)).toList
           val anchor:JsStmt = new JsReturn(obj)
-          val body = (anchor /: args)((body, arg) => JsFunction("f", arg::Nil, body)) & JsReturn(Some("f"))
+          val body = (anchor /: args)((body, arg) => (JsFunction("f", arg::Nil, body) & JsReturn(Some("f"))))
           
           val privateDef = JsDef("_" + c.constructor, JsNum(idx)) & JsFunction($(c.constructor), List("_arg0"), body)
           val publicDef = JsAssignment(JsQualifiedName(JsName("exports"), JsName("_" + c.constructor)), JsName("_" + c.constructor)) &
