@@ -7,11 +7,16 @@ define(function(require, exports, module) {
 ;
 var $logAvailable = typeof console != "undefined";
 var $andPrint = function(res){return function(printer){
+
 	console && console.log(printer(res)); 
+
 	return res;
+
 }};
 var $anyToString = function(some){
+
 	return some.toString();
+
 };
 function $print(_arg0)
 {
@@ -37,23 +42,23 @@ function $andPrintMessage(_arg0)
     {
       var $a = _arg0;
       var $s = _arg1;
-      var $15 = $andPrint;
-      var $14 = $a;
-      var $13 = $15($14);
-      var $11 = function (_arg0)
+      var $38 = $andPrint;
+      var $37 = $a;
+      var $36 = $38($37);
+      var $34 = function (_arg0)
       {
         if(true)
         {
           var $r = _arg0;
-          var $12 = $s
+          var $35 = $s
         }
         else 
         {
           throw "Pattern for lambda expression did not match arguments"
         };
-        return $12
+        return $35
       };
-      var _return = $13($11);
+      var _return = $36($34);
       return _return
     }
     else 

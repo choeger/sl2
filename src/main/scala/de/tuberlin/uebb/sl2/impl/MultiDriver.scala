@@ -83,7 +83,8 @@ trait MultiDriver extends Driver {
 	    ensureDirExists(config.destination)
 	    // compile in topological order
 	    val result =(for(modules <- sortedModules.right;
-	    		     results <- errorMap(modules.toSeq.toList, handleModuleSource(config)).right) yield "")
+	    		     results <- errorMap(modules.toSeq.toList,
+	    		    		 		handleSource(_ :Module, config)).right) yield "")
 	    if(result.isLeft) {
 	      result
 	    } else {
@@ -129,7 +130,7 @@ trait MultiDriver extends Driver {
 	    				module.source.path, module.signature.path))
 	    	}
 	    } else if(module.source.canRead() &&
-	              module.source.lastModified() > module.signature.lastModified()) {
+	              (module.source.lastModified() > module.signature.lastModified())) {
 	    	// a signature file exists, as well as a source file
 	        Right(module.copy(compile = true))
 	    } else {
@@ -210,19 +211,29 @@ trait MultiDriver extends Driver {
     ) yield x.toSet
   }
   
-  def handleModuleSource(config: Config)(module: Module) = {
-    handleSource(module, config)
-  }
-  
   def handleSource(module: Module, inputConfig: Config) = {
     // load input file
     val name = module.name
+    println(inputConfig.sources+", "+name)
+    //TODO: move main marking to Module?
+    val isMain = inputConfig.sources.contains(name+".sl")
     val destination = inputConfig.destination
     val config = inputConfig.copy(mainName = module.source.filename, mainParent = module.source.parent, destination = destination)
     val code = module.source.contents
+    
+    for (
+      (moq, compiled) <- compile(name, code, config).right;
+      // output to fs
+      res <- outputToFiles(moq, name, compiled, config).right;
+      // create main.js while compiling main unit only if a main function is declared
+      _ <- if (isMain && moq.functionDefs.contains("main"))
+          generateMainJsFile(name, config).right
+        else Right("No Main needed").right
+    ) yield res
 
-    // parse the syntax
-    fileName = name
+  }
+  
+  def compile(name: String, code: String, config: Config): Either[Error, Pair[Program, String]] = {
     val ast = parseAst(code)
 
     val checkResults = for (
@@ -230,48 +241,18 @@ trait MultiDriver extends Driver {
       // check and load dependencies
       imports <- inferDependencies(mo, config).right;
       // type check the program
-      _ <- checkProgram(mo, normalizeModules(imports)).right) yield imports
-    
-    if(checkResults.isLeft) {
-      checkResults
-    } else {
-    	// generate code, if checks were successful
-	    for (
-	      mo <- ast.right;
-	      // check and load dependencies
-	      imports <- checkResults.right;
-	      // qualify references to unqualified module and synthesize
-	      res <- compile(qualifyUnqualifiedModules(mo.asInstanceOf[Program], imports), name, imports, config).right
-	    ) yield res
-    }
-  }
-  
-  def compileSL(src: String, config: Config) = {
-    // parse the syntax
-    fileName = ""
-    val ast = parseAst(src)
-    //debugPrint(ast.toString());
-
-    val checkResults = for (
+      _ <- checkProgram(mo, normalizeModules(imports)).right)
+      yield imports
+      
+    for (
       mo <- ast.right;
       // check and load dependencies
-      imports <- inferDependencies(mo, config).right;
-      // type check the program
-      _ <- checkProgram(mo, normalizeModules(imports)).right) yield imports
-    
-    if(checkResults.isLeft) {
-      Left(checkResults.left.get)
-    } else {
-    	// generate code, if checks were successful
-	    for (
-	      mo <- ast.right;
-	      // check and load dependencies
-	      imports <- checkResults.right
-	    ) yield (
-	      // qualify references to unqualified module and synthesize
-        compileToString(qualifyUnqualifiedModules(mo.asInstanceOf[Program], imports), imports)
-      )
-    }
+      imports <- checkResults.right;
+      // qualify references to unqualified module
+      moq <- Right(qualifyUnqualifiedModules(mo.asInstanceOf[Program], imports)).right;
+      // synthesize
+      compiled <- compileModuleBodyToString(moq, name, imports).right
+    ) yield (moq, compiled)
   }
   
   def ensureDirExists(dir: File) = {
@@ -287,41 +268,77 @@ trait MultiDriver extends Driver {
     }
   }
   
-  def compileToString(program: Program, imports: List[ResolvedImport]) = {
+  def compileSL(src: String, config: Config) = {
+    for (
+      (moq, compiled) <- compile("inline", src, config).right
+    ) yield compiled 
+  }
+  
+  def generateMainJsFile(name: String, config: Config) : Either[Error, String] = {
+    val mainJs = new File(config.destination, "main.js")
+    val libURL = getLibURL(config)
+    if(libURL.isLeft)
+      return Left(libURL.left.get)
+	val stdURL = JsObject(List((JsName("std"), JsStr(libURL.right.get.toString))))
+	val stdPath = JsObject(List((JsName("std"), JsStr(Paths.get(libURL.right.get.toURI).toString.replace("\\", "/")))))
+    val mainWriter = new PrintWriter(mainJs)
+    
+    mainWriter.println("/***********************************/")
+    mainWriter.println("// generated from: "+name)
+    mainWriter.println("/***********************************/") 
+    
+    val mainTemplate = Source.fromURL(getClass.getResource("/js/main_template.js")).getLines.mkString("\n")
+    mainWriter.write(mainTemplate.replace("%%MODULE_PATHS_LIST%%", "\""+name+".sl\"")
+      .replace("%%STD_PATH%%", JsPrettyPrinter.pretty(stdPath))
+      .replace("%%STD_URL%%", JsPrettyPrinter.pretty(stdURL))
+      .replace("%%MODULE_NAMES_LIST%%", "$$$"+name.replace("/", "$").replace("\\", "$"))
+      .replace("%%MAIN%%", JsPrettyPrinter.pretty(JsFunctionCall("$$$"+name.replace("/", "$").replace("\\", "$")+".$main"))))
+    mainWriter.close()
+    
+    // copy index.html, require.js to config.destination
+    copyResource("/js/index.html", new File(config.destination.getPath, "index.html").toURI)
+    copyResource("/js/require.js", new File(config.destination.getPath, "require.js").toURI)
+    
+    return Right("generated main")
+  }
+  
+  def outputToFiles(program: Program, name: String, compiled: String, config: Config): Either[Error, String] = {    
+    val modulesDir = config.destination
+    
+    // compile js unit file
+    val tarJs = new File(modulesDir, name + ".sl.js")
+    ensureDirExists(tarJs.getParentFile())
+    println("writing compiled "+name+" to "+tarJs)
+    val moduleWriter = new PrintWriter(tarJs)
+    moduleWriter.write(compiled)
+    moduleWriter.close
+    
+    // write compiled external signature file
+    val signatureFile = new File(modulesDir, name + ".sl.signature")
+    println("writing signature of "+name+" to "+signatureFile)
+    val writerSig = new PrintWriter(signatureFile)
+    writerSig.write(serialize(program))
+    writerSig.close()
+    
+    return Right("compilation successful")
+  }
+  
+  def compileModuleBodyToString(program: Program, name: String, imports: List[ResolvedImport]): Either[Error, String] = {
+    val moduleWriter = new StringWriter()
+    val compiled = astToJs(program)
     val moduleTemplate = Source.fromURL(getClass().getResource("/js/module_template.js")).getLines.mkString("\n")
-    val stringWriter = new StringWriter()
-    val moduleWriter = new PrintWriter(stringWriter)
-    for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
-      val imp = i.asInstanceOf[ResolvedExternImport]
-      val includedCode = imp.file.contents
-      moduleWriter.println("/***********************************/")
-      moduleWriter.println("// included from: "+imp.file.path)
-      moduleWriter.println("/***********************************/")
-      moduleWriter.println(includedCode)
-      moduleWriter.println("/***********************************/")
-    }
-
+    insertExternallyImported(name, new PrintWriter(moduleWriter), imports) 
     val requires = imports.filter(_.isInstanceOf[ResolvedModuleImport]).map(
         x => JsDef(x.asInstanceOf[ResolvedModuleImport].name,
             JsFunctionCall(JsName("require"),JsStr(x.asInstanceOf[ResolvedModuleImport].path+".sl"))
         	))
     moduleWriter.write(moduleTemplate.replace("%%MODULE_BODY%%", JsPrettyPrinter.pretty(requires)+"\n\n"
-        +JsPrettyPrinter.pretty(dataDefsToJs(program.dataDefs)
-            & functionDefsExternToJs(program.functionDefsExtern)
-            & functionDefsToJs(program.functionDefs)
-            & functionSigsToJs(program.signatures))));
-    stringWriter.toString
+        +JsPrettyPrinter.pretty(compiled)))
+    moduleWriter.close()
+    Right(moduleWriter.toString())
   }
   
-  def compile(program: Program, name: String, imports: List[ResolvedImport], config: Config): Either[Error, String] = {    
-    val compiled = astToJs(program)
-    val modulesDir = config.destination
-    
-    val tarJs = new File(modulesDir, name + ".sl.js")
-    ensureDirExists(tarJs.getParentFile())
-    println("compiling "+name+" to "+tarJs)
-    val moduleTemplate = Source.fromURL(getClass().getResource("/js/module_template.js")).getLines.mkString("\n")
-    val moduleWriter = new PrintWriter(tarJs)
+  def insertExternallyImported(name: String, moduleWriter: PrintWriter, imports: List[ResolvedImport]) {
     for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
       val imp = i.asInstanceOf[ResolvedExternImport]
       val includedCode = imp.file.contents
@@ -334,59 +351,6 @@ trait MultiDriver extends Driver {
     moduleWriter.println("/***********************************/")
     moduleWriter.println("// generated from: "+name)
     moduleWriter.println("/***********************************/") 
-
-    val requires = imports.filter(_.isInstanceOf[ResolvedModuleImport]).map(
-        x => JsDef(x.asInstanceOf[ResolvedModuleImport].name,
-            JsFunctionCall(JsName("require"),JsStr(x.asInstanceOf[ResolvedModuleImport].path+".sl"))
-        	))
-    moduleWriter.write(moduleTemplate.replace("%%MODULE_BODY%%", JsPrettyPrinter.pretty(requires)+"\n\n"
-        +JsPrettyPrinter.pretty(dataDefsToJs(program.dataDefs)
-            & functionDefsExternToJs(program.functionDefsExtern)
-            & functionDefsToJs(program.functionDefs)
-            & functionSigsToJs(program.signatures))));
-    moduleWriter.close();
-    
-    val signatureFile = new File(modulesDir, name + ".sl.signature")
-    println("writing signature of "+name+" to "+signatureFile)
-    val writerSig = new PrintWriter(signatureFile)
-    writerSig.write(serialize(program))
-    writerSig.close()
-    
-    // create main.js only if a main function is declared
-    if(program.isInstanceOf[Program] && program.asInstanceOf[Program].functionDefs.contains("main")) {
-        val mainJs = new File(config.destination, "main.js")
-        val libURL = getLibURL(config)
-        if(libURL.isLeft)
-          return Left(libURL.left.get)
-    	val stdURL = JsObject(List((JsName("std"), JsStr(libURL.right.get.toString))))
-    	val stdPath = JsObject(List((JsName("std"), JsStr(Paths.get(libURL.right.get.toURI).toString.replace("\\", "/")))))
-	    val mainWriter = new PrintWriter(mainJs)
-	    for(i <- imports.filter(_.isInstanceOf[ResolvedExternImport])) {
-	      val imp = i.asInstanceOf[ResolvedExternImport]
-	      val includedCode = imp.file.contents
-	      mainWriter.println("/***********************************/")
-	      mainWriter.println("// included from: "+imp.file.path)
-	      mainWriter.println("/***********************************/")
-	      mainWriter.println(includedCode) 
-	      mainWriter.println("/***********************************/")
-	    }
-	    mainWriter.println("/***********************************/")
-	    mainWriter.println("// generated from: "+name)
-	    mainWriter.println("/***********************************/") 
-	    val mainTemplate = Source.fromURL(getClass.getResource("/js/main_template.js")).getLines.mkString("\n")
-	    mainWriter.write(mainTemplate.replace("%%MODULE_PATHS_LIST%%", "\""+name+".sl\"")
-          .replace("%%STD_PATH%%", JsPrettyPrinter.pretty(stdPath))
-          .replace("%%STD_URL%%", JsPrettyPrinter.pretty(stdURL))
-	      .replace("%%MODULE_NAMES_LIST%%", "$$$"+name.replace("/", "$").replace("\\", "$"))
-	      .replace("%%MAIN%%", JsPrettyPrinter.pretty(JsFunctionCall("$$$"+name.replace("/", "$").replace("\\", "$")+".$main"))))
-	    mainWriter.close()
-	    
-	    // copy index.html, require.js to config.destination
-	    copyResource("/js/index.html", new File(config.destination.getPath, "index.html").toURI)
-	    copyResource("/js/require.js", new File(config.destination.getPath, "require.js").toURI)
-    }
-    
-    return Right("compilation successful")
   }
   
   def getLibURL(config: Config):Either[Error,URL] = {

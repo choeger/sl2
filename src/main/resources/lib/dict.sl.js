@@ -8,53 +8,95 @@ define(function(require, exports, module) {
 ;
 var $empty = {};
 var $has = function(dict){return function(k){
+
 	return (k in dict);
+
 }};
 var $filter = function(predicate){return function(dict){
+
 	var newDict = {};
+
 	for(var key in dict) {
+
       if (predicate(dict[key])) {
+
       	newDict[key] = dict[key];
+
       }
+
     }
+
     return newDict;
+
 }};
 var $merge = function(dict1){return function(dict2){
+
 	var newDict = {};
+
 	for(var key in dict1) {
+
      newDict[key] = dict1[key];
+
     }
+
     for(var key in dict2) {
+
      newDict[key] = dict2[key];
+
     }
+
     return newDict;
+
 }};
 var $reduce = function(f){return function(neut){return function(dict){
+
 	for(var key in dict) {
+
       neut = f(key)(dict[key]);
+
     }
+
     return neut;
+
 }}};
 var $put = function(k){return function(v){return function(dict){
+
 	var newDict = Object();
+
 	newDict.__proto__ = dict;
+
 	newDict[k] = v;
+
 	return newDict;
+
 }}};
 var $get = function(dict){return function(k){
+
 	if (k in dict) {
+
 		return dict[k];
+
 	} else {
+
 		throw "Could not select <"+k+"> from dictionary.";
+
 	}
+
 }};
 var $toStringI = function(tS){return function(dict){
+
 	    var str = "";
+
 		for(var key in dict) {
+
 		  if (str != "") str += ",";
+
 	      str += key + ":" + tS(dict[key]);
+
     	}
+
     	return str;
+
 	}};
 function $getOpt(_arg0)
 {
@@ -64,20 +106,20 @@ function $getOpt(_arg0)
     {
       var $dict = _arg0;
       var $k = _arg1;
-      var $902 = $has;
-      var $901 = $dict;
-      var $900 = $902($901);
-      var $899 = $k;
-      var $898 = $900($899);
-      if($898)
+      var $633 = $has;
+      var $632 = $dict;
+      var $631 = $633($632);
+      var $630 = $k;
+      var $629 = $631($630);
+      if($629)
       {
-        var $908 = Opt.$Some;
-        var $907 = $get;
-        var $906 = $dict;
-        var $905 = $907($906);
-        var $904 = $k;
-        var $903 = $905($904);
-        var _return = $908($903)
+        var $639 = Opt.$Some;
+        var $638 = $get;
+        var $637 = $dict;
+        var $636 = $638($637);
+        var $635 = $k;
+        var $634 = $636($635);
+        var _return = $639($634)
       }
       else 
       {
@@ -99,45 +141,45 @@ function $fromList(_arg0)
     {
       var $generator = _arg0;
       var $list = _arg1;
-      var $924 = List.$reduce;
-      var $913 = function (_arg0)
+      var $655 = List.$reduce;
+      var $644 = function (_arg0)
       {
         if(true)
         {
           var $k = _arg0;
-          var $914 = function (_arg0)
+          var $645 = function (_arg0)
           {
             if(true)
             {
               var $d = _arg0;
-              var $923 = $put;
-              var $922 = $k;
-              var $921 = $923($922);
-              var $920 = $generator;
-              var $919 = $k;
-              var $918 = $920($919);
-              var $917 = $921($918);
-              var $916 = $d;
-              var $915 = $917($916)
+              var $654 = $put;
+              var $653 = $k;
+              var $652 = $654($653);
+              var $651 = $generator;
+              var $650 = $k;
+              var $649 = $651($650);
+              var $648 = $652($649);
+              var $647 = $d;
+              var $646 = $648($647)
             }
             else 
             {
               throw "Pattern for lambda expression did not match arguments"
             };
-            return $915
+            return $646
           }
         }
         else 
         {
           throw "Pattern for lambda expression did not match arguments"
         };
-        return $914
+        return $645
       };
-      var $912 = $924($913);
-      var $911 = $empty;
-      var $910 = $912($911);
-      var $909 = $list;
-      var _return = $910($909);
+      var $643 = $655($644);
+      var $642 = $empty;
+      var $641 = $643($642);
+      var $640 = $list;
+      var _return = $641($640);
       return _return
     }
     else 
@@ -154,19 +196,19 @@ function $toString(_arg0)
     {
       var $tS = _arg0;
       var $dict = _arg1;
-      var $936 = $$std$prelude.$p$p;
-      var $935 = $$std$prelude.$p$p;
-      var $934 = "{";
-      var $933 = $935($934);
-      var $932 = $toStringI;
-      var $931 = $tS;
-      var $930 = $932($931);
-      var $929 = $dict;
-      var $928 = $930($929);
-      var $927 = $933($928);
-      var $926 = $936($927);
-      var $925 = "}";
-      var _return = $926($925);
+      var $667 = $$std$prelude.$p$p;
+      var $666 = $$std$prelude.$p$p;
+      var $665 = "{";
+      var $664 = $666($665);
+      var $663 = $toStringI;
+      var $662 = $tS;
+      var $661 = $663($662);
+      var $660 = $dict;
+      var $659 = $661($660);
+      var $658 = $664($659);
+      var $657 = $667($658);
+      var $656 = "}";
+      var _return = $657($656);
       return _return
     }
     else 

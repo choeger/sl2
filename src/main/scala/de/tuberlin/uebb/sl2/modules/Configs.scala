@@ -30,5 +30,6 @@ trait Configs {
     /**
      * where to put the compiled files from source.
      */
-    val destination: File)
+    val destination: File
+ )
 }

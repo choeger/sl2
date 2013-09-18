@@ -294,8 +294,7 @@ var _SUSPEND = 0;
 function $SUSPEND(_arg0)
 {
   return {_cid : 0, _var0 : _arg0
-  };
-  return f
+  }
 };
 exports._SUSPEND = _SUSPEND;
 exports.$SUSPEND = $SUSPEND;
@@ -352,9 +351,9 @@ function $force(_arg0)
   if(((_arg0["_cid"] === _SUSPEND) && true))
   {
     var $f = _arg0["_var0"];
-    var $38 = $f;
-    var $37 = $Void;
-    var _return = $38($37);
+    var $19 = $f;
+    var $18 = $Void;
+    var _return = $19($18);
     return _return
   }
   else 
@@ -367,11 +366,11 @@ function $neg(_arg0)
   if(true)
   {
     var $i = _arg0;
-    var $42 = $m;
-    var $41 = 0;
-    var $40 = $42($41);
-    var $39 = $i;
-    var _return = $40($39);
+    var $23 = $m;
+    var $22 = 0;
+    var $21 = $23($22);
+    var $20 = $i;
+    var _return = $21($20);
     return _return
   }
   else 
@@ -381,9 +380,9 @@ function $neg(_arg0)
 };
 var $noop = function ()
 {
-  var $44 = $yield;
-  var $43 = $Void;
-  var $noop = $44($43);
+  var $25 = $yield;
+  var $24 = $Void;
+  var $noop = $25($24);
   return $noop
 }();
 function $id(_arg0)
@@ -412,17 +411,17 @@ function $s(_arg0)
         if(true)
         {
           var $x = _arg0;
-          var $49 = $f;
-          var $48 = $g;
-          var $47 = $x;
-          var $46 = $48($47);
-          var $45 = $49($46)
+          var $30 = $f;
+          var $29 = $g;
+          var $28 = $x;
+          var $27 = $29($28);
+          var $26 = $30($27)
         }
         else 
         {
           throw "Pattern for lambda expression did not match arguments"
         };
-        return $45
+        return $26
       };
       return _return
     }
@@ -480,13 +479,13 @@ function $d$e(_arg0)
     {
       var $x = _arg0;
       var $y = _arg1;
-      var $55 = $not;
-      var $54 = $e$e;
-      var $53 = $x;
-      var $52 = $54($53);
-      var $51 = $y;
-      var $50 = $52($51);
-      var _return = $55($50);
+      var $36 = $not;
+      var $35 = $e$e;
+      var $34 = $x;
+      var $33 = $35($34);
+      var $32 = $y;
+      var $31 = $33($32);
+      var _return = $36($31);
       return _return
     }
     else 

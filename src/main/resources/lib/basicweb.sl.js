@@ -8,11 +8,17 @@ define(function(require, exports, module) {
 ;
 ;
 var $getChildNodes = function(node){return function(){
+
 	var list = List.$Nil;
+
 	for (var i=0; i<node.childNodes.length; i++) {
+
 		list = List.$Cons(node.childNodes[i])(list);
+
 	}
+
 	return list;
+
 }};
 function $createElement(_arg0)
 {
@@ -204,50 +210,50 @@ function $createInputElement(_arg0)
           var $type = _arg1;
           var $text = _arg2;
           var $callback = _arg3;
-          var $812 = $$std$prelude.$a$e;
-          var $811 = $createElement;
-          var $810 = $doc;
-          var $809 = $811($810);
-          var $808 = "input";
-          var $807 = $809($808);
-          var $806 = $812($807);
-          var $790 = function (_arg0)
+          var $582 = $$std$prelude.$a$e;
+          var $581 = $createElement;
+          var $580 = $doc;
+          var $579 = $581($580);
+          var $578 = "input";
+          var $577 = $579($578);
+          var $576 = $582($577);
+          var $560 = function (_arg0)
           {
             if(true)
             {
               var $node = _arg0;
-              var $805 = $$std$prelude.$a;
-              var $804 = $$std$prelude.$a;
-              var $803 = $$std$prelude.$a;
-              var $802 = function ()
+              var $575 = $$std$prelude.$a;
+              var $574 = $$std$prelude.$a;
+              var $573 = $$std$prelude.$a;
+              var $572 = function ()
               {
                 return $node.type = $type
               };
-              var $801 = $803($802);
-              var $800 = function ()
+              var $571 = $573($572);
+              var $570 = function ()
               {
                 return $node.value = $text
               };
-              var $799 = $801($800);
-              var $798 = $804($799);
-              var $797 = function ()
+              var $569 = $571($570);
+              var $568 = $574($569);
+              var $567 = function ()
               {
                 return $node.onclick = $callback
               };
-              var $796 = $798($797);
-              var $795 = $805($796);
-              var $794 = $$std$prelude.$yield;
-              var $793 = $node;
-              var $792 = $794($793);
-              var $791 = $795($792)
+              var $566 = $568($567);
+              var $565 = $575($566);
+              var $564 = $$std$prelude.$yield;
+              var $563 = $node;
+              var $562 = $564($563);
+              var $561 = $565($562)
             }
             else 
             {
               throw "Pattern for lambda expression did not match arguments"
             };
-            return $791
+            return $561
           };
-          var _return = $806($790);
+          var _return = $576($560);
           return _return
         }
         else 
@@ -269,15 +275,15 @@ function $createInput(_arg0)
         var $doc = _arg0;
         var $text = _arg1;
         var $callback = _arg2;
-        var $820 = $createInputElement;
-        var $819 = $doc;
-        var $818 = $820($819);
-        var $817 = "text";
-        var $816 = $818($817);
-        var $815 = $text;
-        var $814 = $816($815);
-        var $813 = $callback;
-        var _return = $814($813);
+        var $590 = $createInputElement;
+        var $589 = $doc;
+        var $588 = $590($589);
+        var $587 = "text";
+        var $586 = $588($587);
+        var $585 = $text;
+        var $584 = $586($585);
+        var $583 = $callback;
+        var _return = $584($583);
         return _return
       }
       else 
@@ -298,15 +304,15 @@ function $createButton(_arg0)
         var $doc = _arg0;
         var $text = _arg1;
         var $callback = _arg2;
-        var $828 = $createInputElement;
-        var $827 = $doc;
-        var $826 = $828($827);
-        var $825 = "button";
-        var $824 = $826($825);
-        var $823 = $text;
-        var $822 = $824($823);
-        var $821 = $callback;
-        var _return = $822($821);
+        var $598 = $createInputElement;
+        var $597 = $doc;
+        var $596 = $598($597);
+        var $595 = "button";
+        var $594 = $596($595);
+        var $593 = $text;
+        var $592 = $594($593);
+        var $591 = $callback;
+        var _return = $592($591);
         return _return
       }
       else 

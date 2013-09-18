@@ -10,8 +10,7 @@ var _Some = 0;
 function $Some(_arg0)
 {
   return {_cid : 0, _var0 : _arg0
-  };
-  return f
+  }
 };
 exports._Some = _Some;
 exports.$Some = $Some;
@@ -55,9 +54,9 @@ function $get(_arg0)
   {
     if((_arg0 === $None))
     {
-      var $116 = $$std$prelude.$error;
-      var $115 = "Cannot get value from None-Option.";
-      var _return = $116($115);
+      var $72 = $$std$prelude.$error;
+      var $71 = "Cannot get value from None-Option.";
+      var _return = $72($71);
       return _return
     }
     else 
@@ -77,11 +76,11 @@ function $cmp(_arg0)
         var $rel = _arg0;
         var $a = _arg1["_var0"];
         var $b = _arg2["_var0"];
-        var $120 = $rel;
-        var $119 = $a;
-        var $118 = $120($119);
-        var $117 = $b;
-        var _return = $118($117);
+        var $76 = $rel;
+        var $75 = $a;
+        var $74 = $76($75);
+        var $73 = $b;
+        var _return = $74($73);
         return _return
       }
       else 
@@ -119,11 +118,11 @@ function $map(_arg0)
     {
       var $f = _arg0;
       var $a = _arg1["_var0"];
-      var $124 = $Some;
-      var $123 = $f;
-      var $122 = $a;
-      var $121 = $123($122);
-      var _return = $124($121);
+      var $80 = $Some;
+      var $79 = $f;
+      var $78 = $a;
+      var $77 = $79($78);
+      var _return = $80($77);
       return _return
     }
     else 
