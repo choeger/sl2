@@ -45,7 +45,7 @@ trait AbstractFile {
     }
     
     def contents() = {
-      path.lines(includeTerminator = true).mkString("\n")
+      path.lines(includeTerminator = true).mkString("")
     }
   }
   
