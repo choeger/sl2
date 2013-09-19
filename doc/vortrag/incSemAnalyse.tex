@@ -38,27 +38,12 @@
 \begin{frame}[containsverbatim=true]
 \frametitle{Modulnormalisierung}
 
-hey, vielleicht kannst du einfach eine grafik dafuer verwwenden...
-ein beispiel dafuer liegt in depsModABC.svg/pdf //
--- BEN
-
 \begin{itemize}
 \item keine Modulübergreifende Modul-Bezeichner-Zuordnung
-	\begin{itemize}
-	\item Modul A: \verb+IMPORT "std/list" AS L+
-	\item Modul B: \verb+IMPORT "std/list" AS List+
-	\end{itemize}
 \item Normalisierung erforderlich
-	\begin{itemize}
-	\item Modul C:
-		\begin{verbatim}
-		IMPORT "std/list" AS StdList
-		IMPORT "modul_a" AS A
-		IMPORT "modul_b" AS B
-		\end{verbatim}
-	\item Substitution von \verb+L+ bzw. \verb+List+ durch \verb+StdList+
-	\end{itemize}
 \end{itemize}
+
+\includegraphics[width=1\linewidth]{depsModABC}
 
 \end{frame}
 
