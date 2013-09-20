@@ -28,6 +28,6 @@ PUBLIC FUN main : DOM Void
 DEF main = 
 	printList lines & 
 	printOpt x & 
-	printOpt y & 
+	printOpti y & 
 	printList (List.tail lines) &
 	Log.print hello
