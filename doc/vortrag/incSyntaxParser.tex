@@ -121,5 +121,12 @@ DEF EXTERN + = {| _add |}
 
 \begin{frame}
 \frametitle{Parser}
-
+Zwei Parser-Implementierungen:
+\begin{itemize}
+\item \emph{Parboiled-Parser} war Standard-Parser in SL1.
+\item\emph{Combinator-Parser} hatte zu Beginn noch nicht
+alle Features von SL1, ist jetzt unser Standard-Parser
+wegen besserer Lokalisierung von Knoten im AST.
+\end{itemize}
+Beide Parser parsen SL2 korrekt.
 \end{frame}

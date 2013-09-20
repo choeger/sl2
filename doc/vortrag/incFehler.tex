@@ -1,6 +1,52 @@
 \section{Fehlermeldungen}
 
 \begin{frame}
-\frametitle{Fehlermeldungen}
-Fritz
+\frametitle{Fehlermeldungen -- Ausgangspunkt}
+Die bisherige Fehlerbehandlung in SL war unzureichend
+\begin{itemize}
+\item Parser parst nur bis zum ersten Syntaxfehler, gibt aber bis
+  dahin gültige Teile des Programms einfach weiter
+\item Statt Fehlermeldungen werden Scala-Objekte ausgegeben
+\item Teilweise unbehandelte Exceptions; der Compiler beendet sich
+  mit Stacktrace
+\end{itemize}
+$\Rightarrow$ Absolut unzureichend für jedes Projekt, das mehr als 
+ein paar Zeilen Code umfasst.
+\end{frame}
+
+\begin{frame}[containsverbatim=true]
+\frametitle{Fehlermeldungen -- Format}
+\begin{lstlisting}
+/path/to/file.sl:5:1-23: Use of undefined type(s) in `Foo': `Foo.Bar'
+\end{lstlisting}
+Das allgemeine Format ist folgendes:
+\begin{center}
+\emph{Dateiname} : \emph{Zeile(n)} [: \emph{Spalte(n)}] : \emph{Fehlermeldung}
+\end{center}
+Lokalisierung mit Zeilen- und Spaltennummer nur mit Combinator-Parser
+\end{frame}
+
+\begin{frame}
+\frametitle{Fehlerarten}
+\begin{itemize}
+\item Syntaktische Fehler
+  \begin{itemize}
+  \item Häufige Fehler haben eigene Produktionen im Parser
+  \item Teilweise nur kryptische Fehlermeldungen der Parsec-Bibliothek
+  \item Abbruch nach erstem syntaktischen Fehler
+  \end{itemize}
+\item Semantische Fehler
+  \begin{itemize}
+  \item Typfehler werden erkannt, Ort teils unintuitiv
+  \item Doppelte Deklarationen, fehlende Definitionen, falsche Aritäten, etc.
+    werden mit Ort(en) zurückgegeben
+  \end{itemize}
+\item Importfehler
+  \begin{itemize}
+  \item Moduldateien nicht vorhanden: Ort des Import-Statements
+    sowie Suchpfad für Datei werden ausgegeben
+  \item Zyklische Importe, Qualifizierter Import der Prelude
+  \end{itemize}
+\item Laufzeitfehler werden vom JavaScript-Interpreter behandelt
+\end{itemize}
 \end{frame}
