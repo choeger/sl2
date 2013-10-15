@@ -36,44 +36,7 @@ import de.tuberlin.uebb.sl2.impl.CombinatorParser
   */
 trait PreProcessing {
 
-  this: Syntax with SyntaxTraversal with Errors =>
-
-  /**
-    * Preprocessing step of the code generator.
-    *
-    * This method renames all identifiers in the given abstract syntax tree
-    * into valid JavaScript identifiers.
-    */
-  def preprocessing(a: AST): AST = renameIdentifier(a)
-
-  /**
-    * Rename the identifiers in the given abstract syntax tree, if necessary.
-    */
-  def renameIdentifier(a: AST): AST = {
-    val f : PartialFunction[String, String] = {case s: String => escapeJsIde(s)}
-    map(f, a)
-  }
-
-  /**
-    * Escape an identifier.
-    *
-    * This method yields valid JavaScript identifiers for all SL identifiers.
-    */
-  def escapeJsIde(x: String): String = {
-    var a = x
-
-    if (replaceBuiltinMap.contains(x)) a = replaceBuiltinMap(x)
-    
-    replaceCustomMap.foreach {
-      case (k, v) => a = a.replaceAll(k, v)
-    }
-    
-    if (a(0) == '$' || a(0) == '_') a
-    else "$" + a
-  }
-  
-  def $ (x: String): String = escapeJsIde(x)
-
+  this: Syntax with SyntaxTraversal with Errors =>  
     
   val replaceCustomMap = Map ( "\\!" -> "\\$b"
                              , "\\§" -> "\\$h"
@@ -93,13 +56,28 @@ trait PreProcessing {
                              , "\\." -> "__"
                              )    
   
+
+  /**
+    * Rename the identifiers in the given abstract syntax tree, if necessary.
+    */
   def renameIdentifier(a: AST): AST = {
     val f : PartialFunction[String, String] = {case s: String => escapeJsIde(s)}
     map(f, a)
   }
   
+  /**
+    * Preprocessing step of the code generator.
+    *
+    * This method renames all identifiers in the given abstract syntax tree
+    * into valid JavaScript identifiers.
+    */
   def preprocessing(a: AST): AST = renameIdentifier(a)
 
+  /**
+    * Escape an identifier.
+    *
+    * This method yields valid JavaScript identifiers for all SL identifiers.
+    */
   def escapeJsIde(x: String): String = {
     var a = x
  

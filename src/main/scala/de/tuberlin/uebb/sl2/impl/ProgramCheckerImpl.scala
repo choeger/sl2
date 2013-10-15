@@ -42,6 +42,7 @@ trait ProgramCheckerImpl extends ProgramChecker {
   /**
    * Context analysis, performing the following checks on a program:
    * $ - Data type checking,
+   * $ - Eager checking for recursive let-bindings,
    * $ - Type checking of function definitions,
    * $ - Checking the type of a program's main function.
    */
@@ -56,6 +57,7 @@ trait ProgramCheckerImpl extends ProgramChecker {
     		  -- funSigs.keySet.map(_.asInstanceOf[VarFirstClass])
     		  ++ initialContext.keySet ++ externContext.keySet,
         programToELC(moduleSigs ++ funSigs, funDefs)).right;
+      _ <- checkLetRecs(elc).right ;
       mainType <- {
         checkTypes(moduleContext -- funSigs.keySet.map(_.asInstanceOf[VarFirstClass])
             ++ initialContext ++ externContext, elc).right
@@ -88,6 +90,50 @@ trait ProgramCheckerImpl extends ProgramChecker {
       _ <- checkInferredType.right;
       _ <- checkMainSignature.right
     ) yield ()
+  }
+
+  /**
+* Check if all right-hand sides in recursive let-bindings are lambda-abstractions, i.e,
+* they can be evaluated in an eager fashion.
+*/
+  def checkLetRecs(expr: ELC): Either[Error, Unit] = {
+
+    /**
+* Check if the right-hand side of a local definition is a lambda-abstraction or a choice-expression.
+*/
+    def rhsIsLamOrChoice(definition: EDefinition): Either[Error, Unit] = definition match {
+      case EDefinition(_, _, ELam(_, _, _), _) => Right()
+      case EDefinition(_, _, EChoice(_, _), _) => Right()
+      case EDefinition(_, _, _, attr) => {
+val errorMsg = "Right-hand side of this recursive local definition is not a lambda expression."
+Left(AttributedError(errorMsg, attr))
+      }
+    }
+
+    /* Recursive traversal over the ELC expression */
+    expr match {
+      case ELetRec(defs, body, _) => for ( _ <- errorMap(defs, (d: EDefinition) => rhsIsLamOrChoice(d)).right ;
+_ <- checkLetRecs(body).right )
+yield ()
+
+      case EApp(fun, expr, _) => for ( _ <- checkLetRecs(fun).right ;
+_ <- checkLetRecs(expr).right )
+yield ()
+
+      case ELam(_, body, _) => for ( _ <- checkLetRecs(body).right ) yield ()
+
+      case ELet(definition, body, _) => for ( _ <- checkLetRecs(definition.rhs).right ;
+_ <- checkLetRecs(body).right )
+yield ()
+
+      case EChoice(choices, _) => for ( _ <- errorMap(choices, (e: ELC) => checkLetRecs(e)).right ) yield ()
+
+      case ECase(expr, alts, _) => for ( _ <- checkLetRecs(expr).right ;
+_ <- errorMap(alts.map(_.expr), (e: ELC) => checkLetRecs(e)).right )
+yield ()
+
+      case _ => Right()
+    }
   }
 }
 

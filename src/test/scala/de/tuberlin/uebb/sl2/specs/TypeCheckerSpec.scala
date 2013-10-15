@@ -32,6 +32,7 @@ import org.scalatest.matchers._
 import org.scalatest.FunSpec
 import de.tuberlin.uebb.sl2.modules._
 import de.tuberlin.uebb.sl2.specs.SLPrelude
+import de.tuberlin.uebb.sl2.modules.Syntax._
 
 trait TypeCheckerSpec extends FunSpec with ShouldMatchers with SLPrelude {
 
@@ -63,6 +64,10 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers with SLPrelude {
 
   def haveType(ty: Type) = TypeCheckMatcher(ty)
 
+  def checking(expr: ELC): Either[Error, Type] = for (ty <- checkTypes(initialContext, expr).right) yield ty
+
+  def fail(err: Error): Matcher[Either[Error, Type]] = be(Left(err))
+
   describe(testedImplementationName() + ": Built-in values") {
     it("Should type check Integer values") {
       EInt(42) should haveType(int)
@@ -89,7 +94,7 @@ trait TypeCheckerSpec extends FunSpec with ShouldMatchers with SLPrelude {
     }
 
     it("Should fail on JavaScript quote with invalid type ascription") {
-      val invalidType = TypeConstructor("InvalidType", Nil)
+      val invalidType = TypeConstructor(TConVar("InvalidType"), Nil)
       checking(EJavaScript("", Some(invalidType))) should fail(AttributedError("Invalid type in type ascription for JavaScript quote: `InvalidType'", EmptyAttribute))
     }
   }

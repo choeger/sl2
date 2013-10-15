@@ -73,9 +73,6 @@ trait Errors {
   }
 
   /* Parser: parse error */
-  case class ParseError(msg : String, startIndex : Int, endIndex : Int) extends Error {
-    override def message = "Parse error in [%d,%d]: %s".format(startIndex, endIndex, msg)
-  }
   case class ParseError(what: String, where: Attribute) extends Error
   
   /* Import Checker: path not well formed */

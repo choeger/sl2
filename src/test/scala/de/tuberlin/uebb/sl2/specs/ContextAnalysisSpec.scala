@@ -69,12 +69,6 @@ trait ContextAnalysisSpec extends FunSpec with ShouldMatchers {
   }
 
   describe("Context analysis: erroneous function definitions") {
-  // the concept of 'predefined' functions was changed
-  // basic functions are now imported by an implicit unqualified import of the prelude
-  // therefore duplicate functions rather complain about bad type or duplicate definitions
-//    it("Should fail on a program using an invalid function name") {
-//      checking(prg04) should fail(AttributedError("Function name `intToStr' clashes with predefined function.", EmptyAttribute))
-//    }
 
     it("Should fail on a program with a function using duplicate pattern variables") {
       checking(prg05) should fail(ErrorList(List(AttributedError("Duplicate pattern variable `a' in function definition.", EmptyAttribute))))
@@ -85,7 +79,7 @@ trait ContextAnalysisSpec extends FunSpec with ShouldMatchers {
     }
 
     it("Should fail on a program with a function definition which cannot be evaluated in an eager fashion") {
-      checking(prg15) should fail(AttributedError("Right-hand side of this recursive local definition is not a lambda expression.", EmptyAttribute))
+      checking(prg03) should fail(AttributedError("Right-hand side of this recursive local definition is not a lambda expression.", EmptyAttribute))
     }
   }
 
