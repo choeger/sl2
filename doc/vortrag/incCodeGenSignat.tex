@@ -1,0 +1,201 @@
+\section{Codegenerierung und Signaturen}
+
+\begin{frame}
+\frametitle{Codegenerierung und Signaturen}
+\begin{enumerate}
+\item Modulsignatur
+\item Compileraufruf und Pfade
+\item Abhängigkeitsanalyse
+\item require.js
+\item Code-Generierung
+\end{enumerate}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Modulsignatur}
+
+\begin{itemize}
+\item Signatur für semantische Analyse erforderlich
+\item Inhalt:
+	\begin{itemize}
+	\item Importliste
+	\item Datendefinitionen
+	\item Funktionssignaturen
+	\end{itemize}
+\item Mögliche Signaturformate:
+	\begin{itemize}
+	\item native Serialisierung
+	\item Simple Language
+	\item JavaScript Object Notation
+	\end{itemize}
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[containsverbatim=true]
+\frametitle{Modulsignatur -- JSON}
+
+\begin{verbatim}
+IMPORT "some/module" AS M
+\end{verbatim}
+
+JSON:
+
+\begin{lstlisting}
+"imports" : [
+  {
+    "name" : "M",
+    "path" : "some\/module"
+  }
+]
+\end{lstlisting}
+
+
+\end{frame}
+
+
+\begin{frame}[containsverbatim=true]
+\frametitle{Compileraufruf und Pfade}
+\begin{verbatim}
+> run-main de.tuberlin.uebb.sl2.impl.Main 
+[-d <output directory>]
+[-cp <classpath directory>]
+-sourcepath <source directory>
+<module files>
+\end{verbatim}
+\end{frame}
+
+\begin{frame}
+\frametitle{Abhängigkeitsanalyse I}
+Ein Modul ist zu kompilieren, wenn
+\begin{enumerate}
+\item Quell-Datei in \texttt{<module files>}, oder
+\item importiert\linebreak
+    und Quell-Datei im \texttt{<source directory>}\linebreak
+    keine Signatur-Datei im \texttt{<classpath directory>}, oder
+\item importiert\linebreak
+    und Quell-Datei im \texttt{<source directory>}\linebreak
+    und Signatur-Datei im \texttt{<classpath directory>}\linebreak
+    und Quell-Datei jünger als Signatur-Datei.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}
+\frametitle{Abhängigkeitsanalyse II}
+\begin{tabularx}{\linewidth}{lllll}
+*A.sl          & $\rightarrow$ & B.sl           & & \\
+A.sl.signature &               & B.sl.signature & & \\
+ & & & & \\
+A.sl           & $\rightarrow$ & *B.sl & & \\
+A.sl.signature &               & B.sl.signature & & \\
+ & & & & \\
+A.sl           & $\rightarrow$ & B.sl           & $\rightarrow$ & *C.sl \\
+A.sl.signature &               & B.sl.signature &               & C.sl.signature \\
+\end{tabularx}
+\end{frame}
+
+\begin{frame}[containsverbatim=true]
+\frametitle{require.js}
+require.js statt Common.js
+
+\vspace{1em}
+
+Installation in node.js (u.U. relativ zum akt. Verzeichnis)
+
+\begin{verbatim}
+> npm install requirejs
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[containsverbatim=true]
+\frametitle{Code-Generierung I}
+
+\begin{verbatim}
+> run-main de.tuberlin.uebb.sl2.impl.Main -sourcepath
+src/main/sl/examples/ boxsort.sl
+\end{verbatim}
+        
+\begin{verbatim}
+boxsort.sl.signature
+boxsort.sl.js
+main.js
+require.js
+index.html
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[containsverbatim=true]
+\frametitle{Code-Generierung II}
+\begin{verbatim}
+IMPORT "std/debuglog" AS Dbg
+...
+
+PUBLIC FUN main : DOM Void
+DEF main = 
+    Web.document &= \ doc .
+    ...
+    
+DEF getNode (NodeWithNumber n1 i1) = n1
+...
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[containsverbatim=true]
+\frametitle{Code-Generierung III: boxsort.sl.js}
+\begin{verbatim}
+define(function(require, exports, module) {
+  var $$std$prelude = require("std/prelude.sl");
+  var Dbg = require("std/debuglog.sl");
+  ...
+  function $getNode(_arg0) { ... };
+  ...
+  var $main = function () { ... }();
+  exports.$main = $main
+});
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[containsverbatim=true]
+\frametitle{Code-Generierung IV: main.js}
+\begin{verbatim}
+if (typeof window === 'undefined') {
+  /* in node.js */
+  var requirejs = require('requirejs');
+
+  requirejs.config({
+    //Pass the top-level main.js/index.js require
+    //function to requirejs so that node modules
+    //are loaded relative to the top-level JS file.
+    nodeRequire: require,
+    paths: {std : "C:/Users/monochromata/git/sl2/target/
+      scala-2.10/classes/lib" }
+  });
+
+  requirejs(["boxsort.sl"], function($$$boxsort) {
+    $$$boxsort.$main()
+  });
+...
+\end{verbatim}
+% TODO: Unterscheidung, ob JAR lesbar, oder nicht ...
+\end{frame}
+
+\begin{frame}[containsverbatim=true]
+\frametitle{Code-Generierung V: main.js}
+\begin{verbatim}
+...
+} else {
+  require.config({
+  paths: {std : "file:/C:/Users/monochromata/git/sl2/
+    target/scala-2.10/classes/lib/" }
+  });
+
+  /* in browsers*/ 
+  require(["boxsort.sl"], function($$$boxsort) {
+    $$$boxsort.$main()
+  });
+}
+\end{verbatim}
+% TODO: Unterscheidung, ob JAR lesbar, oder nicht ...
+\end{frame}

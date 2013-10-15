@@ -1,0 +1,132 @@
+\section{Syntax und Parser}
+
+\begin{frame}[containsverbatim=true]
+\frametitle{Syntax -- Ausgangspunkt}
+Typisch funktionale Syntax, ähnlich Haskell und Opal.
+
+Besonderheiten:
+\begin{itemize}
+\item JavaScript-Blöcke:
+  \begin{lstlisting}
+  {| /* JS-Code */ |} : DOM Void
+  \end{lstlisting}
+ \item Fest eingebaute Funktionen und Operatoren:
+   \begin{itemize}
+     \item Standard-Operatoren für Ganzzahl-Arithmetik und
+       Vergleiche
+     \item \verb|+s|, \verb|+r|, \verb|*r|, etc. für
+       Zeichenketten- und Gleitkomma-Operationen
+     \item Unäres Minus auf Ganzzahlen (teilweise auch Gleitkomma) --
+       Einziger unärer Operator, einzige überladene Funktion
+     \item \texttt{\&} sowie \texttt{\&=} für Bind-Operation auf DOM-Monade
+   \end{itemize}
+ \item Eigene Funktionen und (binäre) Operatoren
+   definierbar
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Syntax -- Zielsetzung}
+\begin{itemize}
+\item Unterscheidung zwischen eingebauten und 
+  selbst definierten Operatoren aufheben
+\item Modulsystem -- Syntax für Import, Export
+  und Zugriff auf importierte Bezeichner
+\item „Weniger Magie, mehr Bibliotheken“ -- Auch 
+  Basis-Operatoren und -Funktionen sollten in 
+  der Prelude und selbst geschriebenen Bibliotheken
+  definiert werden können
+\end{itemize}
+\end{frame}
+
+\begin{frame}[containsverbatim=true]
+\frametitle{Anpassungen der Operatoren}
+In SL2 werde alle Operatoren, abgesehen von der 
+Präzedenz, gleich behandelt:
+\begin{itemize}
+\item Dürfen keine alphanumerischen Zeichen enthalten
+\item Werden nicht überladen
+\item Unäres Minus fällt weg, stattdessen Zahlen-Literale 
+  mit negativem Vorzeichen
+  \begin{itemize}
+    \item Erlaubt: \verb|-2|, \verb|-.34e-13|
+    \item Nicht erlaubt: \verb|-x|, \verb|- 2|, \verb|-(2)|
+    \item Unintuitiv: \verb|x-2| ist Applikation \verb|x (-2)|
+  \end{itemize}
+\end{itemize}
+$\Rightarrow$ Nicht schön, aber konsistenter als SL1
+\end{frame}
+
+\begin{frame}[containsverbatim=true]
+\frametitle{Syntax für das Modulsystem}
+Qualifizierter Import eines Moduls:
+\begin{lstlisting}
+IMPORT "path/to/module" AS MyModule
+\end{lstlisting}
+
+Zugriff auf importierte Bezeichner:
+\begin{lstlisting}
+MyModule.function
+MyModule.Type
+MyModule.Constructor
+\end{lstlisting}
+
+Export von Funktionen und Konstruktoren:
+\begin{lstlisting}
+PUBLIC DATA MyType = Cons1 | Cons2 | Cons3
+PUBLIC FUN myFun : MyType -> Int
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[containsverbatim=true]
+\frametitle{Low-Level-Funktionalitäten}
+Mit dem Keyword \verb|EXTERN| kann direkt auf die
+JavaScript-Ebene zugegriffen werden.
+
+\begin{itemize}
+\item
+Definition von Funktionen in JavaScript,
+ohne DOM-Monade:
+\begin{lstlisting}
+DEF EXTERN function = {| js-code  |}
+\end{lstlisting}
+\item
+Direktes Einfügen von JavaScript-Code in die Ausgabe:
+\begin{lstlisting}
+IMPORT EXTERN "path/to/js-file"
+\end{lstlisting}
+\item
+Definition von Typen ohne Konstruktoren:
+\begin{lstlisting}
+DATA EXTERN TypeName
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[containsverbatim=true]
+\frametitle{Beispiel}
+Auszug aus \emph{std/prelude}:
+\begin{lstlisting}
+-- Einfuegen der Datei _prelude.js
+IMPORT EXTERN "std/_prelude"
+
+-- Integer Datentyp ohne Konstruktoren
+DATA EXTERN Int
+
+-- Funktion _add definiert in _prelude.js
+PUBLIC FUN + : Int -> Int -> Int
+DEF EXTERN + = {| _add |}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+\frametitle{Parser}
+Zwei Parser-Implementierungen:
+\begin{itemize}
+\item \emph{Parboiled-Parser} war Standard-Parser in SL1.
+\item\emph{Combinator-Parser} hatte zu Beginn noch nicht
+alle Features von SL1, ist jetzt unser Standard-Parser
+wegen besserer Lokalisierung von Knoten im AST.
+\end{itemize}
+Beide Parser parsen SL2 korrekt.
+\end{frame}

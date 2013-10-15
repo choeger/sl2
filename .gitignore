@@ -1,5 +1,9 @@
 *.class
 *.log
+*.backup
+
+# MacOS specific
+.DS_Store
 
 # sbt specific
 dist/*
@@ -11,3 +15,14 @@ project/plugins/project/
 
 # Scala-IDE specific
 .scala_dependencies
+
+# automatically generated backup files
+*~
+
+# eclipse
+.classpath
+.project
+.settings/
+
+#tex
+*.aux
