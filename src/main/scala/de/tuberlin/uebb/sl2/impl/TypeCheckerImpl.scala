@@ -101,8 +101,9 @@ trait TypeCheckerImpl extends TypeChecker with Lexic with Syntax with EnrichedLa
     /* Let-bindings */
     case ELet(EDefinition(lhs, sig, rhs, _), body, attr) => {
       for (
-        (σ, rhsType) <- inferType(ctx, rhs).right;
+        s_rT <- inferType(ctx, rhs).right;
         φ <- {
+          val (σ, rhsType) = s_rT
           /* 
 	       * Check if the inferred type matches the type signature, i.e.,
 	       * both types are unifiable and the given type ascription is not
@@ -114,7 +115,8 @@ trait TypeCheckerImpl extends TypeChecker with Lexic with Syntax with EnrichedLa
           }
           handleUnifyError(lhs.toString, attr)(unify(equation)).right
         };
-        (ψ, bodyType) <- {
+        p_bT <- {
+          val (σ, rhsType) = s_rT
           /*
 	       * Add the generalized type of the definition's right-hand
 	       * side to the context and infer the body's type.
@@ -123,7 +125,7 @@ trait TypeCheckerImpl extends TypeChecker with Lexic with Syntax with EnrichedLa
           val context = σ(ctx) + (lhs -> typeScheme)
           inferType(context, body).right
         }
-      ) yield (ψ <+> σ, bodyType)
+      ) yield { val (ψ, bodyType) = p_bT; val (σ, rhsType) = s_rT; (ψ <+> σ, bodyType) }
     }
 
     /* Recursive let-bindings */
@@ -151,14 +153,15 @@ trait TypeCheckerImpl extends TypeChecker with Lexic with Syntax with EnrichedLa
       }
 
       for (
-        (σ, rhsTypes) <- {
+        s_rT <- {
           /*
 	       * Calcualte types and a substitution of the right-hand sides
 	       * with respect to the outer context and bindings given in 'lhsCtx'.
 	       */
           inferType(lhsCtx <++> ctx, defs.map(_.rhs)).right
         };
-        (φ, lhsTypes) <- {
+        p_lT <- {
+          val (σ, rhsTypes) = s_rT
           /*
 	       * Unify the left-hand side and the right-hand side types.
 	       */
@@ -167,13 +170,15 @@ trait TypeCheckerImpl extends TypeChecker with Lexic with Syntax with EnrichedLa
           handleUnifyError("letrec", attr)(unify(equations)).right.map((χ: Substitution) => (χ <+> σ, lhsTypes)).right
         };
         ψ <- {
+          val (φ, lhsTypes) = p_lT
           /*
 	       * Check if the inferred left-hand side types match the given type signatures.
 	       */
           val equations = equationBuilder(sigTypes, lhsTypes)
           handleUnifyError("letrec", attr)(unify(equations)).right
         };
-        (ω, bodyType) <- {
+        o_bT <- {
+          val (φ, lhsTypes) = p_lT                              
           /*
 	       * Make up the context to check the body of the letrec.
 	       * Apply the substitution from the previous unification step
@@ -182,26 +187,33 @@ trait TypeCheckerImpl extends TypeChecker with Lexic with Syntax with EnrichedLa
           val context = φ(lhsCtx).mapValues(_.generalize(φ(ctx))) <++> φ(ctx)
           inferType(context, body).right
         }
-      ) yield (ω <+> φ, bodyType)
+      ) yield { val (ω, bodyType) = o_bT;  val (φ, lhsTypes) = p_lT; 
+               (ω <+> φ, bodyType) }
     }
 
     /* Lambda abstraction */
     case ELam(pat, body, attr) => {
       for (
-        (patCtx, argType) <- inferType(ctx, pat).right;
-        (σ, bodyType) <- inferType(patCtx <++> ctx, body).right
-      ) yield (σ, FunctionType(σ :@ argType, bodyType))
+        pC_aT <- inferType(ctx, pat).right;
+        s_bT <- {
+          val (patCtx, argType) = pC_aT
+          inferType(patCtx <++> ctx, body).right
+        }
+      ) yield {val (σ, bodyType) = s_bT ; val (patCtx, argType) = pC_aT ;
+               (σ, FunctionType(σ :@ argType, bodyType)) }
     }
 
     /* Choice expressions */
     case EChoice(choices, attr) => {
       for (
-        (σ, types) <- inferType(ctx, choices).right;
+        s_t <- inferType(ctx, choices).right;
         φ <- {
+          val (σ, types) = s_t
           // all types of the different choice expressions must be equal
           handleUnifyError("function alternatives", attr)(unify(allEqual(types))).right
         };
-        (ψ, choiceType) <- {
+        p_ct <- {
+          val (σ, types) = s_t
           val ψ = φ <+> σ
           // all types of the different choice expressions must be function types
           val wellFormedWitness = types.head
@@ -209,33 +221,38 @@ trait TypeCheckerImpl extends TypeChecker with Lexic with Syntax with EnrichedLa
             (ψ, ψ :@ wellFormedWitness),
             TypeError("choice", attr, GenericError("Alternatives of choice are not of function type"))).right
         }
-      ) yield (ψ, choiceType)
+      ) yield { val (ψ, choiceType) = p_ct ; (ψ, choiceType) }
     }
 
     /* Case expression */
     case ECase(expr, alts, attr) => {
       for (
-        (σ, exprType) <- inferType(ctx, expr).right;
-        (rhsContexts, lhsTypes) <- {
+        s_et <- inferType(ctx, expr).right;
+        rCtxt_lT <- {
+          val (σ, exprType) = s_et
           val pats = alts.map(_.pattern)
           errorMap(pats, (p: EPattern) => inferType(ctx, p)).right.map(_.unzip).right
         };
         φ <- {
+          val (rhsContexts, lhsTypes) = rCtxt_lT
+          val (σ, exprType) = s_et
           val equations = allEqual(exprType :: lhsTypes)
           handleUnifyError("patterns of case expression", attr)(unify(equations)).right.map(_ <+> σ).right
         };
-        (substitutions, rhsTypes) <- {
+        subst_rhsT <- {
+          val (rhsContexts, lhsTypes) = rCtxt_lT
           val rhs = alts.map(_.expr)
           val ctxRhsList = rhsContexts.map(φ(_)).zip(rhs)
           val infer = (c: Context, e: ELC) => inferType(c <++> φ(ctx), e)
           errorMap(ctxRhsList, infer.tupled).right.map(_.unzip).right
         };
         ω <- {
+          val (substitutions, rhsTypes) = subst_rhsT
           val ψ = compose(substitutions :+ φ)
           val equations = allEqual(rhsTypes.map(ψ :@ _))
           handleUnifyError("alternatives of case expression", attr)(unify(equations)).right.map(_ <+> ψ).right
         }
-      ) yield (ω, ω :@ rhsTypes.head)
+      ) yield {val (substitutions, rhsTypes) = subst_rhsT  ; (ω, ω :@ rhsTypes.head) }
     }
   }
 
@@ -247,9 +264,14 @@ trait TypeCheckerImpl extends TypeChecker with Lexic with Syntax with EnrichedLa
     case Nil => Right(empty, Nil)
     case e :: es => {
       for (
-        (σ, t) <- inferType(ctx, e).right;
-        (φ, ts) <- inferType(σ(ctx), es).right
+        s_t <- inferType(ctx, e).right;
+        p_ts <- {
+          val (σ, t) = s_t
+          inferType(σ(ctx), es).right
+        }
       ) yield {
+        val (φ, ts) = p_ts
+        val (σ, t) = s_t        
         (φ <+> σ, (φ :@ t) :: ts)
       }
     }
@@ -276,15 +298,19 @@ trait TypeCheckerImpl extends TypeChecker with Lexic with Syntax with EnrichedLa
             GenericError("constructor" + quote(con.toString) + "not fully applied")))
         } else {
           for (
-            (contexts, patTys) <- {
+            c_t <- {
               val inferPatType = (p: EPattern) => inferType(ctx, p)
               errorMap(pats, inferPatType).right.map(_.unzip).right
             };
             σ <- {
+              val (contexts, patTys) = c_t 
               val equations = (patTys, conTy.argTypes).zipped.map(_ :==: _)
               handleUnifyError("constructor application in pattern", attr)(unify(equations)).right
             }
-          ) yield (join(contexts.map(σ(_))), σ :@ conTy.resType)
+          ) yield {
+              val (contexts, patTys) = c_t 
+              (join(contexts.map(σ(_))), σ :@ conTy.resType)
+          }
         }
       }
     }

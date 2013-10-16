@@ -50,19 +50,23 @@ trait ProgramCheckerImpl extends ProgramChecker {
     val (moduleContext, moduleSigs) = buildModuleContext(modules);
     for (
       initialContext <- checkDataTypes(in, modules).right;
-      (funSigs, funDefs, externContext) <- checkFunctions(in).right;
-      // remove local definitions from imported module context. (imported unqualified names
-      // may otherwise clash with local names. this way they are shadowed.)
-      elc <- splitLetRecs(moduleContext.keySet
-    		  -- funSigs.keySet.map(_.asInstanceOf[VarFirstClass])
-    		  ++ initialContext.keySet ++ externContext.keySet,
-        programToELC(moduleSigs ++ funSigs, funDefs)).right;
-      _ <- checkLetRecs(elc).right ;
-      mainType <- {
-        checkTypes(moduleContext -- funSigs.keySet.map(_.asInstanceOf[VarFirstClass])
-            ++ initialContext ++ externContext, elc).right
-      };
-      _ <- checkMain(funSigs, mainType).right
+      fdc <- checkFunctions(in).right ;
+      _ <- { val FDCheckResult(funSigs, funDefs, externContext) = fdc ; 
+            for {
+              // remove local definitions from imported module context. (imported unqualified names
+              // may otherwise clash with local names. this way they are shadowed.)
+              elc <- splitLetRecs(moduleContext.keySet
+    		                  -- funSigs.keySet.map(_.asInstanceOf[VarFirstClass])
+    		                  ++ initialContext.keySet ++ externContext.keySet,
+                                  programToELC(moduleSigs ++ funSigs, funDefs)).right;
+        
+              _ <- checkLetRecs(elc).right ;
+              mainType <- {
+                checkTypes(moduleContext -- funSigs.keySet.map(_.asInstanceOf[VarFirstClass])
+                           ++ initialContext ++ externContext, elc).right
+              }     
+            } yield (checkMain(funSigs, mainType)) 
+          }.right
     ) yield ()
   }
 

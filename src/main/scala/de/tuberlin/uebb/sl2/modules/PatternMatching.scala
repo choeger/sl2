@@ -38,7 +38,7 @@ trait PatternMatching {
   sealed case class Equation(pattern : List[Pattern], rhs : Expr)
 
 
-  final case class PatternMatchingCtxt(arity : ConVar => Int, 
+  sealed case class PatternMatchingCtxt(arity : ConVar => Int, 
                                        constructors : ConVar => Set[ConVar],
                                        k : Int)
 

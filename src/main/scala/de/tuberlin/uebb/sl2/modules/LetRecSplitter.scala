@@ -57,7 +57,7 @@ trait LetRecSplitter {
 	 * left-hand side `g'.
 	 */
       for (
-        (graph, succs) <- buildDepGraph(boundVars, expr).right;
+        gs <- buildDepGraph(boundVars, expr).right;
 
         /*
 			 * Split the right-hand sides of the letrec's definitions which
@@ -80,6 +80,8 @@ trait LetRecSplitter {
 			 * recognized as recursive
 			 */
         splitRhs <- {
+          val (graph, succs) = gs
+
           def splitRhs(d: EDefinition) = {
             val visibleLhsVars = succs.get(d.lhs).get.toSet
             splitLetRecs(boundVars union visibleLhsVars, d.rhs)
@@ -98,6 +100,7 @@ trait LetRecSplitter {
           splitLetRecs(boundVars union lhsVars, body).right
         }
       ) yield {
+        val (graph, succs) = gs
         // Perform the actual splitting
         val leftHandSides = defs map (_.lhs)
         val signatures = leftHandSides.zip(defs.map(_.sig)).toMap

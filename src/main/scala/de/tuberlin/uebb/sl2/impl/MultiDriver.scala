@@ -222,15 +222,20 @@ trait MultiDriver extends Driver {
     val code = module.source.contents
     
     for (
-      (moq, compiled) <- compile(name, code, config).right;
+      moq_compiled <- (compile(name, code, config).right);
+      
       // output to fs
-      res <- outputToFiles(moq, name, compiled, config).right;
-      // create main.js while compiling main unit only if a main function is declared
-      _ <- if (isMain && moq.functionDefs.contains("main"))
-          generateMainJsFile(name, config).right
-        else Right("No Main needed").right
+      res <- {
+        val (moq, compiled) = moq_compiled ;
+        for { res <- outputToFiles(moq, name, compiled, config).right;
+             // create main.js while compiling main unit only if a main function is declared
+             _ <- { if (isMain && moq.functionDefs.contains("main"))
+                       generateMainJsFile(name, config).right
+                    else Right("No Main needed").right
+                  } 
+           } yield res
+      }.right
     ) yield res
-
   }
   
   def compile(name: String, code: String, config: Config): Either[Error, Pair[Program, String]] = {
@@ -270,8 +275,8 @@ trait MultiDriver extends Driver {
   
   def compileSL(src: String, config: Config) = {
     for (
-      (moq, compiled) <- compile("inline", src, config).right
-    ) yield compiled 
+      moq_compiled <- compile("inline", src, config).right
+    ) yield moq_compiled._2
   }
   
   def generateMainJsFile(name: String, config: Config) : Either[Error, String] = {

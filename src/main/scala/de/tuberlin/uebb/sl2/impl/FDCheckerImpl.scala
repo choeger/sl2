@@ -47,7 +47,7 @@ trait FDCheckerImpl extends FDChecker {
    * @return Definitions and signatures of all top-level functions
    */
   override def checkFunctions(in: AST):
-	  Either[Error, (Map[Var, FunctionSig], Map[Var, List[FunctionDef]], Context)] = in match {
+	  Either[Error, FDCheckResult] = in match {
     case Program(imports, funSigs, funDefs, funDefsExtern, _, _) => {
       val funQualifiedDefs = funDefs.toList.map({case (name,body) => (Syntax.Var(name), body)}).toMap
       val funQualifiedSigs = funSigs.toList.map({case (name,sig) => (Syntax.Var(name), sig)}).toMap
@@ -63,7 +63,7 @@ trait FDCheckerImpl extends FDChecker {
             astToType(funSigs(name).typ))
         }
       for (_ <- checkFunctions(funQualifiedDefs, funQualifiedDefsExt, funQualifiedSigs).right)
-        yield (funQualifiedSigs, funQualifiedDefs, externContext)
+        yield FDCheckResult(funQualifiedSigs, funQualifiedDefs, externContext)
       }
     }
   }
